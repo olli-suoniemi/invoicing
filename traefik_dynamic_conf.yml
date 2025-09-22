@@ -1,0 +1,9 @@
+# Manual TLS (self-signed certificate setup)
+tls:
+  certificates:
+    - certFile: /traefik.localhost.pem
+      keyFile: /traefik.localhost-key.pem
+    - certFile: /api.localhost.pem
+      keyFile: /api.localhost-key.pem
+    - certFile: /ui.localhost.pem
+      keyFile: /ui.localhost-key.pem
