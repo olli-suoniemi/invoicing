@@ -1,0 +1,8 @@
+*.env
+app-cache
+.ssh
+local_instructions
+/.secrets
+*pem
+/config
+/traefik_data
