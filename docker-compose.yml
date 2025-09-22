@@ -1,0 +1,147 @@
+version: "3.9"
+
+services:
+  traefik:
+    image: traefik:v3.1
+    command:
+      - --providers.file.filename=/traefik_dynamic_conf.yml
+      - --api.dashboard=true
+      - --api.insecure=false  
+      - --log.level=ERROR # DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik_dynamic_conf.yml:/traefik_dynamic_conf.yml"
+      - "./traefik.localhost.pem:/traefik.localhost.pem"
+      - "./traefik.localhost-key.pem:/traefik.localhost-key.pem"
+      - "./api.localhost.pem:/api.localhost.pem"
+      - "./api.localhost-key.pem:/api.localhost-key.pem"
+      - "./ui.localhost.pem:/ui.localhost.pem"
+      - "./ui.localhost-key.pem:/ui.localhost-key.pem"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard.tls=true"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+
+      - "traefik.http.routers.traefik-dashboard-web.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik-dashboard-web.entrypoints=web"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.traefik-dashboard-web.middlewares=redirect-to-https"
+    networks:
+      - custom_network
+
+  # api:
+  #   build:
+  #     context: ./api
+  #     dockerfile: Dockerfile.local
+  #   # Ensure hot reload works
+  #   volumes:  
+  #     - ./api:/app
+  #   depends_on:
+  #     - database
+  #     - redis
+  #   environment:
+  #     PGUSER: devuser
+  #     PGPASSWORD: devpassword
+  #     PGDATABASE: devdb
+  #     PGHOST: database
+  #     PGPORT: 5432
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.api.rule=Host(`api.localhost`)"
+  #     - "traefik.http.routers.api.entrypoints=websecure"
+  #     - "traefik.http.routers.api.tls=true"
+  #     - "traefik.http.services.api.loadbalancer.server.port=7777"
+
+  #     - "traefik.http.routers.api-web.rule=Host(`api.localhost`)"
+  #     - "traefik.http.routers.api-web.entrypoints=web"
+  #     - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+  #     - "traefik.http.routers.api-web.middlewares=redirect-to-https"
+      
+  #   networks:
+  #     - custom_network
+  #   ports:
+  #     - "7777:7777"
+  #     - "9229:9229"   # For debugging with --inspect-brk
+  
+  # ui:
+  #   build:
+  #     context: ./ui
+  #     dockerfile: Dockerfile.local
+  #   depends_on:
+  #     - api
+  #   volumes:  
+  #     - ./ui:/app
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.ui.rule=Host(`admin.localhost`)"
+  #     - "traefik.http.routers.ui.entrypoints=websecure"
+  #     - "traefik.http.routers.ui.tls=true"
+  #     - "traefik.http.services.ui.loadbalancer.server.port=3001"
+
+  #     - "traefik.http.routers.ui-web.rule=Host(`admin.localhost`)"
+  #     - "traefik.http.routers.ui-web.entrypoints=web"
+  #     - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+  #     - "traefik.http.routers.ui-web.middlewares=redirect-to-https"
+  #   networks:
+  #     - custom_network
+
+  database:
+    image: postgres:16.1
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: devdb
+    ports:
+      - "5432:5432"
+    networks:
+      - custom_network
+
+  redis:
+    image: redis:7.2
+    command: >
+      redis-server --maxmemory 500mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+    ports:
+      - "6379:6379"
+    networks:
+      - custom_network
+
+  flyway:
+    image: flyway/flyway:11
+    profiles: ["flyway"]         
+    depends_on:
+      - database
+    volumes:
+      - ./flyway/sql:/flyway/sql
+    environment:
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_CONNECT_RETRIES: "60"
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
+      FLYWAY_URL: jdbc:postgresql://database:5432/devdb
+      FLYWAY_USER: devuser
+      FLYWAY_PASSWORD: devpassword
+    networks:
+      - custom_network
+    command: migrate         
+
+volumes:
+  db-data:
+  traefik_data:
+
+networks:
+  custom_network:
+    driver: bridge
+
