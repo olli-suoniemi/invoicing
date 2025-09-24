@@ -7,3 +7,5 @@ tls:
       keyFile: /api.localhost-key.pem
     - certFile: /ui.localhost.pem
       keyFile: /ui.localhost-key.pem
+    - certFile: /auth.localhost.pem
+      keyFile: /auth.localhost-key.pem
