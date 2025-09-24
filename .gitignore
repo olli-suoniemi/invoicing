@@ -6,3 +6,5 @@ local_instructions
 *pem
 /config
 /traefik_data
+api/node_modules
+firebase/firebase-debug.log
