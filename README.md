@@ -1,6 +1,6 @@
-# Simple invoicing generation
+# WigCRM
 
-This web-app helps in creating invoices simply and easy
+Web-based invoice generation and customer relationship management
 
 ## Architechture
 
@@ -18,6 +18,20 @@ This web-app helps in creating invoices simply and easy
 | Content delivery & protection    | Hides VPS IP, adds DDoS protection, and caches static assets globally.                                               | Cloudflare                       |
 | Hosting                          | Runs the application stack in production.                                                                            | Virtual Private Server           |
 | CI/CD                            | CI/CD pipeline for testing, building, and automated deployment.                                                      | GitHub Actions                   |
+
+### Schema structure
+
+![Database](database.jpg)
+
+### Authentication
+
+#### Local - Firebase Auth Emulator
+
+- A local version of Firebase Authentication that runs on local machine.
+
+- Issues fake ID tokens and lets create/sign-in test users without touching production Firebase.
+
+- The emulator runs as a Docker service.
 
 ## Instructions for local development
 
@@ -37,6 +51,7 @@ and add the following lines:
 127.0.0.1   traefik.localhost
 127.0.0.1   api.localhost
 127.0.0.1   ui.localhost
+127.0.0.1   auth.localhost
 ```
 
 Install ```mkcert``` for local SSL certificates. See [installation docs](https://github.com/FiloSottile/mkcert#installation)
@@ -53,9 +68,28 @@ To create a certificate:
 mkcert traefik.localhost
 mkcert api.localhost
 mkcert ui.localhost
+mkcert auth.localhost
 ```
 
+#### Environment variables
+
+In order to use ENV variables in Deno API locally, you can just set them to .env file in the `api` directory. 
+The env file will be used because it is passed with `--env-file=` flag in the `Dockerfile.local`
+
+#### Database connection
+
+When trying to connect to the database outside of Docker network (e.g. Dbeaver), the PGHOST must be `localhost` instead of the service name `database`
+
 ### Daily development 
+
+#### Shutting occupying programs
+
+```bash
+sudo systemctl stop postgresql
+sudo service apache2 stop
+```
+
+
 #### Running app
 
 ```bash
