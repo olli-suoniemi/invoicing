@@ -1,0 +1,15 @@
+{
+  "imports": {
+    "@db/redis": "jsr:@db/redis@^0.37.1",
+    "firebase-admin": "npm:firebase-admin@13.0.0",
+    "hono": "jsr:@hono/hono@^4.9.8",
+    "hono/cors": "https://jsr.io/@hono/hono/4.9.8/src/middleware/cors/index.ts",
+    "hono/logger": "https://jsr.io/@hono/hono/4.9.8/src/middleware/logger/index.ts",
+    "postgres": "https://deno.land/x/postgresjs/mod.js"
+  },
+  "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "hono/jsx"
+  }
+}
