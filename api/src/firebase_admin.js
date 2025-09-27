@@ -1,7 +1,6 @@
 import admin from "firebase-admin";
 import { config } from "./firebase_config.js";
 
-// Important: call initializeApp only once
 if (!admin.apps.length) {
   // If using emulator, no credentials needed, just provide projectId
   if (config.firebaseEmulatorHost) {
