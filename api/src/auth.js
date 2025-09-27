@@ -9,7 +9,6 @@ function getBearerToken(c) {
 
 // Verify token -> return decoded claims or throw
 async function verifyToken(idToken) {
-  // verifyIdToken caches Google certs internally; safe to call per request
   const decoded = await firebaseAdmin.auth().verifyIdToken(idToken);
   return decoded;
 }
