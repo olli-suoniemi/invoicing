@@ -127,9 +127,9 @@ services:
     depends_on:
       - database
     volumes:
-      - ./flyway/sql:/flyway/sql
+      - ./flyway/migrations:/flyway/migrations
     environment:
-      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_LOCATIONS: filesystem:/flyway/migrations
       FLYWAY_CONNECT_RETRIES: "60"
       FLYWAY_BASELINE_ON_MIGRATE: "true"
       FLYWAY_URL: jdbc:postgresql://database:5432/localdev
@@ -152,7 +152,7 @@ services:
       - "4000:4000"   # Expose to see the UI
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.auth.rule=Host(`auth.localhost`)" # This is the API url
+      - "traefik.http.routers.auth.rule=Host(`auth.localhost`)"
       - "traefik.http.routers.auth.entrypoints=websecure"
       - "traefik.http.routers.auth.tls=true"
       - "traefik.http.services.auth.loadbalancer.server.port=9099"
