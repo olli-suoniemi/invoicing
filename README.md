@@ -101,3 +101,9 @@ docker compose up
 ```bash
 docker compose --profile flyway run --rm flyway
 ```
+
+#### Connect to database
+
+```bash
+psql -h localhost -U devuser -d localdev
+```
