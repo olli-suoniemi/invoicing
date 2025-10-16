@@ -1,7 +1,7 @@
 import { firebaseAdmin } from "./firebase_admin.js";
 import { config } from "./firebase_config.js";
 
-// Pull "Bearer <token>" from the Authorization header
+// Pull the Bearer token from Authorization header
 function getBearerToken(c) {
   const authz = c.req.header("authorization") ?? "";
   return authz.startsWith("Bearer ") ? authz.slice(7) : null;
@@ -15,7 +15,8 @@ async function verifyToken(idToken) {
 
 // Require any authenticated user
 export async function requireAuth(c, next) {
-  // let preflight pass if this middleware ever runs before your global CORS
+  // let preflight pass if this middleware ever runs before global CORS
+  // See: https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request
   if (c.req.method === "OPTIONS") return next();
 
   const token = getBearerToken(c);
