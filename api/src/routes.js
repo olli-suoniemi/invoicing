@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { requireAuth, requireAdmin } from "./auth.js";
-import { sql } from "./util/databaseConnect.js";
-import { redis } from "./util/cacheUtil.js";
+import * as invoicesService from "./services/invoices/service.js";
 
 export const routes = new Hono();
 
@@ -18,35 +17,57 @@ v1.get("/me", (c) => {
   return c.json({ user });
 });
 
-v1.get("/db-ping", async (c) => {
-  const r = await sql`select now()`;
-  return c.json({ now: r[0].now });
+// read one invoice by ID
+// IDs are UUIDs, not sequential integers
+v1.get("/invoices/:id", async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  try {
+    const inv = await invoicesService.getInvoice(user, id);
+    return c.json(inv);
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? "Internal error" }, status);
+  }
 });
 
-v1.get("/cache-ping", async (c) => {
-  await redis.set("ping", "pong", "EX", 10);
-  const v = await redis.get("ping");
-  return c.json({ redis: v });
-});
-
-// Example: regular user can read *their* invoices
+// list my company invoices
 v1.get("/invoices", async (c) => {
   const user = c.get("user");
-  const rows = await sql`select * from invoices where owner_uid = ${user.uid} limit 50`;
-  return c.json({ invoices: rows });
+  try {
+    const rows = await invoicesService.listMyCompanyInvoices(user);
+    return c.json({ invoices: rows });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? "Internal error" }, status);
+  }
+});
+
+// mark as paid (requires editor or admin per policy)
+v1.post("/invoices/:id/paid", async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    const updated = await invoicesService.markPaid(user, id, Boolean(body.paid));
+    return c.json(updated);
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? "Internal error" }, status);
+  }
 });
 
 // --------- Admin-only section under /v1/admin/* ---------
 const admin = new Hono();
 admin.use("*", requireAdmin);
 
-admin.get("/stats", async (c) => {
-  const [{ count }] = await sql`select count(*)::int as count from invoices`;
-  return c.json({ invoicesTotal: count });
-});
-
 // mount /v1/admin/*
 v1.route("/admin", admin);
+
+// example admin-only endpoint
+admin.get("/stats", (c) => {
+  return c.json({ ok: true });
+});
 
 // finally mount /v1/*
 routes.route("/v1", v1);
