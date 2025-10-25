@@ -43,51 +43,27 @@ const NavBar = () => {
       <div className="navbar-center hidden md:flex">
 
         <div className="dropdown dropdown-hover">
-          <div tabIndex={0} role="button" className="btn btn-ghost">Customers ▼</div>
-          <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-            <li onClick={handleClick}>
-              <Link href="/customers">
-                All customers
-              </Link>
-            </li>
-            <li onClick={handleClick}>
-              <Link href="/customers/new">
-                Add new customer
-              </Link>
-            </li>
-          </ul>
-        </div>
-        
-        <div className="dropdown dropdown-hover">
-          <div tabIndex={0} role="button" className="btn btn-ghost">Sales ▼</div>
-          <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-            <li onClick={handleClick}>
-              <Link href="/sales">
-                All sales
-              </Link>
-            </li>
-            <li onClick={handleClick}>
-              <Link href="/sales/new">
-                Add new sale
-              </Link>
-            </li>
-          </ul>
+          <div>
+            <Link className="btn btn-ghost" href="/customers">
+              Customers
+            </Link>
+          </div>
         </div>
 
         <div className="dropdown dropdown-hover">
-          <div tabIndex={0} role="button" className="btn btn-ghost">Inventory ▼</div>
-          <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-            <li onClick={handleClick}>
-              <Link href="/inventory">
-                All products
-              </Link>
-            </li>
-            <li onClick={handleClick}>
-              <Link href="/inventory/new">
-                Add new product
-              </Link>
-            </li>
-          </ul>
+          <div>
+            <Link className="btn btn-ghost" href="/sales">
+              Sales
+            </Link>
+          </div>
+        </div>
+
+        <div className="dropdown dropdown-hover">
+          <div>
+            <Link className="btn btn-ghost" href="/inventory">
+              Inventory
+            </Link>
+          </div>
         </div>
 
       </div>
