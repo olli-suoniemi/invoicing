@@ -6,32 +6,49 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE TYPE invoice_status AS ENUM ('draft', 'sent', 'paid', 'cancelled');
 CREATE TYPE client_type    AS ENUM ('business', 'individual');  -- NEW
 
--- Organizations & users
-CREATE TABLE organizations (
+-- companies
+CREATE TABLE companies (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name          text NOT NULL,
-  vat_id        text,                 
   business_id   text,
   email         text,
-  address       text,
-  postal_code   text,
-  city          text,
-  country       text,
-  currency      char(3) NOT NULL DEFAULT 'EUR',
-  created_at    timestamptz NOT NULL DEFAULT now()
+  phone         text,
+  website       text,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  updated_at    timestamptz NOT NULL DEFAULT now()
 );
 
+-- Address
+CREATE TABLE company_addresses (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id  uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  type        text CHECK (type IN ('invoicing','delivery')) NOT NULL,
+  address     text NOT NULL,
+  postal_code text NOT NULL,
+  city        text NOT NULL,
+  state       text NOT NULL,
+  country     text NOT NULL,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  updated_at    timestamptz NOT NULL DEFAULT now()
+);
+
+-- Users
 CREATE TABLE users (
   id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  firebase_uid text UNIQUE NOT NULL,
+  role       text CHECK (role IN ('admin','user')) NOT NULL DEFAULT 'user',
+  company_id uuid REFERENCES companies(id) ON DELETE SET NULL,
   email      citext UNIQUE NOT NULL,
   first_name text,
   last_name  text,
-  created_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  last_login timestamptz
 );
 
 CREATE TABLE user_org_roles (
   user_id     uuid REFERENCES users(id)           ON DELETE CASCADE,
-  org_id      uuid REFERENCES organizations(id)   ON DELETE CASCADE,
+  org_id      uuid REFERENCES companies(id)   ON DELETE CASCADE,
   role        text CHECK (role IN ('owner','member')) NOT NULL,
   PRIMARY KEY (user_id, org_id)
 );
@@ -39,7 +56,7 @@ CREATE TABLE user_org_roles (
 -- Clients (supports both businesses and private individuals)
 CREATE TABLE clients (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_id        uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id        uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   type          client_type NOT NULL DEFAULT 'business',   -- NEW
   name          text NOT NULL,                             -- person full name or company name
   vat_id        text,                                      -- business-only (usually)
@@ -67,7 +84,7 @@ CREATE INDEX idx_clients_name_trgm  ON clients USING gin (name gin_trgm_ops);
 
 -- Invoice numbering counters (per org + fiscal year)
 CREATE TABLE invoice_number_counters (
-  org_id       uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id       uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   fiscal_year  int  NOT NULL,
   next_number  int  NOT NULL CHECK (next_number > 0),
   PRIMARY KEY (org_id, fiscal_year)
@@ -76,7 +93,7 @@ CREATE TABLE invoice_number_counters (
 -- Invoices
 CREATE TABLE invoices (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_id          uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id          uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   client_id       uuid NOT NULL REFERENCES clients(id),
   status          invoice_status NOT NULL DEFAULT 'draft',
   issue_date      date NOT NULL DEFAULT current_date,
@@ -127,7 +144,7 @@ CREATE TABLE payments (
 CREATE TABLE email_logs (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_id   uuid REFERENCES invoices(id) ON DELETE SET NULL,
-  org_id       uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id       uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   to_address   text NOT NULL,
   subject      text NOT NULL,
   provider     text NOT NULL,           -- e.g. "Forward Email"
@@ -148,7 +165,7 @@ CREATE TABLE pdf_assets (
 -- Audit log
 CREATE TABLE audit_logs (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_id      uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id      uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   actor_user  uuid REFERENCES users(id),
   entity_type text NOT NULL,            -- e.g. 'invoice','client'
   entity_id   uuid NOT NULL,
@@ -160,7 +177,7 @@ CREATE INDEX idx_audit_org_entity ON audit_logs(org_id, entity_type, entity_id);
 
 -- Settings per org (defaults, VAT %, numbering prefix, etc.)
 CREATE TABLE org_settings (
-  org_id          uuid PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
+  org_id          uuid PRIMARY KEY REFERENCES companies(id) ON DELETE CASCADE,
   invoice_prefix  text DEFAULT 'INV',
   default_vat_pct numeric(5,2) DEFAULT 25.5,
   payment_terms   text,                 -- e.g. "14 days net"
