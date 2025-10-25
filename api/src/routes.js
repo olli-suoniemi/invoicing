@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { requireAuth, requireAdmin } from "./auth.js";
 import * as invoicesService from "./services/invoices/service.js";
+import * as customersService from "./services/customers/service.js";
+import * as settingsService from "./services/settings/service.js";
 
 export const routes = new Hono();
 
@@ -17,43 +19,108 @@ v1.get("/me", (c) => {
   return c.json({ user });
 });
 
-// read one invoice by ID
-// IDs are UUIDs, not sequential integers
-v1.get("/invoices/:id", async (c) => {
-  const user = c.get("user");
-  const id = c.req.param("id");
-  try {
-    const inv = await invoicesService.getInvoice(user, id);
-    return c.json(inv);
-  } catch (e) {
-    const status = e.status ?? 500;
-    return c.json({ error: e.message ?? "Internal error" }, status);
-  }
-});
-
-// list my company invoices
-v1.get("/invoices", async (c) => {
-  const user = c.get("user");
-  try {
-    const rows = await invoicesService.listMyCompanyInvoices(user);
-    return c.json({ invoices: rows });
-  } catch (e) {
-    const status = e.status ?? 500;
-    return c.json({ error: e.message ?? "Internal error" }, status);
-  }
-});
-
-// mark as paid (requires editor or admin per policy)
-v1.post("/invoices/:id/paid", async (c) => {
-  const user = c.get("user");
-  const id = c.req.param("id");
+// create a new user during login process
+v1.post("/users/login", async (c) => {
+  const authUser = c.get("user");         // comes from requireAuth (verified ID token)
   const body = await c.req.json().catch(() => ({}));
+
   try {
-    const updated = await invoicesService.markPaid(user, id, Boolean(body.paid));
+    const user = await settingsService.createUserDuringLogin(authUser, body);
+    return c.json(user);
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? "Internal error" }, status);
+  }
+});
+
+// get users
+v1.get("/users", async (c) => {
+  const user = c.get("user");
+  try {
+    const users = await settingsService.listUsers(user);
+    return c.json({ users });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? "Internal error" }, status);
+  }
+});
+
+// get user by ID
+v1.get('/users/:id', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  try {
+    const user = await settingsService.getUser(authUser, id);
+    return c.json(user);
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// update user by ID
+v1.put('/users/:id', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  const patch = await c.req.json().catch(() => ({}));
+  try {
+    const updated = await settingsService.updateUser(authUser, id, patch);
     return c.json(updated);
   } catch (e) {
     const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// add company
+v1.post("/companies", async (c) => {
+  const user = c.get("user");
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    const company = await settingsService.createCompany(user, body);
+    return c.json({ company });
+  } catch (e) {
+    const status = e.status ?? 500;
     return c.json({ error: e.message ?? "Internal error" }, status);
+  }
+});
+
+// get companies
+v1.get("/companies", async (c) => {
+  const user = c.get("user");
+  try {
+    const companies = await settingsService.listCompanies(user);
+    return c.json({ companies });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? "Internal error" }, status);
+  }
+});
+
+// get company by ID
+v1.get('/companies/:id', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  try {
+    const company = await settingsService.getCompanyById(authUser, id);
+    return c.json(company);
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// update company by ID
+v1.put('/companies/:id', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  const patch = await c.req.json().catch(() => ({}));
+  try {
+    const updated = await settingsService.updateCompany(authUser, id, patch);
+    return c.json(updated);
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
   }
 });
 
