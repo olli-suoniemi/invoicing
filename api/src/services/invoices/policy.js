@@ -11,7 +11,10 @@ export function canReadInvoice(user, invoice) {
   if (Array.isArray(user?.roles) && user.roles.includes("editor") && user.companyId === invoice.company_id) return true;
 
   // Invoice owners can read their own invoices
-  return user?.uid && user.uid === invoice.owner_uid;
+  if (user?.uid && user.uid === invoice.owner_uid) return true;
+
+  // Otherwise, no access
+  return false;
 }
 
 export function canEditInvoice(user, invoice) {
@@ -19,5 +22,8 @@ export function canEditInvoice(user, invoice) {
   if (user?.admin) return true;
 
   // Editors who belong to the company can edit their company's invoices. Other users cannot.
-  return Boolean(Array.isArray(user?.roles) && user.roles.includes("editor") && user.companyId === invoice.company_id);
+  if (Array.isArray(user?.roles) && user.roles.includes("editor") && user.companyId === invoice.company_id) return true;
+
+  // Otherwise, no access
+  return false;
 }

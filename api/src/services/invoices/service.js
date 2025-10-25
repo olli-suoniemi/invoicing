@@ -1,25 +1,7 @@
 // services/invoices/service.js
 import * as repo from "./repository.js";
 import { canReadInvoice, canEditInvoice } from "./policy.js";
-
-export class HttpError extends Error {
-  constructor(message, status = 500) {
-    super(message);
-    this.status = status;
-  }
-}
-
-export class ForbiddenError extends HttpError {
-  constructor(message = "Forbidden") {
-    super(message, 403);
-  }
-}
-
-export class NotFoundError extends HttpError {
-  constructor(message = "Not found") {
-    super(message, 404);
-  }
-}
+import { ForbiddenError } from "../../util/errors.js";
 
 export async function getInvoice(user, id) {
   const inv = await repo.getInvoiceById(id);
