@@ -99,7 +99,14 @@ docker compose up
 #### Database migrations
 
 ```bash
-docker compose --profile flyway run --rm flyway
+docker compose --profile flyway run --rm flyway migrate
+```
+
+#### Clean database
+
+```bash
+docker compose --profile flyway run --rm \
+  -e FLYWAY_CLEAN_DISABLED=false flyway clean
 ```
 
 #### Connect to database
