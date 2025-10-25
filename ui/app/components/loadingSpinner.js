@@ -1,11 +1,8 @@
-import React from "react";
-
-const LoadingSpinner = () => {
+// components/LoadingSpinner.js
+export default function LoadingSpinner() {
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="w-10 h-10 border-4 border-t-4 border-primary border-t-primary-content rounded-full animate-spin"></div>
+    <div className="fixed inset-0 grid place-items-center">
+      <div className="w-10 h-10 border-4 border-t-4 border-t-neutral border-neutral-content rounded-full animate-spin" />
     </div>
   );
-};
-
-export default LoadingSpinner;
+}
