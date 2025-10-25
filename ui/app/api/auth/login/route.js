@@ -32,7 +32,7 @@ export async function POST(req) {
     });
     return res;
   } catch (err) {
-    console.error("[api/auth] session error:", err);
+    console.error("[api/auth/login] session error:", err);
     return NextResponse.json({ error: "Auth failed" }, { status: 500 });
   }
 }
