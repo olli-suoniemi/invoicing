@@ -8,7 +8,9 @@ import {
   canReadAllCompanies,
   canCreateCompany,
   canReadCompany,
-  canEditCompany
+  canEditCompany,
+  canAddUserToCompany,
+  canRemoveUserFromCompany
 } from "./policy.js";
 import { ForbiddenError } from "../../util/errors.js";
 
@@ -189,9 +191,38 @@ export async function updateCompany(user, id, patch) {
     });
   }
 
+  const users = await repo.getUsersByCompanyId(id);
+
   return {
     ...updated,
     invoicingAddress: updatedInvoicingAddress,
-    deliveryAddress: updatedDeliveryAddress
+    deliveryAddress: updatedDeliveryAddress,
+    users
   };
+}
+
+export async function addUserToCompany(requestor, companyId, userBody) {
+  const company = await repo.getCompanyById(companyId);
+  if (!company) throw new NotFoundError('Company not found');
+  if (!canAddUserToCompany(requestor, company)) throw new ForbiddenError('Not allowed to add users to this company');
+
+  const user = await repo.getUserById(userBody.userId);
+  if (!user) throw new NotFoundError('User not found');
+
+  // Add the user to the company
+  const updatedUser = await repo.addUserToCompany(user.id, companyId);
+  return updatedUser;
+}
+
+export async function removeUserFromCompany(requestor, companyId, userId) {
+  const company = await repo.getCompanyById(companyId);
+  if (!company) throw new NotFoundError('Company not found');
+  if (!canRemoveUserFromCompany(requestor, company)) throw new ForbiddenError('Not allowed to remove users from this company');
+
+  const user = await repo.getUserById(userId);
+  if (!user) throw new NotFoundError('User not found');
+
+  // Remove the user from the company
+  const updatedUser = await repo.removeUserFromCompany(user.id, companyId);
+  return updatedUser;
 }

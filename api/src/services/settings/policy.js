@@ -75,3 +75,25 @@ export function canEditCompany(user, targetCompany) {
   // Otherwise, no access
   return false;
 }
+
+export function canAddUserToCompany(user, targetCompany) {
+  // Admins can add users to any company
+  if (user?.admin) return true;
+
+  // Users can add users to their own company
+  if (user?.company_id && user.company_id === targetCompany.id) return true;
+
+  // Otherwise, no access
+  return false;
+}
+
+export function canRemoveUserFromCompany(user, targetCompany) {
+  // Admins can remove users from any company
+  if (user?.admin) return true;
+
+  // Users can remove users from their own company
+  if (user?.company_id && user.company_id === targetCompany.id) return true;
+
+  // Otherwise, no access
+  return false;
+}

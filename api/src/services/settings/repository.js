@@ -146,3 +146,43 @@ export async function getUsersByCompanyId(companyId) {
   `;
   return rows ?? [];
 }
+
+export async function addUserToCompany(userId, companyId) {
+  const result = await sql`
+    update users
+    set
+      company_id = ${companyId},
+      updated_at = ${new Date()}
+    where id = ${userId}
+    returning *
+  `;
+
+  // Update company updated at timestamp
+  await sql`
+    update companies
+    set
+      updated_at = ${new Date()}
+    where id = ${companyId}
+  `;
+  return result[0];
+}
+
+export async function removeUserFromCompany(userId, companyId) {
+  const result = await sql`
+    update users
+    set
+      company_id = null,
+      updated_at = ${new Date()}
+    where id = ${userId}
+    returning *
+  `;
+
+  // Update company updated at timestamp
+  await sql`
+    update companies
+    set
+      updated_at = ${new Date()}
+    where id = ${companyId}
+  `;
+  return result[0];
+}
