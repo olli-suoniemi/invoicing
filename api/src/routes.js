@@ -124,6 +124,35 @@ v1.put('/companies/:id', async (c) => {
   }
 });
 
+// add user to company
+v1.post('/companies/:id/users', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    const user = await settingsService.addUserToCompany(authUser, id, body);
+    return c.json({ user });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// remove user from company
+v1.delete('/companies/:id/users', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  const body = await c.req.json().catch(() => ({}));
+  const userId = body.userId;
+  try {
+    const user = await settingsService.removeUserFromCompany(authUser, id, userId);
+    return c.json({ user });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
 // --------- Admin-only section under /v1/admin/* ---------
 const admin = new Hono();
 admin.use("*", requireAdmin);
