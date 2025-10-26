@@ -154,7 +154,6 @@ export default function UserPage() {
             <div><b>Email:</b> {initial.email}</div>
             <div><b>User ID:</b> {initial.id}</div>
             <div><b>Firebase ID:</b> {initial.firebase_uid}</div>
-            <div><b>Company ID:</b> {initial.company_id}</div>
             <div><b>Created at:</b>{' '}
               {new Date(initial.created_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </div>
