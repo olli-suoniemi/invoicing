@@ -21,8 +21,15 @@ export default function CompanyPage() {
   const [form, setForm] = useState(null);       // editable copy
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Users from database for UserSelect
   const [users, setUsers] = useState([]);
+
+  // State for adding user
   const [isAddingUser, setIsAddingUser] = useState(false);
+
+  // The selected user from UserSelect
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -31,7 +38,6 @@ export default function CompanyPage() {
         if (!r.ok) throw new Error('Failed to load company');
         const data = await r.json();
         setInitial(data.company);
-        console.log(data.company);
         setForm({
           companyName: data.company.name ?? '',
           businessId: data.company.business_id ?? '',
@@ -71,14 +77,6 @@ export default function CompanyPage() {
     })();
   }, []);
 
-  // Modify users to fit UserSelect format
-  const modifiedUsers = useMemo(() => {
-    return users.map(user => ({
-      value: user.id,
-      label: `${user.first_name} ${user.last_name} (${user.email})`
-    }));
-  }, [users]);
-
   const hasChanges = useMemo(() => {
     if (!initial || !form) return false;
     return (
@@ -105,21 +103,21 @@ export default function CompanyPage() {
   const onReset = () => {
     if (!initial) return;
     setForm({
-      companyName: initial.companyName ?? '',
-      businessId: initial.businessId ?? '',
+      companyName: initial.name ?? '',
+      businessId: initial.business_id ?? '',
       email: initial.email ?? '',
       phone: initial.phone ?? '',
       website: initial.website ?? '',
-      invoiceStreet: initial.invoiceStreet ?? '',
-      invoiceCity: initial.invoiceCity ?? '',
-      invoicePostalCode: initial.invoicePostalCode ?? '',
-      invoiceState: initial.invoiceState ?? '',
-      invoiceCountry: initial.invoiceCountry ?? '',
-      deliveryStreet: initial.deliveryStreet ?? '',
-      deliveryCity: initial.deliveryCity ?? '',
-      deliveryPostalCode: initial.deliveryPostalCode ?? '',
-      deliveryState: initial.deliveryState ?? '',
-      deliveryCountry: initial.deliveryCountry ?? '',
+      invoiceStreet: initial.invoicingAddress?.address ?? '',
+      invoiceCity: initial.invoicingAddress?.city ?? '',
+      invoicePostalCode: initial.invoicingAddress?.postal_code ?? '',
+      invoiceState: initial.invoicingAddress?.state ?? '',
+      invoiceCountry: initial.invoicingAddress?.country ?? '',
+      deliveryStreet: initial.deliveryAddress?.address ?? '',
+      deliveryCity: initial.deliveryAddress?.city ?? '',
+      deliveryPostalCode: initial.deliveryAddress?.postal_code ?? '',
+      deliveryState: initial.deliveryAddress?.state ?? '',
+      deliveryCountry: initial.deliveryAddress?.country ?? '',
     });
   };
 
@@ -165,10 +163,90 @@ export default function CompanyPage() {
     }
   };
 
+  const handleAddUser = async () => {
+    if (!selectedUser) {
+      toast.error('Please select a user to add.');
+      return;
+    }
+
+    try {
+      const r = await fetch(`/api/settings/companies/${id}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: selectedUser.value }),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j.error || 'Failed to add user');
+      }
+
+      const data = await r.json();
+
+      setInitial((prev) => ({
+        ...prev,
+        users: [...prev.users, data.user],
+      }));
+
+      setIsAddingUser(false);
+      setSelectedUser(null);
+      toast.success('User added to company');
+    } catch (e) {
+      toast.error(e.message || 'Failed to add user');
+    }
+  };
+
+  const handleUserChangeInSelect = (selected) => {
+    setSelectedUser(selected);
+  };
+
+  // 1) Compute ids of users already in the company
+  const existingUserIds = useMemo(() => {
+    return new Set((initial?.users ?? []).map(u => u.id));
+  }, [initial?.users]);
+
+  // 2) Options for the select = all users NOT already in company
+  const selectableUserOptions = useMemo(() => {
+    return users
+      .filter(u => !existingUserIds.has(u.id))
+      .map(u => ({
+        value: u.id,
+        label: `${u.first_name ?? ''} ${u.last_name ?? ''} (${u.email ?? ''})`.trim(),
+      }));
+  }, [users, existingUserIds]);
+
+  // 3) If the currently selected user is no longer selectable, clear it
+  useEffect(() => {
+    if (selectedUser && existingUserIds.has(selectedUser.value)) {
+      setSelectedUser(null);
+    }
+  }, [existingUserIds, selectedUser]);
+
+  const handleRemoveUser = async (userId) => {
+    try {
+      const r = await fetch(`/api/settings/companies/${id}/users`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j.error || 'Failed to remove user');
+      }
+
+      // Remove the user from the initial state to update the UI
+      setInitial((prev) => ({
+        ...prev,
+        users: prev.users.filter((u) => u.id !== userId),
+      }));
+
+      toast.success('User removed from company');
+    } catch (e) {
+      toast.error(e.message || 'Failed to remove user');
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
   if (!initial) return <div className="p-6">Company not found</div>;
-
-  console.log(users);
 
   return (
     <div className="min-h-screen py-5">
@@ -429,36 +507,60 @@ export default function CompanyPage() {
             <hr className="mt-2 mb-4 border-gray-300" />
           </div>
 
-          <div className="mt-4">
-            {initial.users && initial.users.length > 0 ? (
-              <ul className="list-disc list-inside">
+          <div className="mt-4 flex flex-col">
+            {Array.isArray(initial.users) && initial.users.length > 0 ? (
+              <ul className="list-disc list-inside mb-4">
                 {initial.users.map((user) => (
                   <li key={user.id}>
                     {user.first_name} {user.last_name} ({user.email})
+                    <button
+                      className="btn btn-xs btn-error ml-4"
+                      onClick={() => handleRemoveUser(user.id)}
+                    >
+                      Remove
+                    </button>
                   </li>
                 ))}
               </ul>
-            ) : (
+            ) : !isAddingUser ? (
               <p>No users found for this company.</p>
-            )}
-            <button className="btn btn-sm btn-primary mt-2" onClick={() => setIsAddingUser(true)}>Add User</button>
+            ) : null}
 
             {isAddingUser && (
-              <div className="mt-4">
+              <>
                 <UserSelect
-                  userOptions={modifiedUsers}
-                  handleUserChangeInSelect={(selected) => {
-                    // Handle user selection
-                    console.log('Selected user:', selected);
-                    setIsAddingUser(false);
-                  }}
-                  selectedOption={null}
-                  handleInputChangeSelect={(inputValue) => {
-                    // Handle input change if needed
-                    console.log('Input changed:', inputValue);
-                  }}
+                  userOptions={selectableUserOptions}
+                  handleUserChangeInSelect={handleUserChangeInSelect}
+                  selectedOption={selectedUser}
                 />
-              </div>
+
+                <div className="flex mt-4 justify-center gap-4">
+                  <button
+                    className="btn btn-sm btn-secondary mt-2 self-center"
+                    onClick={() => {
+                      setSelectedUser(null);   // clear the select
+                      setIsAddingUser(false);  // close the add UI
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-sm btn-primary mt-2 self-center"
+                    onClick={handleAddUser}
+                  >
+                    Add user
+                  </button>
+                </div>
+              </>
+            )}
+
+            {!isAddingUser && (
+              <button
+                className="btn btn-sm btn-primary w-40 self-center mt-5"
+                onClick={() => setIsAddingUser(true)}
+              >
+                Add users
+              </button>
             )}
           </div>
 
