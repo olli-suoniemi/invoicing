@@ -44,8 +44,8 @@ VALUES
     ); 
 
 
--- CLIENTS
-INSERT INTO clients 
+-- customers
+INSERT INTO customers 
     (
         type, 
         name, 
@@ -67,10 +67,10 @@ VALUES
     );
 
 
--- CLIENT ADDRESSES
-INSERT INTO client_addresses
+-- CUSTOMER ADDRESSES
+INSERT INTO customer_addresses
     (
-        client_id,
+        customer_id,
         type,
         address,
         postal_code,
@@ -80,7 +80,7 @@ INSERT INTO client_addresses
         created_at
     ) VALUES 
     (
-        (SELECT id FROM clients WHERE name='Demo Client Oy'),
+        (SELECT id FROM customers WHERE name='Demo Client Oy'),
         'invoicing',
         'Client Street 5',
         '00200',
@@ -90,9 +90,9 @@ INSERT INTO client_addresses
         now()
     );
 
-INSERT INTO client_addresses
+INSERT INTO customer_addresses
     (
-        client_id,
+        customer_id,
         type,
         address,
         postal_code,
@@ -102,7 +102,7 @@ INSERT INTO client_addresses
         created_at
     ) VALUES 
     (
-        (SELECT id FROM clients WHERE name='Demo Client Oy'),
+        (SELECT id FROM customers WHERE name='Demo Client Oy'),
         'delivery',
         'Delivery Avenue 10',
         '01000',

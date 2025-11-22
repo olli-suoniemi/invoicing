@@ -2,8 +2,8 @@
 CREATE EXTENSION IF NOT EXISTS citext;
 
 -- Types
-CREATE TYPE invoice_status AS ENUM ('draft', 'sent', 'paid', 'cancelled');
-CREATE TYPE client_type    AS ENUM ('business', 'individual');  -- NEW
+CREATE TYPE invoice_status    AS ENUM ('draft', 'sent', 'paid', 'cancelled');
+CREATE TYPE customer_type     AS ENUM ('business', 'individual');  -- NEW
 
 -- companies
 CREATE TABLE companies (
@@ -47,17 +47,17 @@ CREATE TABLE users (
 -- User-Organization roles
 CREATE TABLE user_org_roles (
   user_id     uuid REFERENCES users(id)           ON DELETE CASCADE,
-  org_id      uuid REFERENCES companies(id)   ON DELETE CASCADE,
+  org_id      uuid REFERENCES companies(id)       ON DELETE CASCADE,
   role        text CHECK (role IN ('owner','member')) NOT NULL,
   is_main     boolean NOT NULL DEFAULT true,
   created_at  timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, org_id)
 );
 
--- Clients (supports both businesses and private individuals)
-CREATE TABLE clients (
+-- customers (supports both businesses and private individuals)
+CREATE TABLE customers (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  type          client_type NOT NULL DEFAULT 'business',   -- NEW
+  type          customer_type NOT NULL DEFAULT 'business', -- NEW
   name          text NOT NULL,                             -- person full name or company name
   vat_id        text,                                      -- business-only (usually)
   business_id   text,                                      -- business-only (e.g., Y-tunnus)
@@ -67,10 +67,10 @@ CREATE TABLE clients (
   updated_at    timestamptz NOT NULL DEFAULT now()
 );
 
--- Client addresses
-CREATE TABLE client_addresses (
+-- Customer addresses
+CREATE TABLE customer_addresses (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  client_id     uuid NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  customer_id     uuid NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
   type          text CHECK (type IN ('invoicing','delivery')) NOT NULL,
   address       text NOT NULL,
   postal_code   text NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE products (
 -- Orders
 CREATE TABLE orders (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  client_id     uuid NOT NULL REFERENCES clients(id) ON DELETE SET NULL,
+  customer_id     uuid NOT NULL REFERENCES customers(id) ON DELETE SET NULL,
   company_id    uuid REFERENCES companies(id) ON DELETE SET NULL,
   order_date    timestamptz NOT NULL DEFAULT now(),
   total_amount  numeric(12,2) NOT NULL DEFAULT 0.00,
