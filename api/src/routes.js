@@ -9,6 +9,7 @@ import * as companiesService from "./services/companies/service.js";
 import * as customersService from "./services/customers/service.js";
 import * as settingsService from "./services/settings/service.js";
 import * as inventoryService from "./services/inventory/service.js";
+import * as ordersService from "./services/orders/service.js";
 
 export const routes = new Hono();
 
@@ -250,6 +251,36 @@ v1.post('/inventory', async (c) => {
     const item = await inventoryService.addInventoryItem(authUser, company, body);
 
     return c.json({ inventory: item });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// get orders for user's company
+v1.get('/orders', async (c) => {
+  const authUser = c.get('user');
+  try {
+    // get main company of the auth user
+    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+
+    const orders = await ordersService.listCompanyOrdersById(authUser, company.org_id);
+
+    return c.json({ orders });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// get order by ID
+v1.get('/orders/:id', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  try {
+    const order = await ordersService.getOrderById(authUser, id);
+
+    return c.json({ order });
   } catch (e) {
     const status = e.status ?? 500;
     return c.json({ error: e.message ?? 'Internal error' }, status);
