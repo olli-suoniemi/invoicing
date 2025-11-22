@@ -8,12 +8,12 @@ Web-based invoice generation and customer relationship management
 |:--------------------------------:|:--------------------------------------------------------------------------------------------------------------------:|:--------------------------------:|
 | Frontend                         | The frontend communicates with the backend via a REST API.                                                           | NextJS                           |
 | Backend                          | Implements business logic for authentication, client management, invoice creation, PDF generation and email sending. | DenoJS                           |
-| Database                         | A relational database for persistent storage of users, clients, invoices, and logs.                                  | PostgreSQL                       |
+| Database                         | A relational database for persistent storage of users, customers, invoices, and logs.                                  | PostgreSQL                       |
 | Migrations                       | Database migrations                                                                                                  | Flyway                           |
 | Containerization & orchestration | Packages services, ensures portability and scaling.                                                                  | Docker & Docker Swarm            |
 | In-memory cache                  | Speeds up queries, stores sessions and temporary data.                                                               | Redis                            |
 | Authentication                   | Secure login and role-based access control.                                                                          | Firebase Authentication          |
-| Email delivery                   | Sends invoices and notifications to clients.                                                                         | Forward Email (SMTP/API service) |
+| Email delivery                   | Sends invoices and notifications to customers.                                                                         | Forward Email (SMTP/API service) |
 | Reverse proxy & routing          | Handles HTTPS termination, routing, and load balancing between services.                                             | Traefik                          |
 | Content delivery & protection    | Hides VPS IP, adds DDoS protection, and caches static assets globally.                                               | Cloudflare                       |
 | Hosting                          | Runs the application stack in production.                                                                            | Virtual Private Server           |
