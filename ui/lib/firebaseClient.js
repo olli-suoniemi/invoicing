@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 
 const app = initializeApp({
-  apiKey: "fake",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "invoicing.firebaseapp.com",
   projectId: "invoicing",
 });
