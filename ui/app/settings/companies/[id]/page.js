@@ -117,7 +117,7 @@ export default function CompanyPage() {
       deliveryCity: initial.deliveryAddress?.city ?? '',
       deliveryPostalCode: initial.deliveryAddress?.postal_code ?? '',
       deliveryState: initial.deliveryAddress?.state ?? '',
-      deliveryCountry: initial.deliveryAddress?.country ?? '',
+      deliveryCountry: initial.deliveryAddress?.country ?? ''
     });
   };
 
@@ -201,7 +201,8 @@ export default function CompanyPage() {
 
   // 1) Compute ids of users already in the company
   const existingUserIds = useMemo(() => {
-    return new Set((initial?.users ?? []).map(u => u.id));
+    const users = (initial?.users ?? []).filter(Boolean); // remove undefined/null
+    return new Set(users.map(u => u.id));
   }, [initial?.users]);
 
   // 2) Options for the select = all users NOT already in company
