@@ -52,8 +52,8 @@ const NavBar = () => {
 
         <div className="dropdown dropdown-hover">
           <div>
-            <Link className="btn btn-ghost" href="/sales">
-              Sales
+            <Link className="btn btn-ghost" href="/orders">
+              Orders
             </Link>
           </div>
         </div>

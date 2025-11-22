@@ -24,11 +24,11 @@ export default function DashboardPage() {
           </Link>
 
           <Link
-            href="/sales"
+            href="/orders"
             className="p-10 rounded-md shadow-md cursor-pointer focus:outline-none bg-base-300 hover:shadow-xl transition-shadow duration-300"
           >
             <div className="flex flex-col items-center">
-              <h2 className="text-2xl font-semibold">Sales</h2>
+              <h2 className="text-2xl font-semibold">Orders</h2>
             </div>
           </Link>
 
