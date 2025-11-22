@@ -10,7 +10,7 @@ import { FaLock } from "react-icons/fa";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("test@gmail.com");
-  const [password, setPassword] = useState("testpassword");
+  const [password, setPassword] = useState("test@gmail.com");
   const [err, setErr] = useState("");
   const router = useRouter();
   const sp = useSearchParams();
