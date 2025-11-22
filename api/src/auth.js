@@ -1,6 +1,7 @@
 // auth.js (backend)
 import { firebaseAdmin } from "./firebase_admin.js";
 import { config } from "./firebase_config.js";
+import { sql } from "./util/databaseConnect.js";
 
 function getBearerToken(c) {
   const authz = c.req.header("authorization") ?? "";
@@ -8,17 +9,14 @@ function getBearerToken(c) {
 }
 
 async function verifyEitherToken(raw) {
-  // 1) Try ID token
   try {
     return await firebaseAdmin.auth().verifyIdToken(raw);
   } catch (_) {}
-  // 2) Try session cookie
   return await firebaseAdmin.auth().verifySessionCookie(raw, true);
 }
 
-export async function requireAuth(c, next) {
-  // let preflight pass if this middleware ever runs before global CORS
-  // See: https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request
+// 1) Just Firebase auth (no DB)
+export async function requireFirebaseAuth(c, next) {
   if (c.req.method === "OPTIONS") return next();
 
   const raw = getBearerToken(c);
@@ -27,16 +25,18 @@ export async function requireAuth(c, next) {
   try {
     const decoded = await verifyEitherToken(raw);
 
-    // admin flag (same as your code)
     const adminIds = (config.adminIds ?? "")
-      .split(",").map(s => s.trim()).filter(Boolean);
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
     const isAdminClaim =
       decoded.admin === true ||
       (Array.isArray(decoded.roles) && decoded.roles.includes("admin")) ||
       decoded.role === "admin";
     decoded.admin = isAdminClaim || adminIds.includes(decoded.uid);
 
-    c.set("user", decoded);
+    // store basic auth user (Firebase only)
+    c.set("authUser", decoded);
     await next();
   } catch (e) {
     console.error("[auth] token verify error:", e?.code, e?.message);
@@ -44,10 +44,35 @@ export async function requireAuth(c, next) {
   }
 }
 
+// 2) Attach local DB user (and internalId)
+export async function requireLocalUser(c, next) {
+  const authUser = c.get("authUser");
+  if (!authUser) return c.json({ error: "Not authenticated" }, 401);
 
-// Require an authenticated admin
+  const [dbUser] = await sql`
+    SELECT id, email
+    FROM users
+    WHERE firebase_uid = ${authUser.uid}
+    LIMIT 1
+  `;
+
+  if (!dbUser) {
+    return c.json({ error: "User not found in local DB" }, 404);
+  }
+
+  const userContext = {
+    ...authUser,
+    internalId: dbUser.id,
+    dbUser,
+  };
+
+  c.set("user", userContext);
+  await next();
+}
+
+// Admin still checks the enriched user
 export async function requireAdmin(c, next) {
-  const user = c.get("user"); // requireAuth should've set this
+  const user = c.get("user");
   if (!user) return c.json({ error: "Not authenticated" }, 401);
   if (!user.admin) return c.json({ error: "Forbidden" }, 403);
   await next();
