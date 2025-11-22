@@ -71,6 +71,43 @@ mkcert ui.localhost
 mkcert auth.localhost
 ```
 
+#### Install toolings
+
+```bash
+cd ~
+curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh -o install_nvm.sh
+bash install_nvm.sh
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.bashrc
+echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
+echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' >> ~/.bashrc
+
+source ~/.bashrc
+
+nvm --version
+
+nvm install --lts
+nvm use --lts
+
+nvm alias default 'lts/*'
+
+node -v
+npm -v
+
+corepack enable
+
+corepack prepare yarn@1.22.22 --activate
+
+yarn -v
+
+cd ui
+yarn install       
+```
+
 #### Environment variables
 
 In order to use ENV variables in Deno API locally, you can just set them to .env file in the `api` directory. 
@@ -95,6 +132,10 @@ sudo service apache2 stop
 ```bash
 docker compose up
 ```
+
+Create test user in `http://127.0.0.1:4000/auth`
+
+Login in `ui.localhost`
 
 #### Database migrations
 
