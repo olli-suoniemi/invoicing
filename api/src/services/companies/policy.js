@@ -1,22 +1,16 @@
 // services/companies/policy.js
 
-export function canReadCompany(user, company) {
+export function canReadCompany(user) {
   // Admins can read anything
   if (user?.admin) return true;
-
-  // Company members can read their company
-  if (user?.companyId && user.companyId === company.company_id) return true;
 
   // Otherwise, no access
   return false;
 }
 
-export function canEditCompany(user, company) {
+export function canEditCompany(user) {
   // Admins can edit anything
   if (user?.admin) return true;
-
-  // Company members can edit their company
-  if (user?.companyId && user.companyId === company.company_id) return true;
 
   // Otherwise, no access
   return false;
