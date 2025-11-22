@@ -1,11 +1,8 @@
 // services/inventory/policy.js
 
-export function canCreateItem(user, company) {
+export function canCreateItem(user) {
   // Admins can create items
   if (user?.admin) return true;
-
-  // Company members can create items for their company
-  if (company.org_id === user.company_id) return true;
 
   // Otherwise, no access
   return false;

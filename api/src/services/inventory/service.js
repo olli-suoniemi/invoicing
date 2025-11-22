@@ -5,7 +5,7 @@ import { ForbiddenError } from "../../util/errors.js";
 
 export async function addInventoryItem(user, company, itemData) {
   // check if user can create inventory items
-  if (!canCreateItem(user, company)) {
+  if (!canCreateItem(user)) {
     throw new ForbiddenError('User does not have permission to create inventory items');
   }
 
@@ -19,7 +19,6 @@ export async function addInventoryItem(user, company, itemData) {
     company_id: company.org_id,
   };
 
-  console.log('Creating inventory item:', newItem);
   const item = await repo.createInventoryItem(newItem);
   return item;
 };
