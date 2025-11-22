@@ -1,154 +1,130 @@
+// app/customers/[id]/page.jsx
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { ToastContainer, toast } from 'react-toastify';
+
 import { MdEmail } from "react-icons/md";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { FaHouse, FaPhone, FaUser, FaCity, FaMapLocationDot, FaMap } from "react-icons/fa6";
 import { TbHexagonNumber7Filled } from "react-icons/tb";
 import { BsSignpostFill } from "react-icons/bs";
 
-export default function CustomerNewPage() {
-  const [customerType, setCustomerType] = useState('person');
-  const [sameAsInvoice, setSameAsInvoice] = useState(true);
+export default function CustomerDetailsPage() {
+  const { id } = useParams();
+  const router = useRouter();
 
-  // Controlled state for both variants
-  const [person, setPerson] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    invoiceStreet: '',
-    invoiceCity: '',
-    invoicePostalCode: '',
-    invoiceState: '',
-    invoiceCountry: '',
-    deliveryStreet: '',
-    deliveryCity: '',
-    deliveryPostalCode: '',
-    deliveryState: '',
-    deliveryCountry: '',
-  });
+  const [customer, setCustomer] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const [company, setCompany] = useState({
-    companyName: '',
-    businessId: '',
-    email: '',
-    phone: '',
-    invoiceStreet: '',
-    invoiceCity: '',
-    invoicePostalCode: '',
-    invoiceState: '',
-    invoiceCountry: '',
-    deliveryStreet: '',
-    deliveryCity: '',
-    deliveryPostalCode: '',
-    deliveryState: '',
-    deliveryCountry: '',
-  });
+  useEffect(() => {
+    if (!id) return;
 
-  // Determine if *any* field in the currently visible form has text
-  const hasText = useMemo(() => {
-    const values = Object.values(customerType === 'person' ? person : company);
-    return values.some(v => (v ?? '').toString().trim() !== '');
-  }, [customerType, person, company]);
+    async function fetchCustomer() {
+      try {
+        const res = await fetch(`/api/customers/${id}`);
+        if (!res.ok) {
+          throw new Error('Failed to fetch customer');
+        }
+        const data = await res.json();
+        console.log(data);
+        // API returns { customer: {...} }
+        setCustomer(data.customer);
+      } catch (err) {
+        console.error(err);
+        toast.error(`Error: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  const handleSave = () => {
-    const payload = customerType === 'person' ? { type: 'person', ...person } : { type: 'company', ...company };
-    // Do your submit here (fetch/axios/action)
-    // await saveCustomer(payload)
-    toast.success('New customer created!');
-  };
+    fetchCustomer();
+  }, [id]);
+
+  const isCompany = customer?.type === 'business'; // from your enum: 'business' | 'individual'
+
+  // Display name and basic fields
+  const displayName = useMemo(() => {
+    if (!customer) return '';
+    return customer.name || '';
+  }, [customer]);
+
+  const email = customer?.email ?? '';
+
+  // --- Address helpers: pick from addresses[] by type ---
+
+  const invoicingAddress = useMemo(() => {
+    return customer?.addresses?.find(a => a.type === 'invoicing') ?? null;
+  }, [customer]);
+
+  const deliveryAddress = useMemo(() => {
+    return customer?.addresses?.find(a => a.type === 'delivery') ?? null;
+  }, [customer]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-start min-h-screen py-5">
+        <ToastContainer />
+        <div className="w-full max-w-4xl flex items-center justify-center">
+          <span className="loading loading-spinner loading-lg" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!customer) {
+    return (
+      <div className="flex justify-center items-start min-h-screen py-5">
+        <ToastContainer />
+        <div className="w-full max-w-4xl flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">Customer not found</h1>
+            <button className="btn btn-ghost" onClick={() => router.back()}>
+              Back
+            </button>
+          </div>
+          <p className="text-gray-500">
+            We couldn&rsquo;t find a customer with id <code>{id}</code>.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center items-start min-h-screen py-5">
-
       <ToastContainer />
-      
+
       <div className="w-full max-w-4xl flex items-center gap-4">
         <div className="flex w-full flex-col gap-4">
-
           {/* Title + buttons */}
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">Add new customer</h1>
+            <div className="flex flex-col">
+              <h1 className="text-3xl font-bold">
+                {displayName || 'Customer details'}
+              </h1>
+              <span className="badge badge-neutral mt-1 w-fit">
+                {isCompany ? 'Company' : 'Person'}
+              </span>
+            </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 className="btn btn-ghost"
-                onClick={() => {
-                  // Reset form
-                  setPerson({
-                    fullName: '',
-                    email: '',
-                    phone: '',
-                    invoiceStreet: '',
-                    invoiceCity: '',
-                    invoicePostalCode: '',
-                    invoiceState: '',
-                    invoiceCountry: '',
-                    deliveryStreet: '',
-                    deliveryCity: '',
-                    deliveryPostalCode: '',
-                    deliveryState: '',
-                    deliveryCountry: '',
-                  });
-                  setCompany({
-                    companyName: '',
-                    businessId: '',
-                    email: '',
-                    phone: '',
-                    invoiceStreet: '',
-                    invoiceCity: '',
-                    invoicePostalCode: '',
-                    invoiceState: '',
-                    invoiceCountry: '',
-                    deliveryStreet: '',
-                    deliveryCity: '',
-                    deliveryPostalCode: '',
-                    deliveryState: '',
-                    deliveryCountry: '',
-                  });
-                }}
+                onClick={() => router.back()}
               >
-                Reset
+                Back
               </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={!hasText}
-                className={`btn btn-primary ${!hasText ? 'btn-disabled opacity-50 cursor-not-allowed' : ''}`}
-                aria-disabled={!hasText}
-              >
-                Save
-              </button>
+              {/* Optional: link to edit page later */}
+              {/* <Link href={`/customers/${id}/edit`} className="btn btn-primary">
+                Edit
+              </Link> */}
             </div>
           </div>
 
-          {/* Person / Company switch */}
-          <div className="flex items-center gap-4">
-            <label className="cursor-pointer flex items-center gap-2">
-              <input
-                type="radio"
-                name="customerType"
-                value="person"
-                checked={customerType === 'person'}
-                onChange={() => setCustomerType('person')}
-              />
-              <span>Person</span>
-            </label>
-            <label className="cursor-pointer flex items-center gap-2">
-              <input
-                type="radio"
-                name="customerType"
-                value="company"
-                checked={customerType === 'company'}
-                onChange={() => setCustomerType('company')}
-              />
-              <span>Company</span>
-            </label>
-          </div>
-
-          {/* Company form */}
-          {customerType === 'company' && (
+          {/* COMPANY VIEW (type = 'business') */}
+          {isCompany && (
             <>
               {/* Company name */}
               <div className="join w-md">
@@ -158,9 +134,9 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={displayName}
                   placeholder="Company name"
-                  value={company.companyName}
-                  onChange={(e) => setCompany(s => ({ ...s, companyName: e.target.value }))}
                 />
               </div>
 
@@ -172,9 +148,23 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={customer.business_id ?? customer.businessId ?? ''}
                   placeholder="Business ID"
-                  value={company.businessId}
-                  onChange={(e) => setCompany(s => ({ ...s, businessId: e.target.value }))}
+                />
+              </div>
+
+              {/* VAT ID */}
+              <div className="join w-md">
+                <span className="join-item px-3 text-gray-500 flex items-center">
+                  <TbHexagonNumber7Filled size={18} />
+                </span>
+                <input
+                  type="text"
+                  className="input input-bordered join-item w-full"
+                  readOnly
+                  value={customer.vat_id ?? ''}
+                  placeholder="VAT ID"
                 />
               </div>
 
@@ -186,13 +176,13 @@ export default function CustomerNewPage() {
                 <input
                   type="email"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={email}
                   placeholder="Email"
-                  value={company.email}
-                  onChange={(e) => setCompany(s => ({ ...s, email: e.target.value }))}
                 />
               </div>
 
-              {/* Phone */}
+              {/* Phone (if you add it later to API, otherwise will just be empty) */}
               <div className="join w-md">
                 <span className="join-item px-3 text-gray-500 flex items-center">
                   <FaPhone size={18} />
@@ -200,19 +190,18 @@ export default function CustomerNewPage() {
                 <input
                   type="tel"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={customer.phone ?? ''}
                   placeholder="Phone"
-                  value={company.phone}
-                  onChange={(e) => setCompany(s => ({ ...s, phone: e.target.value }))}
                 />
               </div>
 
-              {/* Invoice address divider */}
+              {/* Invoice address from invoicingAddress */}
               <div className="mt-4">
                 <span className="text-gray-500">Invoice address</span>
                 <hr className="mt-2 mb-1 border-gray-300" />
               </div>
 
-              {/* Street */}
               <div className="join w-md">
                 <span className="join-item px-3 text-gray-500 flex items-center">
                   <FaMapMarkerAlt size={18} />
@@ -220,13 +209,12 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={invoicingAddress?.address ?? ''}
                   placeholder="Street address"
-                  value={company.invoiceStreet}
-                  onChange={(e) => setCompany(s => ({ ...s, invoiceStreet: e.target.value }))}
                 />
               </div>
 
-              {/* City */}
               <div className="join w-md">
                 <span className="join-item px-3 text-gray-500 flex items-center">
                   <FaCity size={18} />
@@ -234,13 +222,12 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={invoicingAddress?.city ?? ''}
                   placeholder="City"
-                  value={company.invoiceCity}
-                  onChange={(e) => setCompany(s => ({ ...s, invoiceCity: e.target.value }))}
                 />
               </div>
 
-              {/* Postal Code */}
               <div className="join w-md">
                 <span className="join-item px-3 text-gray-500 flex items-center">
                   <BsSignpostFill size={18} />
@@ -248,13 +235,12 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={invoicingAddress?.postal_code ?? ''}
                   placeholder="Postal Code"
-                  value={company.invoicePostalCode}
-                  onChange={(e) => setCompany(s => ({ ...s, invoicePostalCode: e.target.value }))}
                 />
               </div>
 
-              {/* State */}
               <div className="join w-md">
                 <span className="join-item px-3 text-gray-500 flex items-center">
                   <FaMapLocationDot size={18} />
@@ -262,13 +248,12 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={invoicingAddress?.state ?? ''}
                   placeholder="State"
-                  value={company.invoiceState}
-                  onChange={(e) => setCompany(s => ({ ...s, invoiceState: e.target.value }))}
                 />
               </div>
 
-              {/* Country */}
               <div className="join w-md">
                 <span className="join-item px-3 text-gray-500 flex items-center">
                   <FaMap size={18} />
@@ -276,32 +261,20 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={invoicingAddress?.country ?? ''}
                   placeholder="Country"
-                  value={company.invoiceCountry}
-                  onChange={(e) => setCompany(s => ({ ...s, invoiceCountry: e.target.value }))}
                 />
               </div>
 
-              <div className="mt-4">
-                <span className="text-gray-500">Delivery address</span>
-                <hr className="mt-2 mb-4 border-gray-300" />
-                {/* Checkbox same as invoice address? */}
-                <label className="label">
-                  <input 
-                    type="checkbox" 
-                    defaultChecked
-                    className="toggle w-8 h-6 mr-2 text-gray-400 checked:text-gray-600" 
-                    onChange={(e) => setSameAsInvoice(e.target.checked)}
-                  />
-                    Same as invoice address
-                </label>
-              </div>
-
-              {/* Show delivery address fields only if checkbox is unchecked */}
-
-              {!sameAsInvoice && (
+              {/* Delivery address from deliveryAddress (if present) */}
+              {deliveryAddress && (
                 <>
-                  {/* Street */}
+                  <div className="mt-4">
+                    <span className="text-gray-500">Delivery address</span>
+                    <hr className="mt-2 mb-1 border-gray-300" />
+                  </div>
+
                   <div className="join w-md">
                     <span className="join-item px-3 text-gray-500 flex items-center">
                       <FaMapMarkerAlt size={18} />
@@ -309,13 +282,12 @@ export default function CustomerNewPage() {
                     <input
                       type="text"
                       className="input input-bordered join-item w-full"
+                      readOnly
+                      value={deliveryAddress.address ?? ''}
                       placeholder="Street address"
-                      value={company.deliveryStreet}
-                      onChange={(e) => setCompany(s => ({ ...s, deliveryStreet: e.target.value }))}
                     />
                   </div>
 
-                  {/* City */}
                   <div className="join w-md">
                     <span className="join-item px-3 text-gray-500 flex items-center">
                       <FaCity size={18} />
@@ -323,13 +295,12 @@ export default function CustomerNewPage() {
                     <input
                       type="text"
                       className="input input-bordered join-item w-full"
-                      placeholder="Delivery address city"
-                      value={company.deliveryCity}
-                      onChange={(e) => setCompany(s => ({ ...s, deliveryCity: e.target.value }))}
+                      readOnly
+                      value={deliveryAddress.city ?? ''}
+                      placeholder="City"
                     />
                   </div>
 
-                  {/* Postal Code */}
                   <div className="join w-md">
                     <span className="join-item px-3 text-gray-500 flex items-center">
                       <BsSignpostFill size={18} />
@@ -337,13 +308,12 @@ export default function CustomerNewPage() {
                     <input
                       type="text"
                       className="input input-bordered join-item w-full"
+                      readOnly
+                      value={deliveryAddress.postal_code ?? ''}
                       placeholder="Postal Code"
-                      value={company.deliveryPostalCode}
-                      onChange={(e) => setCompany(s => ({ ...s, deliveryPostalCode: e.target.value }))}
                     />
                   </div>
 
-                  {/* State */}
                   <div className="join w-md">
                     <span className="join-item px-3 text-gray-500 flex items-center">
                       <FaMapLocationDot size={18} />
@@ -351,13 +321,12 @@ export default function CustomerNewPage() {
                     <input
                       type="text"
                       className="input input-bordered join-item w-full"
+                      readOnly
+                      value={deliveryAddress.state ?? ''}
                       placeholder="State"
-                      value={company.deliveryState}
-                      onChange={(e) => setCompany(s => ({ ...s, deliveryState: e.target.value }))}
                     />
                   </div>
 
-                  {/* Country */}
                   <div className="join w-md">
                     <span className="join-item px-3 text-gray-500 flex items-center">
                       <FaMap size={18} />
@@ -365,9 +334,9 @@ export default function CustomerNewPage() {
                     <input
                       type="text"
                       className="input input-bordered join-item w-full"
+                      readOnly
+                      value={deliveryAddress.country ?? ''}
                       placeholder="Country"
-                      value={company.deliveryCountry}
-                      onChange={(e) => setCompany(s => ({ ...s, deliveryCountry: e.target.value }))}
                     />
                   </div>
                 </>
@@ -375,8 +344,8 @@ export default function CustomerNewPage() {
             </>
           )}
 
-          {/* Person form */}
-          {customerType === 'person' && (
+          {/* PERSON VIEW (type = 'individual') */}
+          {!isCompany && (
             <>
               {/* Name */}
               <div className="join w-md">
@@ -386,9 +355,9 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={displayName}
                   placeholder="Full name"
-                  value={person.fullName}
-                  onChange={(e) => setPerson(s => ({ ...s, fullName: e.target.value }))}
                 />
               </div>
 
@@ -400,13 +369,13 @@ export default function CustomerNewPage() {
                 <input
                   type="email"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={email}
                   placeholder="Email"
-                  value={person.email}
-                  onChange={(e) => setPerson(s => ({ ...s, email: e.target.value }))}
                 />
               </div>
 
-              {/* Phone */}
+              {/* Phone (if you add it) */}
               <div className="join w-md">
                 <span className="join-item px-3 text-gray-500 flex items-center">
                   <FaPhone size={18} />
@@ -414,20 +383,18 @@ export default function CustomerNewPage() {
                 <input
                   type="tel"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={customer.phone ?? ''}
                   placeholder="Phone"
-                  value={person.phone}
-                  onChange={(e) => setPerson(s => ({ ...s, phone: e.target.value }))}
                 />
               </div>
 
-              
-              {/* Invoice address divider */}
+              {/* Invoice address (still invoicingAddress) */}
               <div className="mt-4">
                 <span className="text-gray-500">Invoice address</span>
                 <hr className="mt-2 mb-1 border-gray-300" />
               </div>
 
-              {/* Street */}
               <div className="join w-md">
                 <span className="join-item px-3 text-gray-500 flex items-center">
                   <FaMapMarkerAlt size={18} />
@@ -435,13 +402,12 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={invoicingAddress?.address ?? ''}
                   placeholder="Street address"
-                  value={person.invoiceStreet}
-                  onChange={(e) => setPerson(s => ({ ...s, invoiceStreet: e.target.value }))}
                 />
               </div>
 
-              {/* City */}
               <div className="join w-md">
                 <span className="join-item px-3 text-gray-500 flex items-center">
                   <FaCity size={18} />
@@ -449,13 +415,12 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={invoicingAddress?.city ?? ''}
                   placeholder="City"
-                  value={person.invoiceCity}
-                  onChange={(e) => setPerson(s => ({ ...s, invoiceCity: e.target.value }))}
                 />
               </div>
 
-              {/* Postal Code */}
               <div className="join w-md">
                 <span className="join-item px-3 text-gray-500 flex items-center">
                   <BsSignpostFill size={18} />
@@ -463,13 +428,12 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={invoicingAddress?.postal_code ?? ''}
                   placeholder="Postal Code"
-                  value={person.invoicePostalCode}
-                  onChange={(e) => setPerson(s => ({ ...s, invoicePostalCode: e.target.value }))}
                 />
               </div>
 
-              {/* State */}
               <div className="join w-md">
                 <span className="join-item px-3 text-gray-500 flex items-center">
                   <FaMapLocationDot size={18} />
@@ -477,13 +441,12 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={invoicingAddress?.state ?? ''}
                   placeholder="State"
-                  value={person.invoiceState}
-                  onChange={(e) => setPerson(s => ({ ...s, invoiceState: e.target.value }))}
                 />
               </div>
 
-              {/* Country */}
               <div className="join w-md">
                 <span className="join-item px-3 text-gray-500 flex items-center">
                   <FaMap size={18} />
@@ -491,34 +454,20 @@ export default function CustomerNewPage() {
                 <input
                   type="text"
                   className="input input-bordered join-item w-full"
+                  readOnly
+                  value={invoicingAddress?.country ?? ''}
                   placeholder="Country"
-                  value={person.invoiceCountry}
-                  onChange={(e) => setPerson(s => ({ ...s, invoiceCountry: e.target.value }))}
                 />
               </div>
 
-
-              
-              <div className="mt-4">
-                <span className="text-gray-500">Delivery address</span>
-                <hr className="mt-2 mb-4 border-gray-300" />
-                {/* Checkbox same as invoice address? */}
-                <label className="label">
-                  <input 
-                    type="checkbox" 
-                    defaultChecked
-                    className="toggle w-8 h-6 mr-2 text-gray-400 checked:text-gray-600" 
-                    onChange={(e) => setSameAsInvoice(e.target.checked)}
-                  />
-                    Same as invoice address
-                </label>
-              </div>
-
-              {/* Show delivery address fields only if checkbox is unchecked */}
-
-              {!sameAsInvoice && (
+              {/* Delivery address for person */}
+              {deliveryAddress && (
                 <>
-                  {/* Street */}
+                  <div className="mt-4">
+                    <span className="text-gray-500">Delivery address</span>
+                    <hr className="mt-2 mb-1 border-gray-300" />
+                  </div>
+
                   <div className="join w-md">
                     <span className="join-item px-3 text-gray-500 flex items-center">
                       <FaMapMarkerAlt size={18} />
@@ -526,13 +475,12 @@ export default function CustomerNewPage() {
                     <input
                       type="text"
                       className="input input-bordered join-item w-full"
+                      readOnly
+                      value={deliveryAddress.address ?? ''}
                       placeholder="Street address"
-                      value={person.deliveryStreet}
-                      onChange={(e) => setPerson(s => ({ ...s, deliveryStreet: e.target.value }))}
                     />
                   </div>
 
-                  {/* City */}
                   <div className="join w-md">
                     <span className="join-item px-3 text-gray-500 flex items-center">
                       <FaCity size={18} />
@@ -540,13 +488,12 @@ export default function CustomerNewPage() {
                     <input
                       type="text"
                       className="input input-bordered join-item w-full"
+                      readOnly
+                      value={deliveryAddress.city ?? ''}
                       placeholder="City"
-                      value={person.deliveryCity}
-                      onChange={(e) => setPerson(s => ({ ...s, deliveryCity: e.target.value }))}
                     />
                   </div>
 
-                  {/* Postal Code */}
                   <div className="join w-md">
                     <span className="join-item px-3 text-gray-500 flex items-center">
                       <BsSignpostFill size={18} />
@@ -554,13 +501,12 @@ export default function CustomerNewPage() {
                     <input
                       type="text"
                       className="input input-bordered join-item w-full"
+                      readOnly
+                      value={deliveryAddress.postal_code ?? ''}
                       placeholder="Postal Code"
-                      value={person.deliveryPostalCode}
-                      onChange={(e) => setPerson(s => ({ ...s, deliveryPostalCode: e.target.value }))}
                     />
                   </div>
 
-                  {/* State */}
                   <div className="join w-md">
                     <span className="join-item px-3 text-gray-500 flex items-center">
                       <FaMapLocationDot size={18} />
@@ -568,13 +514,12 @@ export default function CustomerNewPage() {
                     <input
                       type="text"
                       className="input input-bordered join-item w-full"
+                      readOnly
+                      value={deliveryAddress.state ?? ''}
                       placeholder="State"
-                      value={person.deliveryState}
-                      onChange={(e) => setPerson(s => ({ ...s, deliveryState: e.target.value }))}
                     />
                   </div>
 
-                  {/* Country */}
                   <div className="join w-md">
                     <span className="join-item px-3 text-gray-500 flex items-center">
                       <FaMap size={18} />
@@ -582,9 +527,9 @@ export default function CustomerNewPage() {
                     <input
                       type="text"
                       className="input input-bordered join-item w-full"
+                      readOnly
+                      value={deliveryAddress.country ?? ''}
                       placeholder="Country"
-                      value={person.deliveryCountry}
-                      onChange={(e) => setPerson(s => ({ ...s, deliveryCountry: e.target.value }))}
                     />
                   </div>
                 </>
