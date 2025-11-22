@@ -35,7 +35,6 @@ export async function createUserDuringLogin(authUser, body) {
     firebase_uid: authUser.uid,
     role: authUser.admin ? 'admin' : 'user',
     email: body.email || "",
-    company_id: body.companyId ?? null,
     created_at: new Date(),
     updated_at: new Date(),
     last_login: new Date(),

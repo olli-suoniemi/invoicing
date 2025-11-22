@@ -13,8 +13,8 @@ export async function getUserByAuthUid(firebase_uid) {
 
 export async function createUser(user) {
   const result = await sql`
-    insert into users (firebase_uid, role, company_id, email, created_at, updated_at, last_login)
-    values (${user.firebase_uid}, ${user.role}, ${user.company_id}, ${user.email}, ${user.created_at}, ${user.updated_at}, ${user.last_login})
+    insert into users (firebase_uid, role, email, created_at, updated_at, last_login)
+    values (${user.firebase_uid}, ${user.role}, ${user.email}, ${user.created_at}, ${user.updated_at}, ${user.last_login})
     returning *
   `;
   return result[0];
@@ -75,9 +75,9 @@ export async function listAllCompanies(limit = 100) {
 
 export async function createCompanyAddress(address) {
   const result = await sql`
-    insert into company_addresses (company_id, type, address, postal_code, city, state, country, created_at, updated_at)
+    insert into company_addresses (id, type, address, postal_code, city, state, country, created_at, updated_at)
     values (
-      ${address.company_id}, 
+      ${address.id}, 
       ${address.type}, 
       ${address.address}, 
       ${address.postal_code}, 
@@ -100,7 +100,7 @@ export async function getCompanyById(id) {
 export async function getCompanyAddressByType(companyId, type) {
   const rows = await sql`
     select * from company_addresses
-    where company_id = ${companyId} and type = ${type}
+    where id = ${companyId} and type = ${type}
     limit 1
   `;
   return rows[0] ?? null;
@@ -140,49 +140,47 @@ export async function updateCompanyAddress(id, address) {
 
 export async function getUsersByCompanyId(companyId) {
   const rows = await sql`
-    select * from users
-    where company_id = ${companyId}
-    order by created_at desc
+    SELECT u.*
+    FROM users u
+    JOIN user_org_roles uor
+      ON uor.user_id = u.id
+    WHERE uor.org_id = ${companyId}
+    ORDER BY u.created_at DESC
   `;
   return rows ?? [];
 }
 
-export async function addUserToCompany(userId, companyId) {
-  const result = await sql`
-    update users
-    set
-      company_id = ${companyId},
-      updated_at = ${new Date()}
-    where id = ${userId}
-    returning *
+export async function addUserToCompany(userId, companyId, role = 'member') {
+  // insert relationship
+  await sql`
+    INSERT INTO user_org_roles (user_id, org_id, role)
+    VALUES (${userId}, ${companyId}, ${role})
+    ON CONFLICT (user_id, org_id) DO NOTHING
   `;
 
-  // Update company updated at timestamp
-  await sql`
-    update companies
-    set
-      updated_at = ${new Date()}
-    where id = ${companyId}
+  // return the user
+  const users = await sql`
+    SELECT *
+    FROM users
+    WHERE id = ${userId}
   `;
-  return result[0];
+
+  return users[0] ?? null;
 }
 
+
 export async function removeUserFromCompany(userId, companyId) {
-  const result = await sql`
-    update users
-    set
-      company_id = null,
-      updated_at = ${new Date()}
-    where id = ${userId}
-    returning *
+  await sql`
+    DELETE FROM user_org_roles
+    WHERE user_id = ${userId}
+      AND org_id = ${companyId}
   `;
 
-  // Update company updated at timestamp
-  await sql`
-    update companies
-    set
-      updated_at = ${new Date()}
-    where id = ${companyId}
+  const users = await sql`
+    SELECT *
+    FROM users
+    WHERE id = ${userId}
   `;
-  return result[0];
+
+  return users[0] ?? null;
 }
