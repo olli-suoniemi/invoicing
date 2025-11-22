@@ -1,8 +1,6 @@
-version: "3.9"
-
 services:
   traefik:
-    image: traefik:v3.1
+    image: traefik:v3.6.1
     command:
       - --providers.file.filename=/traefik_dynamic_conf.yml
       - --api.dashboard=true
@@ -135,6 +133,7 @@ services:
       FLYWAY_URL: jdbc:postgresql://database:5432/localdev
       FLYWAY_USER: devuser
       FLYWAY_PASSWORD: devpassword
+      FLYWAY_CLEAN_DISABLED: "false"
     networks:
       - custom_network
     command: 
