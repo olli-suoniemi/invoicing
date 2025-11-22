@@ -1,27 +1,35 @@
+// routes.js (backend)
 import { Hono } from "hono";
-import { requireAuth, requireAdmin } from "./auth.js";
-import * as invoicesService from "./services/invoices/service.js";
+import {
+  requireFirebaseAuth,
+  requireLocalUser,
+  requireAdmin,
+} from "./auth.js";
+import * as companiesService from "./services/companies/service.js";
 import * as customersService from "./services/customers/service.js";
 import * as settingsService from "./services/settings/service.js";
+import * as inventoryService from "./services/inventory/service.js";
 
 export const routes = new Hono();
 
-// public
 routes.get("/health", (c) => c.json({ ok: true }));
 
-// v1 sub-app (everything here requires auth)
 const v1 = new Hono();
-v1.use("*", requireAuth);
 
-// --------- Authenticated (non-admin) ---------
+// 1) Every /v1 route requires Firebase auth
+v1.use("*", requireFirebaseAuth);
+
+// --------- Authenticated via Firebase (no local user yet) ---------
+
+// minimal "who am I (Firebase)" endpoint if you want it
 v1.get("/me", (c) => {
-  const user = c.get("user");
-  return c.json({ user });
+  const authUser = c.get("authUser");
+  return c.json({ user: authUser });
 });
 
 // create a new user during login process
 v1.post("/users/login", async (c) => {
-  const authUser = c.get("user");         // comes from requireAuth (verified ID token)
+  const authUser = c.get("authUser"); // NOTE: from requireFirebaseAuth
   const body = await c.req.json().catch(() => ({}));
 
   try {
@@ -31,6 +39,18 @@ v1.post("/users/login", async (c) => {
     const status = e.status ?? 500;
     return c.json({ error: e.message ?? "Internal error" }, status);
   }
+});
+
+// 2) From here on, require local DB user (internalId)
+v1.use("*", requireLocalUser);
+
+// --------- Authenticated with local user (has internalId) ---------
+
+// If you want /me to return *local* user instead, you can redefine it here
+// or keep the earlier one and rename this.
+v1.get("/me", (c) => {
+  const user = c.get("user");
+  return c.json({ user });
 });
 
 // get users
@@ -147,6 +167,89 @@ v1.delete('/companies/:id/users', async (c) => {
   try {
     const user = await settingsService.removeUserFromCompany(authUser, id, userId);
     return c.json({ user });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// get customers for user's company
+v1.get('/customers', async (c) => {
+  const authUser = c.get('user');
+  try {
+    // get main company of the auth user
+    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+
+    const customers = await customersService.listCompanyCustomersById(company.org_id);
+
+    return c.json({ customers });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// get customer by ID
+v1.get('/customers/:id', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  try {
+    // get main company of the auth user
+    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+
+    const customer = await customersService.getCustomerById(authUser, company, id);
+
+    return c.json({ customer });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// get inventory
+v1.get('/inventory', async (c) => {
+  const authUser = c.get('user');
+  try {
+    // get main company of the auth user
+    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+
+    const inventory = await inventoryService.listCompanyInventoryById(company.org_id);
+
+    return c.json({ inventory });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// get inventory item by ID
+v1.get('/inventory/:id', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  try {
+    // get main company of the auth user
+    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+    
+    const item = await inventoryService.getInventoryItemById(authUser, company, id);
+
+    return c.json({ inventory: item });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+}); 
+
+// add inventory item
+v1.post('/inventory', async (c) => {
+  const authUser = c.get('user');
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    // get main company of the auth user
+    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+
+    const item = await inventoryService.addInventoryItem(authUser, company, body);
+
+    return c.json({ inventory: item });
   } catch (e) {
     const status = e.status ?? 500;
     return c.json({ error: e.message ?? 'Internal error' }, status);
