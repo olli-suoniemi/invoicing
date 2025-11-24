@@ -1,13 +1,16 @@
+// ui/app/customers/page.js
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import { FaPlus } from "react-icons/fa";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchCustomers() {
@@ -46,7 +49,7 @@ export default function CustomersPage() {
         <ToastContainer />
         <div className="w-full max-w-4xl flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold"> Customers not found</h1>
+            <h1 className="text-3xl font-bold">Customers not found</h1>
             <button className="btn btn-ghost" onClick={() => router.back()}>
               Back
             </button>
@@ -94,37 +97,22 @@ export default function CustomersPage() {
           </p>
         ) : (
           <div className="w-full max-w-4xl self-center overflow-x-auto">
-            <table className="table table-zebra w-full">
+            <table className="table table-zebra table-fixed w-full text-center">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  {/* Add more columns if your API returns them */}
-                  {/* <th>Type</th>
-                  <th>Created</th> */}
-                  <th className="text-right">Actions</th>
+                  <th className="w-1/2 text-center">Name</th>
+                  <th className="w-1/2 text-center">Email</th>
                 </tr>
               </thead>
               <tbody>
                 {customers.map((customer) => (
-                  <tr key={customer.id} className="hover">
-                    <td>{customer.name}</td>
-                    <td>{customer.email}</td>
-                    {/* Example extra fields if available:
-                    <td>{customer.type}</td>
-                    <td>
-                      {customer.created_at
-                        ? new Date(customer.created_at).toLocaleDateString()
-                        : '-'}
-                    </td> */}
-                    <td className="text-right">
-                      <Link
-                        href={`/customers/${customer.id}`}
-                        className="btn btn-ghost btn-xs"
-                      >
-                        View
-                      </Link>
-                    </td>
+                  <tr
+                    key={customer.id}
+                    className="hover cursor-pointer hover:bg-accent/10"
+                    onClick={() => router.push(`/customers/${customer.id}`)}
+                  >
+                    <td className="text-center">{customer.name}</td>
+                    <td className="text-center">{customer.email}</td>
                   </tr>
                 ))}
               </tbody>
