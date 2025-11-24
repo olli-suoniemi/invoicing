@@ -11,6 +11,7 @@ import {
   FaMinus,
 } from "react-icons/fa6";
 import CustomerSelect from '@/app/components/customerSelect';
+import ProductSelect from '@/app/components/productSelect';
 
 export default function OrdersNewPage() {
   const [order, setOrder] = useState({
@@ -27,9 +28,14 @@ export default function OrdersNewPage() {
 
   // Customers loaded from backend
   const [customers, setCustomers] = useState([]);
+  // Products loaded from backend
+  const [products, setProducts] = useState([]);
 
   // The selected customer in the select
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  // The selected product in the select
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
   // Load customers
   useEffect(() => {
     (async () => {
@@ -41,6 +47,21 @@ export default function OrdersNewPage() {
       } catch (e) {
         console.error(e);
         toast.error(e.message || 'Failed to load customers');
+      }
+    })();
+  }, []);
+
+  // Load products
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch('/api/inventory'); // change if your endpoint is different
+        if (!r.ok) throw new Error('Failed to load products');
+        const data = await r.json();
+        setProducts(data.inventory || []);
+      } catch (e) {
+        console.error(e);
+        toast.error(e.message || 'Failed to load products');
       }
     })();
   }, []);

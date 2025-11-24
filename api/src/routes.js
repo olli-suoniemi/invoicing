@@ -93,12 +93,11 @@ v1.put('/users/:id', async (c) => {
   }
 });
 
-// add company
-v1.post("/companies", async (c) => {
+// get company
+v1.get("/company", async (c) => {
   const user = c.get("user");
-  const body = await c.req.json().catch(() => ({}));
   try {
-    const company = await settingsService.createCompany(user, body);
+    const company = await settingsService.getCompany(user);
     return c.json({ company });
   } catch (e) {
     const status = e.status ?? 500;
@@ -106,38 +105,12 @@ v1.post("/companies", async (c) => {
   }
 });
 
-// get companies
-v1.get("/companies", async (c) => {
-  const user = c.get("user");
-  try {
-    const companies = await settingsService.listCompanies(user);
-    return c.json({ companies });
-  } catch (e) {
-    const status = e.status ?? 500;
-    return c.json({ error: e.message ?? "Internal error" }, status);
-  }
-});
-
-// get company by ID
-v1.get('/companies/:id', async (c) => {
+// update company
+v1.put('/company', async (c) => {
   const authUser = c.get('user');
-  const id = c.req.param('id');
+  const body = await c.req.json().catch(() => ({}));
   try {
-    const company = await settingsService.getCompanyById(authUser, id);
-    return c.json(company);
-  } catch (e) {
-    const status = e.status ?? 500;
-    return c.json({ error: e.message ?? 'Internal error' }, status);
-  }
-});
-
-// update company by ID
-v1.put('/companies/:id', async (c) => {
-  const authUser = c.get('user');
-  const id = c.req.param('id');
-  const patch = await c.req.json().catch(() => ({}));
-  try {
-    const updated = await settingsService.updateCompany(authUser, id, patch);
+    const updated = await settingsService.updateCompany(authUser, body);
     return c.json(updated);
   } catch (e) {
     const status = e.status ?? 500;
@@ -146,12 +119,11 @@ v1.put('/companies/:id', async (c) => {
 });
 
 // add user to company
-v1.post('/companies/:id/users', async (c) => {
+v1.post('/company/users', async (c) => {
   const authUser = c.get('user');
-  const id = c.req.param('id');
   const body = await c.req.json().catch(() => ({}));
   try {
-    const user = await settingsService.addUserToCompany(authUser, id, body);
+    const user = await settingsService.addUserToCompany(authUser, body);
     return c.json({ user });
   } catch (e) {
     const status = e.status ?? 500;
@@ -160,13 +132,12 @@ v1.post('/companies/:id/users', async (c) => {
 });
 
 // remove user from company
-v1.delete('/companies/:id/users', async (c) => {
+v1.delete('/company/users', async (c) => {
   const authUser = c.get('user');
-  const id = c.req.param('id');
   const body = await c.req.json().catch(() => ({}));
   const userId = body.userId;
   try {
-    const user = await settingsService.removeUserFromCompany(authUser, id, userId);
+    const user = await settingsService.removeUserFromCompany(authUser, userId);
     return c.json({ user });
   } catch (e) {
     const status = e.status ?? 500;

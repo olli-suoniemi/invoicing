@@ -43,6 +43,29 @@ VALUES
         now()
     ); 
 
+INSERT INTO company_addresses 
+    (
+        company_id, 
+        type, 
+        address, 
+        postal_code, 
+        city, 
+        state, 
+        country, 
+        created_at
+    )
+VALUES 
+    (
+        (SELECT id FROM companies WHERE name='My Company'), 
+        'delivery', 
+        'Demo Street 1', 
+        '00100', 
+        'Helsinki', 
+        'Uusimaa', 
+        'Finland',
+        now()
+    ); 
+
 
 -- customers
 INSERT INTO customers 

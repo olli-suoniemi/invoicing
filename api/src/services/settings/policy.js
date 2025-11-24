@@ -38,61 +38,33 @@ export function canEditUser(user, targetUser) {
   return false;
 }
 
-export function canReadAllCompanies(user) {
-  // Only admins can read all companies
-  if (user?.admin) return true;
-
-  // Otherwise, no access
-  return false;
-}
-
-export function canCreateCompany(user) {
-  // Only admins can create companies
-  if (user?.admin) return true;
-
-  // Otherwise, no access
-  return false;
-}
-
-export function canReadCompany(user, targetCompany) {
+export function canReadCompany(user) {
   // Admins can read anything
   if (user?.admin) return true;
 
-  // Users can read their own company information
-  if (user?.company_id && user.company_id === targetCompany.id) return true;
-
   // Otherwise, no access
   return false;
 }
 
-export function canEditCompany(user, targetCompany) {
+export function canEditCompany(user) {
   // Admins can edit anything
   if (user?.admin) return true;
 
-  // Users can edit their own company information
-  if (user?.company_id && user.company_id === targetCompany.id) return true;
-
   // Otherwise, no access
   return false;
 }
 
-export function canAddUserToCompany(user, targetCompany) {
+export function canAddUserToCompany(user) {
   // Admins can add users to any company
   if (user?.admin) return true;
 
-  // Users can add users to their own company
-  if (user?.company_id && user.company_id === targetCompany.id) return true;
-
   // Otherwise, no access
   return false;
 }
 
-export function canRemoveUserFromCompany(user, targetCompany) {
+export function canRemoveUserFromCompany(user) {
   // Admins can remove users from any company
   if (user?.admin) return true;
-
-  // Users can remove users from their own company
-  if (user?.company_id && user.company_id === targetCompany.id) return true;
 
   // Otherwise, no access
   return false;

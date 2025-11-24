@@ -34,11 +34,14 @@ export default function CompanyPage() {
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch(`/api/settings/companies/${id}`);
+        const r = await fetch(`/api/settings/company`);
         if (!r.ok) throw new Error('Failed to load company');
         const data = await r.json();
         setInitial(data.company);
         setForm({
+          id: data.company.id ?? '',
+          invoicingAddressId: data.company.invoicingAddress?.id ?? '',
+          deliveryAddressId: data.company.deliveryAddress?.id ?? '',
           companyName: data.company.name ?? '',
           businessId: data.company.business_id ?? '',
           email: data.company.email ?? '',
@@ -80,6 +83,9 @@ export default function CompanyPage() {
   const hasChanges = useMemo(() => {
     if (!initial || !form) return false;
     return (
+      (initial.id ?? '') !== form.id ||
+      (initial.invoicingAddress?.id ?? '') !== form.invoicingAddressId ||
+      (initial.deliveryAddress?.id ?? '') !== form.deliveryAddressId ||
       (initial.companyName ?? '') !== form.companyName ||
       (initial.businessId ?? '') !== form.businessId ||
       (initial.email ?? '') !== form.email ||
@@ -103,6 +109,9 @@ export default function CompanyPage() {
   const onReset = () => {
     if (!initial) return;
     setForm({
+      id: initial.id ?? '',
+      invoicingAddressId: initial.invoicingAddress?.id ?? '',
+      deliveryAddressId: initial.deliveryAddress?.id ?? '',
       companyName: initial.name ?? '',
       businessId: initial.business_id ?? '',
       email: initial.email ?? '',
@@ -124,7 +133,7 @@ export default function CompanyPage() {
   const onSave = async () => {
     try {
       setSaving(true);
-      const r = await fetch(`/api/settings/companies/${id}`, {
+      const r = await fetch(`/api/settings/company`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -139,6 +148,9 @@ export default function CompanyPage() {
       setInitial(data.company);
       // keep form in sync with what backend returned
       setForm({
+        id: data.company.id ?? '',
+        invoicingAddressId: data.company.invoicingAddress?.id ?? '',
+        deliveryAddressId: data.company.deliveryAddress?.id ?? '',
         companyName: data.company.name ?? '',
         businessId: data.company.business_id ?? '',
         email: data.company.email ?? '',
@@ -170,7 +182,7 @@ export default function CompanyPage() {
     }
 
     try {
-      const r = await fetch(`/api/settings/companies/${id}/users`, {
+      const r = await fetch(`/api/settings/company/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.value }),
@@ -224,7 +236,7 @@ export default function CompanyPage() {
 
   const handleRemoveUser = async (userId) => {
     try {
-      const r = await fetch(`/api/settings/companies/${id}/users`, {
+      const r = await fetch(`/api/settings/company/users`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
