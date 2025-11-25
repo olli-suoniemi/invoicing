@@ -17,11 +17,20 @@ export async function listCompanyCustomersById(companyId, limit = 50) {
 }
 
 export async function createCustomer(customer) {
+  console.log("Repository - creating customer:", customer);
   // Create new address record
-
   const result = await sql`
-    insert into customers (name, email, company_id)
-    values (${customer.name}, ${customer.email}, ${customer.company_id})
+    insert into customers (type, name, business_id, email, phone, company_id, created_at)
+    values (${customer.type}, ${customer.name}, ${customer.business_id ?? null}, ${customer.email}, ${customer.phone}, ${customer.company_id}, now())
+    returning *
+  `;
+  return result[0];
+}
+
+export async function createCustomerAddress(customerId, address) { 
+  const result = await sql`
+    insert into customer_addresses (customer_id, type, address, postal_code, city, state, country, created_at)
+    values (${customerId}, ${address.type}, ${address.street}, ${address.postal_code}, ${address.city}, ${address.state}, ${address.country}, now())
     returning *
   `;
   return result[0];
@@ -34,4 +43,41 @@ export async function listCustomerAddressesById(customerId) {
     order by created_at desc
   `;
   return rows ?? [];
+}
+
+export async function updateCustomer(customerId, customerData) {
+  // update customer
+  const result = await sql`
+    update customers
+    set
+      type = ${customerData.type},
+      name = ${customerData.name},
+      business_id = ${customerData.business_id ?? null},
+      email = ${customerData.email},
+      phone = ${customerData.phone},
+      company_id = ${customerData.company_id},
+      updated_at = now()
+    where id = ${customerId}
+    returning *
+  `;
+
+  // update addresses 
+  const addr = customerData.addresses || [];
+  for (const address of addr) {
+    await sql`
+      update customer_addresses
+      set
+        type = ${address.type},
+        address = ${address.address},
+        postal_code = ${address.postal_code},
+        city = ${address.city},
+        state = ${address.state},
+        country = ${address.country},
+        updated_at = now()
+      where id = ${address.id} and customer_id = ${customerId}
+    `;
+  }
+
+  const address = await listCustomerAddressesById(customerId);
+  return { ...result[0], addresses: address };
 }
