@@ -47,9 +47,7 @@ export default function OrderDetailsPage() {
     if (!order) return '';
     // Prefer some kind of human-readable order number if available
     return (
-      order.order_number ||
-      order.number ||
-      `Order ${order.id?.slice(0, 8)}` ||
+      `Order # ${order.id}` ||
       ''
     );
   }, [order]);
@@ -88,17 +86,22 @@ export default function OrderDetailsPage() {
     order.total_amount === null || order.total_amount === undefined
       ? '0.00'
       : Number(order.total_amount).toFixed(2);
+  
+  const totalAmountVatInclDisplay =
+    order.total_amount_vat_incl === null || order.total_amount_vat_incl === undefined
+      ? '0.00'
+      : Number(order.total_amount_vat_incl).toFixed(2);
 
   const orderDateDisplay = order.order_date
-    ? new Date(order.order_date).toLocaleString()
+    ? new Date(order.order_date).toLocaleString('fi-FI')
     : '—';
 
   const createdAtDisplay = order.created_at
-    ? new Date(order.created_at).toLocaleString()
+    ? new Date(order.created_at).toLocaleString('fi-FI')
     : '—';
 
   const updatedAtDisplay = order.updated_at
-    ? new Date(order.updated_at).toLocaleString()
+    ? new Date(order.updated_at).toLocaleString('fi-FI')
     : '—';
 
   const items = order.items ?? [];
@@ -107,7 +110,7 @@ export default function OrderDetailsPage() {
     <div className="flex justify-center items-start min-h-screen py-5">
       <ToastContainer />
 
-      <div className="w-full max-w-4xl flex items-center gap-4">
+      <div className="w-full max-w-6xl flex items-center gap-4">
         <div className="flex w-full flex-col gap-4">
           {/* Title + buttons */}
           <div className="flex items-center justify-between">
@@ -125,12 +128,15 @@ export default function OrderDetailsPage() {
                 className="btn btn-ghost"
                 onClick={() => router.back()}
               >
-                Back
+                &larr; Back
               </button>
-              {/* Optional: link to edit page later */}
-              {/* <Link href={`/orders/${id}/edit`} className="btn btn-primary">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => router.push(`/orders/${id}/edit`)}
+              >
                 Edit
-              </Link> */}
+              </button>
             </div>
           </div>
 
@@ -139,43 +145,15 @@ export default function OrderDetailsPage() {
             <span className="join-item px-3 text-gray-500 flex items-center">
               <FaUser size={18} />
             </span>
-            <input
-              type="text"
-              className="input input-bordered join-item w-full"
-              readOnly
-              value={order.client_name ?? order.client_id ?? ''}
-              placeholder="Client"
-            />
+            {order.customer_name ?? ''}
           </div>
-
-          {/* Company (if present) */}
-          {order.company_name || order.company_id ? (
-            <div className="join w-md">
-              <span className="join-item px-3 text-gray-500 flex items-center">
-                <FaBox size={18} />
-              </span>
-              <input
-                type="text"
-                className="input input-bordered join-item w-full"
-                readOnly
-                value={order.company_name ?? order.company_id ?? ''}
-                placeholder="Company"
-              />
-            </div>
-          ) : null}
 
           {/* Order date */}
           <div className="join w-md">
             <span className="join-item px-3 text-gray-500 flex items-center">
               <FaFileLines size={18} />
             </span>
-            <input
-              type="text"
-              className="input input-bordered join-item w-full"
-              readOnly
-              value={orderDateDisplay}
-              placeholder="Order date"
-            />
+            {orderDateDisplay}
           </div>
 
           {/* Total amount */}
@@ -183,13 +161,15 @@ export default function OrderDetailsPage() {
             <span className="join-item px-3 text-gray-500 flex items-center">
               <FaTag size={18} />
             </span>
-            <input
-              type="text"
-              className="input input-bordered join-item w-full"
-              readOnly
-              value={totalAmountDisplay}
-              placeholder="Total amount"
-            />
+            {totalAmountDisplay} € (excl. VAT)
+          </div>
+
+          {/* Total amount (incl. VAT) */}
+          <div className="join w-md">
+            <span className="join-item px-3 text-gray-500 flex items-center">
+              <FaTag size={18} />
+            </span>
+            {totalAmountVatInclDisplay} € (incl. VAT)
           </div>
 
           {/* Items section */}
@@ -207,8 +187,12 @@ export default function OrderDetailsPage() {
                   <tr>
                     <th>Product</th>
                     <th className="text-right">Qty</th>
-                    <th className="text-right">Unit price</th>
-                    <th className="text-right">Total</th>
+                    <th className="text-right">Unit (excl. VAT) €</th>
+                    <th className="text-right">VAT %</th>
+                    <th className="text-right">VAT €</th>
+                    <th className="text-right">Unit (incl. VAT) €</th>
+                    <th className="text-right">Total (excl. VAT) €</th>
+                    <th className="text-right">Total (incl. VAT) €</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -231,8 +215,18 @@ export default function OrderDetailsPage() {
                         <td className="text-right">
                           {unitPrice.toFixed(2)}
                         </td>
+                        <td className="text-right">{item.tax_rate ?? '-'}</td>
+                        <td className="text-right">
+                          {(((item.tax_rate ? Number(item.tax_rate) : 0) / 100) * unitPrice).toFixed(2)}
+                        </td>
+                        <td className="text-right">
+                          {(unitPrice + ((item.tax_rate ? Number(item.tax_rate) : 0) / 100) * unitPrice).toFixed(2)}
+                        </td>
                         <td className="text-right">
                           {totalPrice.toFixed(2)}
+                        </td>
+                        <td className="text-right">
+                          {(totalPrice + ((item.tax_rate ? Number(item.tax_rate) : 0) / 100) * totalPrice).toFixed(2)}
                         </td>
                       </tr>
                     );

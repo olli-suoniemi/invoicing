@@ -163,6 +163,7 @@ export default function OrdersNewPage() {
       status: 'pending',
       items: [
         {
+          tax_rate: '0.00',
           product_id: '',
           quantity: '1',
           unit_price: '0.00',
@@ -190,6 +191,7 @@ export default function OrdersNewPage() {
       const productId = item.product_id.trim();
       const qtyStr = item.quantity.toString().trim();
       const priceStr = item.unit_price.toString().trim();
+      const totalPriceStr = item.total_price ? item.total_price.toString().trim() : null;
 
       if (!productId) {
         toast.error('Each item must have a product ID');
@@ -223,6 +225,8 @@ export default function OrdersNewPage() {
         product_id: productId,
         quantity,
         unit_price: unitPrice,
+        tax_rate: toNumber(item.tax_rate),
+        total_price: totalPriceStr ? Number(totalPriceStr) : quantity * unitPrice,
       });
     }
 
@@ -236,7 +240,6 @@ export default function OrdersNewPage() {
       status: order.status || 'pending',
       total_amount,         // numeric(12,2)
       items: itemsPayload,  // for order_items
-      // company_id can be added here if your API needs it
     };
 
     try {
@@ -298,8 +301,17 @@ export default function OrdersNewPage() {
         <div className="flex w-full flex-col">
           {/* Title + buttons */}
           <div className="flex items-center gap-10">
-            <h1 className="text-3xl font-bold">Add new order</h1>
-            <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold">
+              Add new order
+            </h1>
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => router.back()}
+              >
+                &larr; Back
+              </button>
               <button
                 type="button"
                 className="btn btn-ghost"
@@ -343,7 +355,7 @@ export default function OrdersNewPage() {
               <span className="label-text">Status</span>
             </label>
             <select
-              className="select select-bordered w-full h-11 text-sm flex-1"
+              className="select select-bordered w-full h-11 text-md flex-1"
               value={order.status}
               onChange={(e) =>
                 setOrder((s) => ({ ...s, status: e.target.value }))
@@ -408,7 +420,7 @@ export default function OrdersNewPage() {
                           type="number"
                           min="1"
                           step="1"
-                          className="input input-sm input-bordered w-full text-right"
+                          className="input input-md input-bordered w-full text-right"
                           value={item.quantity}
                           onChange={(e) => updateItem(index, 'quantity', e.target.value)}
                         />
@@ -420,7 +432,7 @@ export default function OrdersNewPage() {
                           type="number"
                           min="0"
                           step="0.01"
-                          className="input input-sm input-bordered w-full text-right"
+                          className="input input-md input-bordered w-full text-right"
                           value={item.unit_price}
                           onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
                         />
@@ -430,7 +442,7 @@ export default function OrdersNewPage() {
                       <td className="text-right">
                         <input
                           type="text"
-                          className="input input-sm input-bordered w-full text-right"
+                          className="input input-md input-bordered w-full text-right"
                           value={`${taxRate.toFixed(2)} %`}
                           readOnly
                         />
@@ -440,7 +452,7 @@ export default function OrdersNewPage() {
                       <td className="text-right">
                         <input
                           type="text"
-                          className="input input-sm input-bordered w-full text-right"
+                          className="input input-md input-bordered w-full text-right"
                           value={priceInclVAT.toFixed(2)}
                           readOnly
                         />

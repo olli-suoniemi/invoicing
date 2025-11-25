@@ -3,12 +3,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
-import { FaPlus } from "react-icons/fa";
+import { FaPlus } from 'react-icons/fa';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchOrders() {
@@ -18,7 +20,6 @@ export default function OrdersPage() {
           throw new Error('Failed to fetch orders');
         }
         const data = await response.json();
-        // expect { orders: [...] }
         setOrders(data.orders ?? []);
       } catch (error) {
         console.error(error);
@@ -37,6 +38,25 @@ export default function OrdersPage() {
         <ToastContainer />
         <div className="w-full max-w-4xl flex items-center justify-center">
           <span className="loading loading-spinner loading-lg" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!orders) {
+    return (
+      <div className="flex justify-center items-start min-h-screen py-5">
+        <ToastContainer />
+        <div className="w-full max-w-4xl flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">Orders not found</h1>
+            <button className="btn btn-ghost" onClick={() => router.back()}>
+              Back
+            </button>
+          </div>
+          <p className="text-gray-500">
+            We couldn&rsquo;t find any orders.
+          </p>
         </div>
       </div>
     );
@@ -77,31 +97,45 @@ export default function OrdersPage() {
           </p>
         ) : (
           <div className="w-full max-w-4xl self-center overflow-x-auto">
-            <table className="table table-zebra w-full">
+            <table className="table table-zebra table-fixed w-full text-center">
               <thead>
                 <tr>
-                  {/* Adjust these to match your API fields */}
-                  <th>Order #</th>
-                  <th>Customer</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th className="text-right">Actions</th>
+                  <th className="w-1/4 text-center">Order #</th>
+                  <th className="w-1/4 text-center">Customer</th>
+                  <th className="w-1/4 text-center">Total</th>
+                  <th className="w-1/4 text-center">Order date</th>
+                  <th className="w-1/4 text-center">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.map((order) => (
-                  <tr key={order.id} className="hover">
-                    <td>{order.order_number ?? order.number ?? order.id}</td>
-                    <td>{order.customer_name ?? order.client_name ?? '-'}</td>
-                    <td>{order.total_amount ?? '-'}</td>
-                    <td>{order.status ?? '-'}</td>
-                    <td className="text-right">
-                      <Link
-                        href={`/orders/${order.id}`}
-                        className="btn btn-ghost btn-xs"
-                      >
-                        View
-                      </Link>
+                  <tr
+                    key={order.id}
+                    className="hover cursor-pointer hover:bg-accent/10"
+                    onClick={() => router.push(`/orders/${order.id}`)}
+                  >
+                    <td className="text-center">{order.id ?? '-'}</td>
+                    <td className="text-center">
+                      {order.customer_name ?? '—'}
+                    </td>
+                    <td className="text-center">
+                      {order.total_amount != null
+                        ? Number(order.total_amount).toFixed(2)
+                        : '—'}
+                    </td>
+                    <td className="text-center">
+                      {order.order_date
+                        ? new Date(order.order_date).toLocaleDateString('fi-FI')
+                        : '—'}
+                    </td>
+                    <td className="text-center">
+                      {order.status ? (
+                        <span className="badge badge-neutral">
+                          {order.status}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
                     </td>
                   </tr>
                 ))}
