@@ -327,27 +327,13 @@ export default function InventoryDetailsPage() {
             <div>
               <b>Created at:</b>{' '}
               {initial.created_at
-                ? new Date(initial.created_at).toLocaleString('en-GB', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                  })
+                ? new Date(initial.created_at).toLocaleString('fi-FI')
                 : '—'}
             </div>
             <div>
               <b>Updated at:</b>{' '}
               {initial.updated_at
-                ? new Date(initial.updated_at).toLocaleString('en-GB', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                  })
+                ? new Date(initial.updated_at).toLocaleString('fi-FI')
                 : '—'}
             </div>
           </div>
