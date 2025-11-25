@@ -62,6 +62,7 @@ CREATE TABLE customers (
   vat_id        text,                                      -- business-only (usually)
   business_id   text,                                      -- business-only (e.g., Y-tunnus)
   email         text,
+  phone         text,
   company_id    uuid REFERENCES companies(id) ON DELETE SET NULL, -- optional link to owning org
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now()
@@ -70,7 +71,7 @@ CREATE TABLE customers (
 -- Customer addresses
 CREATE TABLE customer_addresses (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  customer_id     uuid NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+  customer_id   uuid NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
   type          text CHECK (type IN ('invoicing','delivery')) NOT NULL,
   address       text NOT NULL,
   postal_code   text NOT NULL,
@@ -97,10 +98,11 @@ CREATE TABLE products (
 -- Orders
 CREATE TABLE orders (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  customer_id     uuid NOT NULL REFERENCES customers(id) ON DELETE SET NULL,
+  customer_id   uuid NOT NULL REFERENCES customers(id) ON DELETE SET NULL,
   company_id    uuid REFERENCES companies(id) ON DELETE SET NULL,
   order_date    timestamptz NOT NULL DEFAULT now(),
   total_amount  numeric(12,2) NOT NULL DEFAULT 0.00,
+  total_amount_vat_incl numeric(12,2) NOT NULL DEFAULT 0.00,
   status        text CHECK (status IN ('pending','completed','cancelled')) NOT NULL DEFAULT 'pending',
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now()
