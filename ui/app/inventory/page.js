@@ -4,10 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import { FaPlus } from "react-icons/fa";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function InventoryPage() {
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchInventory() {
@@ -45,7 +47,7 @@ export default function InventoryPage() {
         <ToastContainer />
         <div className="w-full max-w-4xl flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold"> Inventory not found</h1>
+            <h1 className="text-3xl font-bold">Inventory not found</h1>
             <button className="btn btn-ghost" onClick={() => router.back()}>
               Back
             </button>
@@ -81,7 +83,11 @@ export default function InventoryPage() {
             <input type="search" className="grow" placeholder="Search" />
           </label>
 
-          <Link className="btn" title="Add new inventory item" href="/inventory/new">
+          <Link
+            className="btn"
+            title="Add new inventory item"
+            href="/inventory/new"
+          >
             <FaPlus size={20} />
           </Link>
         </div>
@@ -93,30 +99,22 @@ export default function InventoryPage() {
           </p>
         ) : (
           <div className="w-full max-w-4xl self-center overflow-x-auto">
-            <table className="table table-zebra w-full">
+            <table className="table table-zebra table-fixed w-full text-center">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Unit Price</th>
-                  {/* Add more columns if your API returns them */}
-                  {/* <th>Type</th>
-                  <th>Created</th> */}
-                  <th className="text-right">Actions</th>
+                  <th className="w-1/2 text-center">Name</th>
+                  <th className="w-1/2 text-center">Unit Price</th>
                 </tr>
               </thead>
               <tbody>
                 {inventory.map((item) => (
-                  <tr key={item.id} className="hover">
-                    <td>{item.name}</td>
-                    <td>{item.unit_price}</td>
-                    <td className="text-right">
-                      <Link
-                        href={`/inventory/${item.id}`}
-                        className="btn btn-ghost btn-xs"
-                      >
-                        View
-                      </Link>
-                    </td>
+                  <tr
+                    key={item.id}
+                    className="hover cursor-pointer hover:bg-accent/10"
+                    onClick={() => router.push(`/inventory/${item.id}`)}
+                  >
+                    <td className="text-center">{item.name}</td>
+                    <td className="text-center">{item.unit_price}</td>
                   </tr>
                 ))}
               </tbody>
