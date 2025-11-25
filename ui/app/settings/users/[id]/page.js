@@ -155,16 +155,16 @@ export default function UserPage() {
             <div><b>User ID:</b> {initial.id}</div>
             <div><b>Firebase ID:</b> {initial.firebase_uid}</div>
             <div><b>Created at:</b>{' '}
-              {new Date(initial.created_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              {new Date(initial.created_at).toLocaleString('fi-FI')}
             </div>
             <div><b>Updated at:</b>{' '}
               {initial.updated_at
-                ? new Date(initial.updated_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                ? new Date(initial.updated_at).toLocaleString('fi-FI')
                 : '—'}
             </div>
             <div><b>Last login:</b>{' '}
               {initial.last_login
-                ? new Date(initial.last_login).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                ? new Date(initial.last_login).toLocaleString('fi-FI')
                 : '—'}
             </div>
           </div>
