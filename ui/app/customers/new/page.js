@@ -52,11 +52,220 @@ export default function CustomerNewPage() {
     return values.some(v => (v ?? '').toString().trim() !== '');
   }, [customerType, person, company]);
 
-  const handleSave = () => {
-    const payload = customerType === 'person' ? { type: 'person', ...person } : { type: 'company', ...company };
-    // Do your submit here (fetch/axios/action)
-    // await saveCustomer(payload)
-    toast.success('New customer created!');
+  const handleSave = async () => {
+    const fullName = person.fullName.trim();
+    const email = person.email.trim();
+    const phone = person.phone.trim();
+
+    // Person invoice address (always from invoice fields)
+    const invoiceStreet = person.invoiceStreet.trim();
+    const invoiceCity = person.invoiceCity.trim();
+    const invoicePostalCode = person.invoicePostalCode.trim();
+    const invoiceState = person.invoiceState.trim();
+    const invoiceCountry = person.invoiceCountry.trim();
+
+    // Person delivery address (may mirror invoice if sameAsInvoice)
+    let deliveryStreet;
+    let deliveryCity;
+    let deliveryPostalCode;
+    let deliveryState;
+    let deliveryCountry;
+
+    if (sameAsInvoice) {
+      deliveryStreet = invoiceStreet;
+      deliveryCity = invoiceCity;
+      deliveryPostalCode = invoicePostalCode;
+      deliveryState = invoiceState;
+      deliveryCountry = invoiceCountry;
+    } else {
+      deliveryStreet = person.deliveryStreet.trim();
+      deliveryCity = person.deliveryCity.trim();
+      deliveryPostalCode = person.deliveryPostalCode.trim();
+      deliveryState = person.deliveryState.trim();
+      deliveryCountry = person.deliveryCountry.trim();
+    }
+
+    // --- Trim company basics ---
+    const companyName = company.companyName.trim();
+    const businessId = company.businessId.trim();
+    const compEmail = company.email.trim();
+    const compPhone = company.phone.trim();
+
+    // Company invoice address
+    const compInvoiceStreet = company.invoiceStreet.trim();
+    const compInvoiceCity = company.invoiceCity.trim();
+    const compInvoicePostalCode = company.invoicePostalCode.trim();
+    const compInvoiceState = company.invoiceState.trim();
+    const compInvoiceCountry = company.invoiceCountry.trim();
+
+    // Company delivery address
+    let compDeliveryStreet;
+    let compDeliveryCity;
+    let compDeliveryPostalCode;
+    let compDeliveryState;
+    let compDeliveryCountry;
+
+    if (sameAsInvoice) {
+      compDeliveryStreet = compInvoiceStreet;
+      compDeliveryCity = compInvoiceCity;
+      compDeliveryPostalCode = compInvoicePostalCode;
+      compDeliveryState = compInvoiceState;
+      compDeliveryCountry = compInvoiceCountry;
+    } else {
+      compDeliveryStreet = company.deliveryStreet.trim();
+      compDeliveryCity = company.deliveryCity.trim();
+      compDeliveryPostalCode = company.deliveryPostalCode.trim();
+      compDeliveryState = company.deliveryState.trim();
+      compDeliveryCountry = company.deliveryCountry.trim();
+    }
+
+    // --- Validation helpers ---
+    const requireIfPerson = (value, message) => {
+      if (customerType === 'person' && !value) {
+        toast.error(message);
+        return false;
+      }
+      return true;
+    };
+
+    const requireIfCompany = (value, message) => {
+      if (customerType === 'company' && !value) {
+        toast.error(message);
+        return false;
+      }
+      return true;
+    };
+
+    // --- Basic validation ---
+
+    // Person
+    if (
+      !requireIfPerson(fullName, 'Full name is required') ||
+      !requireIfPerson(email, 'Email is required') ||
+      !requireIfPerson(invoiceStreet, 'Invoice street is required') ||
+      !requireIfPerson(invoiceCity, 'Invoice city is required') ||
+      !requireIfPerson(invoicePostalCode, 'Invoice postal code is required') ||
+      !requireIfPerson(invoiceCountry, 'Invoice country is required') ||
+      !requireIfPerson(deliveryStreet, 'Delivery street is required') ||
+      !requireIfPerson(deliveryCity, 'Delivery city is required') ||
+      !requireIfPerson(deliveryPostalCode, 'Delivery postal code is required') ||
+      !requireIfPerson(deliveryCountry, 'Delivery country is required')
+    ) {
+      return;
+    }
+
+    // Company
+    if (
+      !requireIfCompany(companyName, 'Company name is required') ||
+      !requireIfCompany(compEmail, 'Email is required') ||
+      !requireIfCompany(compInvoiceStreet, 'Invoice street is required') ||
+      !requireIfCompany(compInvoiceCity, 'Invoice city is required') ||
+      !requireIfCompany(compInvoicePostalCode, 'Invoice postal code is required') ||
+      !requireIfCompany(compInvoiceCountry, 'Invoice country is required') ||
+      !requireIfCompany(compDeliveryStreet, 'Delivery street is required') ||
+      !requireIfCompany(compDeliveryCity, 'Delivery city is required') ||
+      !requireIfCompany(compDeliveryPostalCode, 'Delivery postal code is required') ||
+      !requireIfCompany(compDeliveryCountry, 'Delivery country is required')
+    ) {
+      return;
+    }
+
+    // --- Build payload ---
+    const payload = {
+      type: customerType,
+      person:
+        customerType === 'person'
+          ? {
+              full_name: fullName,
+              email: email || null,
+              phone: phone || null,
+              invoice_street: invoiceStreet || null,
+              invoice_city: invoiceCity || null,
+              invoice_postal_code: invoicePostalCode || null,
+              invoice_state: invoiceState || null,
+              invoice_country: invoiceCountry || null,
+              delivery_street: deliveryStreet || null,
+              delivery_city: deliveryCity || null,
+              delivery_postal_code: deliveryPostalCode || null,
+              delivery_state: deliveryState || null,
+              delivery_country: deliveryCountry || null,
+            }
+          : null,
+      company:
+        customerType === 'company'
+          ? {
+              company_name: companyName,
+              business_id: businessId || null,
+              email: compEmail || null,
+              phone: compPhone || null,
+              invoice_street: compInvoiceStreet || null,
+              invoice_city: compInvoiceCity || null,
+              invoice_postal_code: compInvoicePostalCode || null,
+              invoice_state: compInvoiceState || null,
+              invoice_country: compInvoiceCountry || null,
+              delivery_street: compDeliveryStreet || null,
+              delivery_city: compDeliveryCity || null,
+              delivery_postal_code: compDeliveryPostalCode || null,
+              delivery_state: compDeliveryState || null,
+              delivery_country: compDeliveryCountry || null,
+            }
+          : null,
+    };
+
+    try {
+      const resp = await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || 'Upstream error');
+      }
+
+      resetForm();
+      toast.success('New customer created!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to create customer');
+    }
+  };
+
+
+  const resetForm = () => {
+    setPerson({
+      fullName: '',
+      email: '',
+      phone: '',
+      invoiceStreet: '',
+      invoiceCity: '',
+      invoicePostalCode: '',
+      invoiceState: '',
+      invoiceCountry: '',
+      deliveryStreet: '',
+      deliveryCity: '',
+      deliveryPostalCode: '',
+      deliveryState: '',
+      deliveryCountry: '',
+    });
+
+    setCompany({
+      companyName: '',
+      businessId: '',
+      email: '',
+      phone: '',
+      invoiceStreet: '',
+      invoiceCity: '',
+      invoicePostalCode: '',
+      invoiceState: '',
+      invoiceCountry: '',
+      deliveryStreet: '',
+      deliveryCity: '',
+      deliveryPostalCode: '',
+      deliveryState: '',
+      deliveryCountry: '',
+    });
   };
 
   return (
