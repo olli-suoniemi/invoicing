@@ -120,6 +120,7 @@ export default function ProductSelect({
   onChange,
   placeholder = 'Search a product...',
   onEdit,
+  isDisabled = false,        // 👈 new prop
 }) {
   const [portalTarget, setPortalTarget] = useState(null);
 
@@ -144,6 +145,7 @@ export default function ProductSelect({
       menuPortalTarget={portalTarget}  // 👈 render menu in body, not inside table div
       menuPosition="fixed"             // keeps it aligned when scrolling
       onEdit={onEdit}
+      isDisabled={isDisabled}
     />
   );
 }
