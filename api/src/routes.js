@@ -199,10 +199,8 @@ v1.get('/inventory/:id', async (c) => {
   const authUser = c.get('user');
   const id = c.req.param('id');
   try {
-    // get main company of the auth user
-    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
     
-    const item = await inventoryService.getInventoryItemById(authUser, company, id);
+    const item = await inventoryService.getInventoryItemById(authUser, id);
 
     return c.json({ inventory: item });
   } catch (e) {
@@ -222,6 +220,21 @@ v1.post('/inventory', async (c) => {
     const item = await inventoryService.addInventoryItem(authUser, company, body);
 
     return c.json({ inventory: item });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// update inventory item by ID
+v1.put('/inventory/:id', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    const updated = await inventoryService.updateInventoryItemById(authUser, id, body);
+
+    return c.json( updated );
   } catch (e) {
     const status = e.status ?? 500;
     return c.json({ error: e.message ?? 'Internal error' }, status);
