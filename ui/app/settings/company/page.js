@@ -586,11 +586,11 @@ export default function CompanyPage() {
           <div className="mt-2 text-sm opacity-70">
             <div><b>Company ID:</b> {initial.id}</div>
             <div><b>Created at:</b>{' '}
-              {new Date(initial.created_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              {new Date(initial.created_at).toLocaleString('fi-FI')}
             </div>
             <div><b>Updated at:</b>{' '}
               {initial.updated_at
-                ? new Date(initial.updated_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                ? new Date(initial.updated_at).toLocaleString('fi-FI')
                 : '—'}
             </div>
           </div>
