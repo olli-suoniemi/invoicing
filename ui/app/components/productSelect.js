@@ -1,6 +1,7 @@
 // app/components/productSelect.js
 'use client';
 
+import React, { useEffect, useState } from 'react';
 import Select, { components } from 'react-select';
 
 const selectStyles = {
@@ -41,7 +42,6 @@ const selectStyles = {
     boxShadow:
       '0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1)',
     overflow: 'hidden',
-    zIndex: 50,
   }),
   menuList: (base) => ({
     ...base,
@@ -72,20 +72,20 @@ const selectStyles = {
   indicatorSeparator: () => ({
     display: 'none',
   }),
+  // styles for the portal container
+  menuPortal: (base) => ({
+    ...base,
+    zIndex: 50, // or higher if needed
+  }),
 };
 
-/**
- * Custom ClearIndicator that adds an edit button next to the X
- */
-// 🔧 Custom ClearIndicator with edit button that does NOT open the menu
+// your ClearWithEdit from before (unchanged except imports)
 const ClearWithEdit = (props) => {
   const { selectProps } = props;
 
   const handleEditMouseDown = (e) => {
-    // Very important: prevent default & stop propagation
-    e.preventDefault();   // stops focus / menu toggle
-    e.stopPropagation();  // stops bubbling to control
-
+    e.preventDefault();
+    e.stopPropagation();
     if (selectProps.onEdit && selectProps.value) {
       selectProps.onEdit(selectProps.value);
     }
@@ -96,7 +96,7 @@ const ClearWithEdit = (props) => {
       {selectProps.value && selectProps.onEdit && (
         <button
           type="button"
-          onMouseDown={handleEditMouseDown}   // 👈 use onMouseDown, not onClick
+          onMouseDown={handleEditMouseDown}
           title="Edit product"
           style={{
             border: 'none',
@@ -121,6 +121,13 @@ export default function ProductSelect({
   placeholder = 'Search a product...',
   onEdit,
 }) {
+  const [portalTarget, setPortalTarget] = useState(null);
+
+  useEffect(() => {
+    // only runs in browser
+    setPortalTarget(document.body);
+  }, []);
+
   return (
     <Select
       className="react-select-container"
@@ -134,6 +141,8 @@ export default function ProductSelect({
       isSearchable
       placeholder={placeholder}
       menuPlacement="auto"
+      menuPortalTarget={portalTarget}  // 👈 render menu in body, not inside table div
+      menuPosition="fixed"             // keeps it aligned when scrolling
       onEdit={onEdit}
     />
   );
