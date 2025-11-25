@@ -16,11 +16,29 @@ export async function getOrderById(user, id) {
   return order;
 };
 
-export async function listCompanyOrdersById(user, companyId) {
+export async function listCompanyOrders(user, companyId) {
   if (!canReadOrderOfCompany(user)) {
     throw new ForbiddenError("You do not have permission to view orders of this company.");
   }
 
   const orders = await repo.getOrdersByCompanyId(companyId);
   return orders;
+}
+
+export async function createOrder(user, orderData, company) {
+  const newOrder = {
+    customer_id: orderData.customer_id,
+    company_id: company.org_id,
+    total_amount: orderData.total_amount,
+    status: orderData.status || 'pending',
+    items: orderData.items || [],
+  };
+
+  const order = await repo.createOrder(newOrder);
+  return order;
+};
+
+export async function updateOrderById(user, orderId, updateData) {
+  const updatedOrder = await repo.updateOrderById({id: orderId, ...updateData});
+  return updatedOrder;
 }
