@@ -26,3 +26,19 @@ export async function createInventoryItem(item) {
   `;
   return result[0];
 }
+
+export async function updateInventoryItemById(item) {
+  const result = await sql`
+    update products
+    set
+      name = coalesce(${item.name}, name),
+      ean_code = coalesce(${item.ean_code}, ean_code),
+      description = coalesce(${item.description}, description),
+      unit_price = coalesce(${item.unit_price}, unit_price),
+      tax_rate = coalesce(${item.tax_rate}, tax_rate),
+      updated_at = now()
+    where id = ${item.id}
+    returning *
+  `;
+  return result[0];
+} 

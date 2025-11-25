@@ -8,23 +8,17 @@ export function canCreateItem(user) {
   return false;
 }
 
-export function canReadInventoryItem(user, company, item) {
+export function canReadInventoryItem(user) {
   // Admins can read anything
   if (user?.admin) return true;
-
-  // Company members can read their company's customers
-  if (company.org_id === item.company_id) return true;
 
   // Otherwise, no access
   return false;
 }
 
-export function canEditInventoryItem(user, company, item) {
+export function canEditInventoryItem(user) {
   // Admins can edit anything
   if (user?.admin) return true;
-
-  // Company members can edit their company's customers
-  if (company.org_id === item.company_id) return true;
 
   // Otherwise, no access
   return false;

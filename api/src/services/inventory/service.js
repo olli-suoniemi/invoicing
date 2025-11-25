@@ -28,11 +28,24 @@ export async function listCompanyInventoryById(id) {
   return inventory;
 };
 
-export async function getInventoryItemById(user, company, itemId) {
+export async function getInventoryItemById(user, itemId) {
   // check if user has access to the inventory item
   const item = await repo.getInventoryItemById(itemId);
-  if (!item || !canReadInventoryItem(user, company, item)) {
+  if (!item || !canReadInventoryItem(user)) {
     throw new ForbiddenError('Inventory item not found or access denied');
   }
   return item;
 }
+
+export async function updateInventoryItemById(user, itemId, updateData) {
+  // check if user has access to the inventory item
+  const item = await repo.getInventoryItemById(itemId);
+
+  if (!item || !canReadInventoryItem(user)) {
+    throw new ForbiddenError('Inventory item not found or access denied');
+  }
+
+  // update inventory item
+  const updatedItem = await repo.updateInventoryItemById({id: itemId, ...updateData});
+  return updatedItem;
+} 
