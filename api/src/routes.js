@@ -178,6 +178,41 @@ v1.get('/customers/:id', async (c) => {
   }
 });
 
+// create customer
+v1.post('/customers', async (c) => {
+  const authUser = c.get('user');
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    // get main company of the auth user
+    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+
+    console.log("Creating customer for company:", company, "with data:", body);
+
+    const customer = await customersService.createCustomer(company, body);
+
+    return c.json({ customer });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// update customer by ID
+v1.put('/customers/:id', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    console.log("Updating customer ID:", id, "with data:", body);
+    const updated = await customersService.updateCustomer(id, body);
+
+    return c.json( updated );
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
 // get inventory
 v1.get('/inventory', async (c) => {
   const authUser = c.get('user');
@@ -248,7 +283,7 @@ v1.get('/orders', async (c) => {
     // get main company of the auth user
     const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
 
-    const orders = await ordersService.listCompanyOrdersById(authUser, company.org_id);
+    const orders = await ordersService.listCompanyOrders(authUser, company.org_id);
 
     return c.json({ orders });
   } catch (e) {
@@ -265,6 +300,37 @@ v1.get('/orders/:id', async (c) => {
     const order = await ordersService.getOrderById(authUser, id);
 
     return c.json({ order });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// create order
+v1.post('/orders', async (c) => {
+  const authUser = c.get('user');
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+
+    const order = await ordersService.createOrder(authUser, body, company);
+
+    return c.json({ order });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// update order by ID
+v1.put('/orders/:id', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    const updated = await ordersService.updateOrderById(authUser, id, body);
+
+    return c.json( updated );
   } catch (e) {
     const status = e.status ?? 500;
     return c.json({ error: e.message ?? 'Internal error' }, status);
