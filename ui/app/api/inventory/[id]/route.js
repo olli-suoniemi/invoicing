@@ -20,3 +20,26 @@ export async function GET(req, { params }) {
   const data = await r.json();
   return NextResponse.json({ inventory: data.inventory });
 }
+
+export async function PUT(req, { params }) {
+  const authz = req.headers.get('authorization');
+  if (!authz) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const body = await req.json().catch(() => ({}));
+  
+  const { id } = await params;
+
+  const r = await fetch(`${apiURL}/v1/inventory/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: authz },
+    body: JSON.stringify(body),
+  });
+
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    return NextResponse.json({ error: e.error || 'Upstream error' }, { status: r.status });
+  }
+
+  const product = await r.json();
+  return NextResponse.json({ inventory: product });
+}
