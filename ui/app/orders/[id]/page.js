@@ -137,6 +137,13 @@ export default function OrderDetailsPage() {
               >
                 Edit
               </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => router.push(`/orders/${id}/invoice`)}
+              >
+                Create Invoice
+              </button>
             </div>
           </div>
 
