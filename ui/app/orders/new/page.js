@@ -379,12 +379,12 @@ export default function OrdersNewPage() {
             <table className="table w-full">
               <thead>
                 <tr>
-                  <th className="w-2/5">Product</th>
-                  <th className="w-1/10 text-right">Qty</th>
-                  <th className="w-1/5 text-right">Unit (excl. VAT)</th>
+                  <th className="w-3/10">Product</th>
+                  <th className="w-2/10 text-right">Qty</th>
+                  <th className="w-2/10 text-right">Unit (excl. VAT)</th>
                   <th className="w-1/10 text-right">VAT %</th>
-                  <th className="w-1/5 text-right">Unit (incl. VAT)</th>
-                  <th className="w-1/5 text-right">Amount</th>
+                  <th className="w-1/10 text-right">Unit (incl. VAT)</th>
+                  <th className="w-1/10 text-right">Amount</th>
                   <th className="w-10"></th>
                 </tr>
               </thead>
@@ -440,22 +440,12 @@ export default function OrdersNewPage() {
 
                       {/* VAT rate – read-only */}
                       <td className="text-right">
-                        <input
-                          type="text"
-                          className="input input-md input-bordered w-full text-right"
-                          value={`${taxRate.toFixed(2)} %`}
-                          readOnly
-                        />
+                        {`${taxRate.toFixed(2)} %`}
                       </td>
 
                       {/* Unit price (VAT included) – read-only */}
                       <td className="text-right">
-                        <input
-                          type="text"
-                          className="input input-md input-bordered w-full text-right"
-                          value={priceInclVAT.toFixed(2)}
-                          readOnly
-                        />
+                        {priceInclVAT.toFixed(2)}
                       </td>
 
                       {/* Line total (qty * unit incl. VAT) */}
