@@ -5,6 +5,10 @@ import NavBar from './components/navBar';
 import { usePathname } from 'next/navigation';
 import './globals.css'; // Import global styles
 
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+
+
 export default function RootLayout({ children }) {
   const pathname = usePathname(); // Get the current pathname
 
