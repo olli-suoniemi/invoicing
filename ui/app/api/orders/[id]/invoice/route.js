@@ -4,6 +4,11 @@ import { NextResponse } from 'next/server';
 import { renderToBuffer } from '@react-pdf/renderer';
 import { apiURL } from '@/utils/apiUrl';
 import { InvoicePdfDocument } from '@/lib/pdf/InvoicePdfDocument';
+import JsBarcode from 'jsbarcode';
+import { createCanvas } from 'canvas';
+import { buildFinnishBankBarcode } from '@/lib/bankBarcode';
+import fs from 'fs';
+import path from 'path';
 
 // IMPORTANT: use Node runtime, React PDF Node APIs need Node
 export const runtime = 'nodejs';
@@ -94,14 +99,55 @@ export async function GET(req, { params }) {
   } else {
     order.company_name = 'Unknown Company';
   }
+
+
+  // ---- Build pankkiviivakoodi string (54 digits) ----
+  const barcodeData = buildFinnishBankBarcode({
+    iban: order.company_iban ?? 'FI5810171000000122',           // e.g. "FI58 1017 1000 0001 22"
+    amount: order.total_amount_vat_incl ?? 304.35, // e.g. 482.99
+    reference: order.payment_reference ?? '123453', // national or RF
+    dueDate: order.due_date ?? '2024-06-30',
+  });
+
+  console.log('Generated pankkiviivakoodi data string:', barcodeData); // --- IGNORE ---
+
+  order.barcodeData = barcodeData;
+
+  // ---- Generate barcode image with JsBarcode ----
+  const canvas = createCanvas(800, 80); // wide canvas for good resolution
+
+  JsBarcode(canvas, barcodeData, {
+    format: 'CODE128C',    // important: character set C
+    displayValue: false,
+    margin: 0,
+    height: 50,
+  });
+
+  const pngBuffer = canvas.toBuffer('image/png');
+  const referenceBarcodeDataUrl =
+    'data:image/png;base64,' + pngBuffer.toString('base64');
   
-  console.log('Using order data for PDF:', order);
-  // Generate the PDF as a Node Buffer
+  // ---- Read logo from public/ and turn into data URL ----
+  const logoPath = path.join(process.cwd(), 'public', 'apples.png');
+  let companyLogoDataUrl = null;
+  try {
+    const logoBuffer = await fs.promises.readFile(logoPath);
+    companyLogoDataUrl =
+      'data:image/png;base64,' + logoBuffer.toString('base64');
+  } catch (e) {
+    console.error('Error reading logo image:', e);
+  }
+
+  // ---- Render PDF ----
   const buffer = await renderToBuffer(
-    <InvoicePdfDocument order={order} />
+    <InvoicePdfDocument
+      order={order}
+      referenceBarcode={referenceBarcodeDataUrl}
+      companyLogo={companyLogoDataUrl}  
+    />,
   );
 
-  // Return as real PDF response
+
   return new NextResponse(buffer, {
     status: 200,
     headers: {
