@@ -1,15 +1,23 @@
 // app/orders/[id]/page.jsx
 'use client';
 
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { format } from 'date-fns';
+import { fi } from 'date-fns/locale';
+
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ToastContainer, toast } from 'react-toastify';
+import { RiProgress8Line, RiMoneyEuroBoxFill } from "react-icons/ri";
 import {
   FaUser,
-  FaTag,
   FaPlus,
   FaMinus,
 } from 'react-icons/fa6';
+import { FaCalendarDay } from "react-icons/fa";
+
 import CustomerSelect from '@/app/components/customerSelect';
 import ProductSelect from '@/app/components/productSelect';
 
@@ -53,12 +61,12 @@ export default function OrderDetailsPage() {
 
         setInitialOrder(ord);
 
-        console.log('Loaded order for edit:', ord);
-
         setOrder({
           customer_id: ord.customer_id ?? '',
           status: ord.status ?? 'pending',
-          total_amount_vat_excl: ord.total_amount ?? 0,
+          extra_info: ord.extra_info || '',
+          order_date: formatOrderDateForInput(ord.order_date),
+          total_amount_vat_excl: ord.total_amount_vat_excl ?? 0,
           total_amount_vat_incl: ord.total_amount_vat_incl ?? 0,
           items:
             (ord.items ?? []).length > 0
@@ -66,9 +74,9 @@ export default function OrderDetailsPage() {
                   id: item.id,
                   product_id: item.product_id ?? '',
                   quantity: String(item.quantity ?? '1'),
-                  unit_price:
-                    item.unit_price != null
-                      ? String(item.unit_price)
+                  unit_price_vat_excl:
+                    item.unit_price_vat_excl != null
+                      ? String(item.unit_price_vat_excl)
                       : '0.00',
                   tax_rate:
                     item.tax_rate != null
@@ -79,7 +87,7 @@ export default function OrderDetailsPage() {
                   {
                     product_id: '',
                     quantity: '1',
-                    unit_price: '0.00',
+                    unit_price_vat_excl: '0.00',
                     tax_rate: '0.00',
                   },
                 ],
@@ -139,7 +147,9 @@ export default function OrderDetailsPage() {
     return (products || []).map((p) => ({
       value: p.id,
       label: p.name,
-      unit_price: p.unit_price,
+      ean_code: p.ean_code,
+      unit_price_vat_excl: p.unit_price_vat_excl,
+      unit_price_vat_incl: p.unit_price_vat_incl,
       tax_rate: p.tax_rate,
     }));
   }, [products]);
@@ -170,13 +180,13 @@ export default function OrderDetailsPage() {
 
       if (option) {
         updated.product_id = option.value;
-        updated.unit_price =
-          option.unit_price != null ? String(option.unit_price) : '0.00';
+        updated.unit_price_vat_excl =
+          option.unit_price_vat_excl != null ? String(option.unit_price_vat_excl) : '0.00';
         updated.tax_rate =
           option.tax_rate != null ? String(option.tax_rate) : '0.00';
       } else {
         updated.product_id = '';
-        updated.unit_price = '0.00';
+        updated.unit_price_vat_excl = '0.00';
         updated.tax_rate = '0.00';
       }
 
@@ -204,7 +214,8 @@ export default function OrderDetailsPage() {
           {
             product_id: '',
             quantity: '1',
-            unit_price: '0.00',
+            unit_price_vat_excl: '0.00',
+            unit_price_vat_incl: '0.00',
             tax_rate: '0.00',
           },
         ],
@@ -225,33 +236,78 @@ export default function OrderDetailsPage() {
 
   const normalizeForCompare = (ord) => {
     if (!ord) return null;
+
     return {
       customer_id: ord.customer_id ?? '',
       status: ord.status ?? 'pending',
+      order_date: ord.order_date ? formatOrderDateForInput(ord.order_date) : '',
+      extra_info: ord.extra_info || '',
       items: (ord.items || []).map((it) => ({
         product_id: it.product_id ?? '',
         quantity: String(it.quantity ?? '1'),
-        unit_price:
-          it.unit_price != null ? String(it.unit_price) : '0.00',
+        unit_price_vat_excl:
+          it.unit_price_vat_excl != null ? String(it.unit_price_vat_excl) : '0.00',
         tax_rate:
           it.tax_rate != null ? String(it.tax_rate) : '0.00',
       })),
     };
   };
 
+
+  const formatOrderDateForInput = (isoString) => {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+
+    const pad = (n) => String(n).padStart(2, '0');
+    const year = d.getFullYear();
+    const month = pad(d.getMonth() + 1);
+    const day = pad(d.getDate());
+
+    // what <input type="date"> expects
+    return `${year}-${month}-${day}`;
+  };
+
   const hasChanges = useMemo(() => {
     if (!initialOrder || !order) return false;
 
-    const initNorm = normalizeForCompare({
-      customer_id: initialOrder.customer_id,
-      status: initialOrder.status,
-      items: initialOrder.items ?? [],
-    });
-
+    const initNorm = normalizeForCompare(initialOrder);
     const currNorm = normalizeForCompare(order);
 
     return JSON.stringify(initNorm) !== JSON.stringify(currNorm);
   }, [initialOrder, order]);
+
+  const {
+    totalAmountVatExcl,
+    totalAmountVatIncl,
+    totalVatAmount,
+  } = useMemo(() => {
+    if (!order || !order.items) {
+      return { totalAmountVatExcl: 0, totalAmountVatIncl: 0, totalVatAmount: 0 };
+    }
+
+    let excl = 0;
+    let incl = 0;
+
+    for (const item of order.items) {
+      const qty = toNumber(item.quantity);
+      const priceExcl = toNumber(item.unit_price_vat_excl);
+      const taxRate = toNumber(item.tax_rate);
+
+      const priceIncl = priceExcl * (1 + taxRate / 100);
+
+      excl += qty * priceExcl;
+      incl += qty * priceIncl;
+    }
+
+    const vat = incl - excl;
+
+    return {
+      totalAmountVatExcl: excl,
+      totalAmountVatIncl: incl,
+      totalVatAmount: vat,
+    };
+  }, [order?.items]);
+
 
   const resetForm = () => {
     if (!initialOrder) return;
@@ -260,14 +316,16 @@ export default function OrderDetailsPage() {
       total_amount_vat_incl: initialOrder.total_amount_vat_incl ?? 0,
       customer_id: initialOrder.customer_id ?? '',
       status: initialOrder.status ?? 'pending',
+      extra_info: initialOrder.extra_info || '',
+      order_date: formatOrderDateForInput(initialOrder.order_date), // ⬅️ here
       items:
         (initialOrder.items ?? []).length > 0
           ? initialOrder.items.map((item) => ({
               product_id: item.product_id ?? '',
               quantity: String(item.quantity ?? '1'),
-              unit_price:
-                item.unit_price != null
-                  ? String(item.unit_price)
+              unit_price_vat_excl:
+                item.unit_price_vat_excl != null
+                  ? String(item.unit_price_vat_excl)
                   : '0.00',
               tax_rate:
                 item.tax_rate != null
@@ -278,7 +336,7 @@ export default function OrderDetailsPage() {
               {
                 product_id: '',
                 quantity: '1',
-                unit_price: '0.00',
+                unit_price_vat_excl: '0.00',
                 tax_rate: '0.00',
               },
             ],
@@ -309,7 +367,7 @@ export default function OrderDetailsPage() {
       const rowId = item.id;
       const productId = item.product_id.trim();
       const qtyStr = item.quantity.toString().trim();
-      const priceStr = item.unit_price.toString().trim();
+      const priceStrVatExcl = item.unit_price_vat_excl.toString().trim();
 
       if (!productId) {
         toast.error('Each item must have a product');
@@ -321,21 +379,21 @@ export default function OrderDetailsPage() {
         return;
       }
 
-      if (!priceStr) {
-        toast.error('Each item must have a unit price');
+      if (!priceStrVatExcl) {
+        toast.error('Each item must have a unit price excluding VAT');
         return;
       }
 
       const quantity = Number(qtyStr);
-      const unitPrice = Number(priceStr);
+      const unitPriceVatExcl = Number(priceStrVatExcl);
 
       if (!Number.isFinite(quantity) || quantity <= 0) {
         toast.error('Quantity must be a positive number');
         return;
       }
 
-      if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-        toast.error('Unit price must be a non-negative number');
+      if (!Number.isFinite(unitPriceVatExcl) || unitPriceVatExcl < 0) {
+        toast.error('Unit price excluding VAT must be a non-negative number');
         return;
       }
 
@@ -343,21 +401,16 @@ export default function OrderDetailsPage() {
         id: rowId,
         product_id: productId,
         quantity,
-        unit_price: unitPrice,
-        total_price: quantity * unitPrice,
+        unit_price_vat_excl: unitPriceVatExcl,
         tax_rate: toNumber(item.tax_rate)
       });
     }
 
-    const total_amount = itemsPayload.reduce(
-      (sum, it) => sum + it.total_price,
-      0,
-    );
-
     const payload = {
       customer_id: customerId,
       status: order.status || 'pending',
-      total_amount,
+      extra_info: order.extra_info || '',
+      order_date: order.order_date,
       items: itemsPayload,
     };
 
@@ -381,18 +434,20 @@ export default function OrderDetailsPage() {
       if (updated) {
         setInitialOrder(updated);
         setOrder({
-          total_amount_vat_excl: updated.total_amount ?? 0,
+          total_amount_vat_excl: updated.total_amount_vat_excl ?? 0,
           total_amount_vat_incl: updated.total_amount_vat_incl ?? 0,
           customer_id: updated.customer_id ?? '',
           status: updated.status ?? 'pending',
+          extra_info: updated.extra_info || '',
+          order_date: formatOrderDateForInput(updated.order_date),
           items:
             (updated.items ?? []).length > 0
               ? updated.items.map((item) => ({
                   product_id: item.product_id ?? '',
                   quantity: String(item.quantity ?? '1'),
-                  unit_price:
-                    item.unit_price != null
-                      ? String(item.unit_price)
+                  unit_price_vat_excl:
+                    item.unit_price_vat_excl != null
+                      ? String(item.unit_price_vat_excl)
                       : '0.00',
                   tax_rate:
                     item.tax_rate != null
@@ -403,7 +458,7 @@ export default function OrderDetailsPage() {
                   {
                     product_id: '',
                     quantity: '1',
-                    unit_price: '0.00',
+                    unit_price_vat_excl: '0.00',
                     tax_rate: '0.00',
                   },
                 ],
@@ -442,6 +497,10 @@ export default function OrderDetailsPage() {
     ? new Date(initialOrder.updated_at).toLocaleString('fi-FI')
     : '—';
 
+  const totalAmountVatExclDisplay = totalAmountVatExcl.toFixed(2);
+  const totalAmountVatInclDisplay = totalAmountVatIncl.toFixed(2);
+  const totalVatAmountDisplay = totalVatAmount.toFixed(2);
+
   return (
     <div className="flex justify-center items-start min-h-screen py-5">
       <ToastContainer />
@@ -451,7 +510,7 @@ export default function OrderDetailsPage() {
           {/* Title + buttons */}
           <div className="flex items-center gap-10">
             <h1 className="text-3xl font-bold">
-              Edit order #{initialOrder.id}
+              Edit order #{initialOrder.order_number}
             </h1>
             <div className="flex items-center gap-2">
               <span className="badge badge-neutral">
@@ -514,7 +573,7 @@ export default function OrderDetailsPage() {
           {/* Status */}
           <div className="w-2xl flex items-center gap-4">
             <label className="label w-32 flex items-center gap-2">
-              <FaUser size={18} />
+              <RiProgress8Line size={18} />
               <span className="label-text">Status</span>
             </label>
             <select
@@ -531,15 +590,25 @@ export default function OrderDetailsPage() {
             </select>
           </div>
 
-          {/* Order date (read-only) */}
+          {/* Order date */}
           <div className="w-2xl flex items-center gap-4 mt-4">
             <label className="label w-32 flex items-center gap-2">
-              <FaUser size={18} />
+              <FaCalendarDay size={18} />
               <span className="label-text">Order date</span>
             </label>
-            <div className="flex-1 h-11 flex items-center px-3">
-              {orderDateDisplay}
-            </div>
+
+            <DatePicker
+              selected={order.order_date ? new Date(order.order_date) : null}
+              onChange={(date) => {
+                const formatted = date ? format(date, 'yyyy-MM-dd') : '';
+                setOrder((s) => ({ ...s, order_date: formatted }));
+              }}
+              dateFormat="dd.MM.yyyy"
+              locale={fi}
+              wrapperClassName="flex-1"                        // ⬅️ flex item
+              className="input input-bordered w-full h-11 text-sm" // ⬅️ full width inside
+              disabled={!canEdit}
+            />
           </div>
 
           {/* Items header */}
@@ -554,6 +623,7 @@ export default function OrderDetailsPage() {
               <thead>
                 <tr>
                   <th className="w-2/5">Product</th>
+                  <th className="w-1/10 text-right">EAN</th>
                   <th className="w-1/10 text-right">Qty</th>
                   <th className="w-1/5 text-right">Unit (excl. VAT) €</th>
                   <th className="w-1/10 text-right">VAT %</th>
@@ -567,7 +637,7 @@ export default function OrderDetailsPage() {
               <tbody>
                 {order.items.map((item, index) => {
                   const qty = toNumber(item.quantity);
-                  const priceExclVAT = toNumber(item.unit_price);
+                  const priceExclVAT = toNumber(item.unit_price_vat_excl);
                   const taxRate = toNumber(item.tax_rate);
                   const priceInclVAT = priceExclVAT * (1 + taxRate / 100);
                   const lineTotal = qty * priceInclVAT;
@@ -595,6 +665,15 @@ export default function OrderDetailsPage() {
                         />
                       </td>
 
+                      {/* EAN */}
+                      <td className="text-right">
+                        {
+                          selectedProductOption
+                            ? selectedProductOption.ean_code || '—'
+                            : '—'
+                        }
+                      </td>
+
                       {/* Quantity */}
                       <td className="text-right">
                         <input
@@ -617,9 +696,9 @@ export default function OrderDetailsPage() {
                           min="0"
                           step="0.01"
                           className="input input-md input-bordered w-full text-right"
-                          value={item.unit_price}
+                          value={item.unit_price_vat_excl}
                           onChange={(e) =>
-                            updateItem(index, 'unit_price', e.target.value)
+                            updateItem(index, 'unit_price_vat_excl', e.target.value)
                           }
                           disabled={!canEdit}
                         />
@@ -678,32 +757,67 @@ export default function OrderDetailsPage() {
                     </button>
                   </td>
                 </tr>
-              </tbody>
+              </tbody>  
             </table>
           </div>
 
+                    
           {/* Summary */}
           <div className="mt-10 mb-4">
             <span className="text-gray-500">Summary</span>
             <hr className="mt-2 mb-1 border-gray-300" />
           </div>
 
-          <div className="join w-md">
-            <span className="join-item px-3 text-gray-500 flex items-center">
-              <FaTag size={18} />
-            </span>
-            {order.total_amount_vat_excl} € (excl. VAT)
+          <div className="space-y-2 flex flex-col">
+            <div className="join w-md">
+              <span className="join-item px-3 text-gray-500 flex items-center">
+                <RiMoneyEuroBoxFill size={18} />
+              </span>
+              <span className="join-item px-3">
+                {totalAmountVatExclDisplay} € (excl. VAT)
+              </span>
+            </div>
+
+            <div className="join w-md">
+              <span className="join-item px-3 text-gray-500 flex items-center">
+                <RiMoneyEuroBoxFill size={18} />
+              </span>
+              <span className="join-item px-3">
+                {totalVatAmountDisplay} € (VAT)
+              </span>
+            </div>
+
+            <div className="join w-md">
+              <span className="join-item px-3 text-gray-500 flex items-center">
+                <RiMoneyEuroBoxFill size={18} />
+              </span>
+              <span className="join-item px-3 font-semibold">
+                {totalAmountVatInclDisplay} € (incl. VAT)
+              </span>
+            </div>
           </div>
 
-          <div className="join w-md">
-            <span className="join-item px-3 text-gray-500 flex items-center">
-              <FaTag size={18} />
-            </span>
-            {order.total_amount_vat_incl} € (incl. VAT)
+          {/* Text area for extra info */}
+          <div className="mt-10 mb-4">
+            <span className="text-gray-500">Notes</span>
+            <hr className="mt-2 mb-1 border-gray-300" />
           </div>
+          <textarea
+            className="textarea textarea-bordered w-2xl h-24"
+            value={order.extra_info}
+            onChange={(e) =>
+              setOrder((s) => ({ ...s, extra_info: e.target.value }))
+            }
+            disabled={!canEdit}
+          ></textarea>
 
           {/* Meta info */}
-          <div className="mt-4 text-sm text-gray-500">
+          <div className="mt-10 mb-4">
+            <span className="text-gray-500">Meta data</span>
+            <hr className="mt-2 mb-1 border-gray-300" />
+          </div>
+
+          <div className="text-sm text-gray-500">
             <p>Created: {createdAtDisplay}</p>
             <p>Updated: {updatedAtDisplay}</p>
           </div>
