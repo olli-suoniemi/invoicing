@@ -20,8 +20,8 @@ export async function createCustomer(customer) {
   console.log("Repository - creating customer:", customer);
   // Create new address record
   const result = await sql`
-    insert into customers (type, name, business_id, email, phone, company_id, created_at)
-    values (${customer.type}, ${customer.name}, ${customer.business_id ?? null}, ${customer.email}, ${customer.phone}, ${customer.company_id}, now())
+    insert into customers (type, name, business_id, email, phone, company_id, internal_info, created_at)
+    values (${customer.type}, ${customer.name}, ${customer.business_id ?? null}, ${customer.email}, ${customer.phone}, ${customer.company_id}, ${customer.internal_info ?? null}, now())
     returning *
   `;
   return result[0];
@@ -29,8 +29,8 @@ export async function createCustomer(customer) {
 
 export async function createCustomerAddress(customerId, address) { 
   const result = await sql`
-    insert into customer_addresses (customer_id, type, address, postal_code, city, state, country, created_at)
-    values (${customerId}, ${address.type}, ${address.street}, ${address.postal_code}, ${address.city}, ${address.state}, ${address.country}, now())
+    insert into customer_addresses (customer_id, type, address, postal_code, city, state, country, extra_info, created_at)
+    values (${customerId}, ${address.type}, ${address.street}, ${address.postal_code}, ${address.city}, ${address.state}, ${address.country}, ${address.extra_info ?? null}, now())
     returning *
   `;
   return result[0];
@@ -56,6 +56,7 @@ export async function updateCustomer(customerId, customerData) {
       email = ${customerData.email},
       phone = ${customerData.phone},
       company_id = ${customerData.company_id},
+      internal_info = ${customerData.internal_info ?? null},
       updated_at = now()
     where id = ${customerId}
     returning *
@@ -73,6 +74,7 @@ export async function updateCustomer(customerId, customerData) {
         city = ${address.city},
         state = ${address.state},
         country = ${address.country},
+        extra_info = ${address.extra_info ?? null},
         updated_at = now()
       where id = ${address.id} and customer_id = ${customerId}
     `;

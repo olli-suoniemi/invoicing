@@ -30,6 +30,7 @@ export async function createCustomer(company, customerData) {
       business_id: customerData.company.business_id,
       email: customerData.company.email,
       phone: customerData.company.phone,
+      internal_info: customerData.company.internal_info,
     }
   } else {
     newCustomer = {
@@ -37,6 +38,7 @@ export async function createCustomer(company, customerData) {
       name: customerData.person.full_name,
       email: customerData.person.email,
       phone: customerData.person.phone,
+      internal_info: customerData.person.internal_info,
     }
   }
 
@@ -49,6 +51,7 @@ export async function createCustomer(company, customerData) {
       postal_code: customerData.person ? customerData.person.invoice_postal_code : customerData.company.invoice_postal_code,
       state: customerData.person ? customerData.person.invoice_state : customerData.company.invoice_state,
       country: customerData.person ? customerData.person.invoice_country : customerData.company.invoice_country,
+      extra_info: customerData.person ? customerData.person.invoice_extra_info : customerData.company.invoice_extra_info,
   }
 
   const deliveryAddress = {
@@ -57,7 +60,8 @@ export async function createCustomer(company, customerData) {
       city: customerData.person ? customerData.person.delivery_city : customerData.company.delivery_city,
       postal_code: customerData.person ? customerData.person.delivery_postal_code : customerData.company.delivery_postal_code,
       state: customerData.person ? customerData.person.delivery_state : customerData.company.delivery_state,
-      country: customerData.person ? customerData.person.delivery_country : customerData.company.delivery_country
+      country: customerData.person ? customerData.person.delivery_country : customerData.company.delivery_country,
+      extra_info: customerData.person ? customerData.person.delivery_extra_info : customerData.company.delivery_extra_info,
   };
 
   // create addresses

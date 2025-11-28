@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ToastContainer, toast } from 'react-toastify';
 
 import { MdEmail } from 'react-icons/md';
-import { FaMapMarkerAlt } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaInfo } from 'react-icons/fa';
 import {
   FaHouse,
   FaPhone,
@@ -56,6 +56,7 @@ export default function CustomerDetailsPage() {
       invoicing_state: invoicing.state ?? '',
       invoicing_country: invoicing.country ?? '',
       invoicing_address_id: invoicing.id ?? '',
+      invoicing_extra_info: invoicing.extra_info ?? '',
 
       // delivery address
       delivery_address: delivery.address ?? '',
@@ -64,9 +65,11 @@ export default function CustomerDetailsPage() {
       delivery_state: delivery.state ?? '',
       delivery_country: delivery.country ?? '',
       delivery_address_id: delivery.id ?? '',
-      
+      delivery_extra_info: delivery.extra_info ?? '',
+
       // meta
       company_id: cust.company_id ?? '',
+      internal_info: cust.internal_info ?? '',
     };
   };
 
@@ -115,16 +118,19 @@ export default function CustomerDetailsPage() {
       baseline.type !== form.type ||
       baseline.business_id !== form.business_id ||
       baseline.vat_id !== form.vat_id ||
+      baseline.internal_info !== form.internal_info ||
       baseline.invoicing_address !== form.invoicing_address ||
       baseline.invoicing_city !== form.invoicing_city ||
       baseline.invoicing_postal_code !== form.invoicing_postal_code ||
       baseline.invoicing_state !== form.invoicing_state ||
       baseline.invoicing_country !== form.invoicing_country ||
+      baseline.invoicing_extra_info !== form.invoicing_extra_info ||
       baseline.delivery_address !== form.delivery_address ||
       baseline.delivery_city !== form.delivery_city ||
       baseline.delivery_postal_code !== form.delivery_postal_code ||
       baseline.delivery_state !== form.delivery_state ||
-      baseline.delivery_country !== form.delivery_country
+      baseline.delivery_country !== form.delivery_country ||
+      baseline.delivery_extra_info !== form.delivery_extra_info
     );
   }, [initial, form]);
 
@@ -154,6 +160,7 @@ export default function CustomerDetailsPage() {
       state: form.invoicing_state || '',
       country: form.invoicing_country || '',
       id: form.invoicing_address_id || '',
+      extra_info: form.invoicing_extra_info || '',
     };
 
     const deliveryAddress = {
@@ -164,6 +171,7 @@ export default function CustomerDetailsPage() {
       state: form.delivery_state || '',
       country: form.delivery_country || '',
       id: form.delivery_address_id || '',
+      extra_info: form.delivery_extra_info || '',
     };
 
     // Preserve any other address types
@@ -185,6 +193,7 @@ export default function CustomerDetailsPage() {
       type: initial.type ?? form.type ?? 'individual',
       business_id: isCompany ? form.business_id || null : null,
       vat_id: isCompany ? form.vat_id || null : null,
+      internal_info: form.internal_info || null,
       addresses,
       company_id: form.company_id || null,
     };
@@ -375,6 +384,23 @@ export default function CustomerDetailsPage() {
               />
             </label>
 
+            {/* Internal info*/}
+            <label className="form-control md:col-span-2">
+              <div className="join px-1 pb-2">
+                <span className="label-text">Internal info</span>
+                <span className="join-item px-3 text-gray-500 flex items-center">
+                  <FaInfo size={18} />
+                </span>
+              </div>
+              <textarea
+                className="textarea textarea-bordered w-full h-24"
+                value={form.internal_info}
+                onChange={onChange('internal_info')}
+                placeholder="Internal info"
+              />
+            </label>
+
+
             {/* Invoice address header */}
             <div className="md:col-span-2 mt-2">
               <span className="text-gray-500">Invoice address</span>
@@ -454,6 +480,23 @@ export default function CustomerDetailsPage() {
                 value={form.invoicing_country}
                 onChange={onChange('invoicing_country')}
                 placeholder="Country"
+              />
+            </label>
+
+
+            {/* External invoicing info*/}
+            <label className="form-control md:col-span-2">
+              <div className="join px-1 pb-2">
+                <span className="label-text">External invoicing info</span>
+                <span className="join-item px-3 text-gray-500 flex items-center">
+                  <FaInfo size={18} />
+                </span>
+              </div>
+              <textarea
+                className="textarea textarea-bordered w-full h-24"
+                value={form.invoicing_extra_info}
+                onChange={onChange('invoicing_extra_info')}
+                placeholder="External invoicing info"
               />
             </label>
 
@@ -538,6 +581,24 @@ export default function CustomerDetailsPage() {
                 placeholder="Country"
               />
             </label>
+
+            
+            {/* External delivery info*/}
+            <label className="form-control md:col-span-2">
+              <div className="join px-1 pb-2">
+                <span className="label-text">External delivery info</span>
+                <span className="join-item px-3 text-gray-500 flex items-center">
+                  <FaInfo size={18} />
+                </span>
+              </div>
+              <textarea
+                className="textarea textarea-bordered w-full h-24"
+                value={form.delivery_extra_info}
+                onChange={onChange('delivery_extra_info')}
+                placeholder="External delivery info"
+              />
+            </label>
+
           </div>
 
           {/* Meta info */}
