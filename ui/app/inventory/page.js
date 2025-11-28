@@ -103,7 +103,8 @@ export default function InventoryPage() {
               <thead>
                 <tr>
                   <th className="w-1/2 text-center">Name</th>
-                  <th className="w-1/2 text-center">Unit Price</th>
+                  <th className="w-1/2 text-center">Unit Price (VAT Excl.) €</th>
+                  <th className="w-1/2 text-center">Unit Price (VAT Incl.) €</th>
                 </tr>
               </thead>
               <tbody>
@@ -114,7 +115,8 @@ export default function InventoryPage() {
                     onClick={() => router.push(`/inventory/${item.id}`)}
                   >
                     <td className="text-center">{item.name}</td>
-                    <td className="text-center">{item.unit_price}</td>
+                    <td className="text-center">{item.unit_price_vat_excl}</td>
+                    <td className="text-center">{item.unit_price_vat_incl}</td>
                   </tr>
                 ))}
               </tbody>
