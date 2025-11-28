@@ -605,13 +605,29 @@
   dependencies:
     "@floating-ui/utils" "^0.2.10"
 
-"@floating-ui/dom@^1.0.1":
+"@floating-ui/dom@^1.0.1", "@floating-ui/dom@^1.7.4":
   version "1.7.4"
   resolved "https://registry.yarnpkg.com/@floating-ui/dom/-/dom-1.7.4.tgz#ee667549998745c9c3e3e84683b909c31d6c9a77"
   integrity sha512-OOchDgh4F2CchOX94cRVqhvy7b3AFb+/rQXyswmzmGakRfkMgoWVjfnLWkRirfLEfuD4ysVW16eXzwt3jHIzKA==
   dependencies:
     "@floating-ui/core" "^1.7.3"
     "@floating-ui/utils" "^0.2.10"
+
+"@floating-ui/react-dom@^2.1.6":
+  version "2.1.6"
+  resolved "https://registry.yarnpkg.com/@floating-ui/react-dom/-/react-dom-2.1.6.tgz#189f681043c1400561f62972f461b93f01bf2231"
+  integrity sha512-4JX6rEatQEvlmgU80wZyq9RT96HZJa88q8hp0pBd+LrczeDI4o6uA2M+uvxngVHo4Ihr8uibXxH6+70zhAFrVw==
+  dependencies:
+    "@floating-ui/dom" "^1.7.4"
+
+"@floating-ui/react@^0.27.15":
+  version "0.27.16"
+  resolved "https://registry.yarnpkg.com/@floating-ui/react/-/react-0.27.16.tgz#6e485b5270b7a3296fdc4d0faf2ac9abf955a2f7"
+  integrity sha512-9O8N4SeG2z++TSM8QA/KTeKFBVCNEz/AGS7gWPJf6KFRzmRWixFRnCnkPHRDwSVZW6QPDO6uT0P2SpWNKCc9/g==
+  dependencies:
+    "@floating-ui/react-dom" "^2.1.6"
+    "@floating-ui/utils" "^0.2.10"
+    tabbable "^6.0.0"
 
 "@floating-ui/utils@^0.2.10":
   version "0.2.10"
@@ -1717,6 +1733,11 @@ daisyui@^5.3.3:
   version "5.3.3"
   resolved "https://registry.yarnpkg.com/daisyui/-/daisyui-5.3.3.tgz#93e47e757b6a23f0f0eb9e9cffbf0e7b3b825736"
   integrity sha512-led/Thra8tVIZYf/yr97uuNGFVmM2fYhTX8c7pUeFGLjYlY3j+KnjKGIqKGc8O7QNHFUxAmSWkSzq4UkX+bEJQ==
+
+date-fns@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-4.1.0.tgz#64b3d83fff5aa80438f5b1a633c2e83b8a1c2d14"
+  integrity sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==
 
 debug@4, debug@^4.3.1, debug@^4.3.4:
   version "4.4.3"
@@ -2840,6 +2861,15 @@ rc@^1.2.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
+react-datepicker@^8.10.0:
+  version "8.10.0"
+  resolved "https://registry.yarnpkg.com/react-datepicker/-/react-datepicker-8.10.0.tgz#dfc4534afde70b491883085d8df959b25689d10f"
+  integrity sha512-JIXuA+g+qP3c4MVJpx24o7n1gnv3WV/8A/D6964HucY1FlSEc30+ITPNUfbKZXYHl5rruCtxYCwi2lzn7gaz7g==
+  dependencies:
+    "@floating-ui/react" "^0.27.15"
+    clsx "^2.1.1"
+    date-fns "^4.1.0"
+
 react-dom@19.1.0:
   version "19.1.0"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-19.1.0.tgz#133558deca37fa1d682708df8904b25186793623"
@@ -3114,6 +3144,11 @@ svg-arc-to-cubic-bezier@^3.0.0, svg-arc-to-cubic-bezier@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/svg-arc-to-cubic-bezier/-/svg-arc-to-cubic-bezier-3.2.0.tgz#390c450035ae1c4a0104d90650304c3bc814abe6"
   integrity sha512-djbJ/vZKZO+gPoSDThGNpKDO+o+bAeA4XQKovvkNCqnIS2t+S4qnLAGQhyyrulhCFRl1WWzAp0wUDV8PpTVU3g==
+
+tabbable@^6.0.0:
+  version "6.3.0"
+  resolved "https://registry.yarnpkg.com/tabbable/-/tabbable-6.3.0.tgz#2e0e6163935387cdeacd44e9334616ca0115a8d3"
+  integrity sha512-EIHvdY5bPLuWForiR/AN2Bxngzpuwn1is4asboytXtpTgsArc+WmSJKVLlhdh71u7jFcryDqB2A8lQvj78MkyQ==
 
 tailwindcss@4.1.14, tailwindcss@^4:
   version "4.1.14"
