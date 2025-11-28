@@ -43,4 +43,9 @@ export async function createOrder(user, orderData, company) {
 export async function updateOrderById(user, orderId, updateData) {
   const updatedOrder = await repo.updateOrderById({id: orderId, ...updateData});
   return updatedOrder;
-}
+};
+
+export async function setOrderCompleted(user, orderId) {
+  const updatedOrder = await repo.setCompleted(orderId);
+  return updatedOrder;
+};

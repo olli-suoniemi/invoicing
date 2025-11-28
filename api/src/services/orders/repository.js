@@ -174,3 +174,14 @@ export async function updateOrderById(order) {
   // 6) Return fresh order with items
   return getOrderById(order.id);
 }
+
+export async function setCompleted(id) {
+  const result = await sql`
+    UPDATE orders
+    SET status = 'completed',
+        updated_at = now()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return result[0];
+}
