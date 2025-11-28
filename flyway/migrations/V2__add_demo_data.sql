@@ -252,7 +252,7 @@ VALUES
     (
         (SELECT id FROM customers WHERE name='Demo Client Oy'), 
         (SELECT id FROM companies WHERE name='My Company'), 
-        now(), 
+        current_date, 
         30.00, 
         37.20, 
         'pending',

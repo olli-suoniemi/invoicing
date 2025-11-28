@@ -112,7 +112,7 @@ CREATE TABLE orders (
   order_number            text UNIQUE NOT NULL DEFAULT to_char(now(), 'YYYY') || '-' || lpad(nextval('order_number_seq')::text, 4, '0'),
   customer_id             uuid NOT NULL REFERENCES customers(id) ON DELETE SET NULL,
   company_id              uuid REFERENCES companies(id) ON DELETE SET NULL,
-  order_date              timestamptz NOT NULL DEFAULT now(),
+  order_date              date NOT NULL DEFAULT current_date,
   total_amount_vat_excl   numeric(12,2) NOT NULL DEFAULT 0.00,
   total_amount_vat_incl   numeric(12,2) NOT NULL DEFAULT 0.00,
   status                  text CHECK (status IN ('pending','completed','cancelled')) NOT NULL DEFAULT 'pending',
@@ -132,7 +132,7 @@ CREATE TABLE order_items (
   total_price_vat_excl    numeric(12,2) NOT NULL DEFAULT 0.00,
   total_price_vat_incl    numeric(12,2) NOT NULL DEFAULT 0.00,
   created_at              timestamptz NOT NULL DEFAULT now(),
-  updated_at    timestamptz NOT NULL DEFAULT now()
+  updated_at              timestamptz NOT NULL DEFAULT now()
 );
 
 -- Invoices
