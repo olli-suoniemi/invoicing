@@ -20,8 +20,8 @@ export async function createInventoryItem(item) {
   // Create new address record
 
   const result = await sql`
-    insert into products (name, ean_code, description, unit_price, tax_rate, company_id)
-    values (${item.name}, ${item.ean_code}, ${item.description}, ${item.unit_price}, ${item.tax_rate}, ${item.company_id})
+    insert into products (name, ean_code, description, unit_price_vat_excl, unit_price_vat_incl, tax_rate, company_id)
+    values (${item.name}, ${item.ean_code}, ${item.description}, ${item.unit_price_vat_excl}, ${item.unit_price_vat_incl}, ${item.tax_rate}, ${item.company_id})
     returning *
   `;
   return result[0];
@@ -34,7 +34,8 @@ export async function updateInventoryItemById(item) {
       name = coalesce(${item.name}, name),
       ean_code = coalesce(${item.ean_code}, ean_code),
       description = coalesce(${item.description}, description),
-      unit_price = coalesce(${item.unit_price}, unit_price),
+      unit_price_vat_excl = coalesce(${item.unit_price_vat_excl}, unit_price_vat_excl),
+      unit_price_vat_incl = coalesce(${item.unit_price_vat_incl}, unit_price_vat_incl),
       tax_rate = coalesce(${item.tax_rate}, tax_rate),
       updated_at = now()
     where id = ${item.id}

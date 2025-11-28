@@ -39,10 +39,14 @@ export default function InventoryDetailsPage() {
             name: inv.name ?? '',
             ean_code: inv.ean_code ?? '',
             description: inv.description ?? '',
-            unit_price:
-              inv.unit_price === null || inv.unit_price === undefined
+            unit_price_vat_excl:
+              inv.unit_price_vat_excl === null || inv.unit_price_vat_excl === undefined
                 ? ''
-                : inv.unit_price.toString(),
+                : inv.unit_price_vat_excl.toString(),
+            unit_price_vat_incl:
+              inv.unit_price_vat_incl === null || inv.unit_price_vat_incl === undefined
+                ? ''
+                : inv.unit_price_vat_incl.toString(),
             tax_rate:
               inv.tax_rate === null || inv.tax_rate === undefined
                 ? ''
@@ -60,10 +64,14 @@ export default function InventoryDetailsPage() {
 
   const hasChanges = useMemo(() => {
     if (!initial || !form) return false;
-    const unitPriceInitial =
-      initial.unit_price === null || initial.unit_price === undefined
+    const unitPriceVatExclInitial =
+      initial.unit_price_vat_excl === null || initial.unit_price_vat_excl === undefined
         ? ''
-        : initial.unit_price.toString();
+        : initial.unit_price_vat_excl.toString();
+    const unitPriceVatInclInitial =
+      initial.unit_price_vat_incl === null || initial.unit_price_vat_incl === undefined
+        ? ''
+        : initial.unit_price_vat_incl.toString();
     const taxRateInitial =
       initial.tax_rate === null || initial.tax_rate === undefined
         ? ''
@@ -73,7 +81,8 @@ export default function InventoryDetailsPage() {
       (initial.name ?? '') !== form.name ||
       (initial.ean_code ?? '') !== form.ean_code ||
       (initial.description ?? '') !== form.description ||
-      unitPriceInitial !== form.unit_price ||
+      unitPriceVatExclInitial !== form.unit_price_vat_excl ||
+      unitPriceVatInclInitial !== form.unit_price_vat_incl ||
       taxRateInitial !== form.tax_rate
     );
   }, [initial, form]);
@@ -87,10 +96,14 @@ export default function InventoryDetailsPage() {
       name: initial.name ?? '',
       ean_code: initial.ean_code ?? '',
       description: initial.description ?? '',
-      unit_price:
-        initial.unit_price === null || initial.unit_price === undefined
-          ? ''
-          : initial.unit_price.toString(),
+      unit_price_vat_excl:
+      initial.unit_price_vat_excl === null || initial.unit_price_vat_excl === undefined
+        ? ''
+        : initial.unit_price_vat_excl.toString(),
+      unit_price_vat_incl:
+      initial.unit_price_vat_incl === null || initial.unit_price_vat_incl === undefined
+        ? ''
+        : initial.unit_price_vat_incl.toString(),
       tax_rate:
         initial.tax_rate === null || initial.tax_rate === undefined
           ? ''
@@ -102,16 +115,23 @@ export default function InventoryDetailsPage() {
     if (!form) return;
 
     // Basic numeric validation for price + tax
-    const unitPrice =
-      form.unit_price.trim() === '' ? null : Number(form.unit_price);
+    const unitPriceVatExcl =
+      form.unit_price_vat_excl.trim() === '' ? null : Number(form.unit_price_vat_excl);
+    const unitPriceVatIncl =
+      form.unit_price_vat_incl.trim() === '' ? null : Number(form.unit_price_vat_incl);
     const taxRate =
       form.tax_rate.trim() === '' ? null : Number(form.tax_rate);
 
     if (
-      unitPrice !== null &&
-      (!Number.isFinite(unitPrice) || unitPrice < 0)
+      unitPriceVatExcl !== null 
+      && 
+      (!Number.isFinite(unitPriceVatExcl) || unitPriceVatExcl < 0) 
+      && 
+      (unitPriceVatIncl !== null 
+      && 
+      !Number.isFinite(unitPriceVatIncl) || unitPriceVatIncl < 0)
     ) {
-      toast.error('Unit price must be a non-negative number');
+      toast.error('Unit prices must be non-negative numbers');
       return;
     }
 
@@ -129,7 +149,8 @@ export default function InventoryDetailsPage() {
           name: form.name,
           ean_code: form.ean_code || null,
           description: form.description || null,
-          unit_price: unitPrice,
+          unit_price_vat_excl: unitPriceVatExcl,
+          unit_price_vat_incl: unitPriceVatIncl,
           tax_rate: taxRate,
         }),
       });
@@ -147,10 +168,14 @@ export default function InventoryDetailsPage() {
         name: inv.name ?? '',
         ean_code: inv.ean_code ?? '',
         description: inv.description ?? '',
-        unit_price:
-          inv.unit_price === null || inv.unit_price === undefined
-            ? ''
-            : inv.unit_price.toString(),
+        unit_price_vat_excl:
+        inv.unit_price_vat_excl === null || inv.unit_price_vat_excl === undefined
+          ? ''
+          : inv.unit_price_vat_excl.toString(),
+        unit_price_vat_incl:
+        inv.unit_price_vat_incl === null || inv.unit_price_vat_incl === undefined
+          ? ''
+          : inv.unit_price_vat_incl.toString(),
         tax_rate:
           inv.tax_rate === null || inv.tax_rate === undefined
             ? ''
@@ -165,6 +190,41 @@ export default function InventoryDetailsPage() {
       setSaving(false);
     }
   };
+
+  const calculateVatIncl = (exclStr, taxStr) => {
+    const excl = parseFloat(exclStr);
+    const tax = parseFloat(taxStr);
+
+    if (isNaN(excl) || isNaN(tax)) {
+      return '';
+    }
+
+    const incl = excl * (1 + tax / 100);
+    // Force 2 decimals for display
+    return incl.toFixed(2);
+  };
+
+  const onUnitPriceExclChange = (e) => {
+    const value = e.target.value;
+
+    setForm((prev) => ({
+      ...prev,
+      unit_price_vat_excl: value,
+      unit_price_vat_incl: calculateVatIncl(value, prev.tax_rate),
+    }));
+  };
+
+  const onTaxRateChange = (e) => {
+    const value = e.target.value;
+
+    setForm((prev) => ({
+      ...prev,
+      tax_rate: value,
+      unit_price_vat_incl: calculateVatIncl(prev.unit_price_vat_excl, value),
+    }));
+  };
+
+
 
   if (loading) return <LoadingSpinner />;
 
@@ -266,7 +326,7 @@ export default function InventoryDetailsPage() {
               />
             </label>
 
-            {/* Unit price */}
+            {/* Tax excluded unit price */}
             <label className="form-control">
               <div className="join px-1 pb-2">
                 <span className="label-text">Tax excluded unit price</span>
@@ -276,9 +336,11 @@ export default function InventoryDetailsPage() {
               </div>
               <input
                 className="input input-bordered"
-                value={form.unit_price}
-                onChange={onChange('unit_price')}
-                placeholder="Unit price"
+                value={form.unit_price_vat_excl}
+                type="number"
+                step="0.01"
+                onChange={onUnitPriceExclChange}  // <-- use custom handler
+                placeholder="Tax excluded unit price"
               />
             </label>
 
@@ -293,13 +355,30 @@ export default function InventoryDetailsPage() {
               <input
                 className="input input-bordered"
                 value={form.tax_rate}
-                onChange={onChange('tax_rate')}
+                onChange={onTaxRateChange}        // <-- use custom handler
                 placeholder="Tax rate (%)"
               />
             </label>
 
-            {/* Description (full width) */}
+            {/* Tax included unit price. NOT EDITABLE */}
             <label className="form-control">
+              <div className="join px-1 pb-2">
+                <span className="label-text">Tax included unit price</span>
+                <span className="join-item px-3 text-gray-500 flex items-center">
+                  <FaTag size={18} />
+                </span>
+              </div>
+              <input
+                className="input input-bordered"
+                value={form.unit_price_vat_incl}
+                type="number"
+                placeholder="Tax included unit price"
+                disabled
+              />
+            </label>
+
+            {/* Description (full width) */}
+            <label className="form-control md:col-span-2">
               <div className="join px-1 pb-2">
                 <span className="label-text">Description</span>
                 <span className="join-item px-3 text-gray-500 flex items-center">
@@ -307,8 +386,7 @@ export default function InventoryDetailsPage() {
                 </span>
               </div>
               <textarea
-                className="textarea textarea-bordered"
-                rows={4}
+                className="textarea textarea-bordered w-full h-24"
                 value={form.description}
                 onChange={onChange('description')}
                 placeholder="Description"
