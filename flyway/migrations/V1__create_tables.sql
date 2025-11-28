@@ -67,6 +67,7 @@ CREATE TABLE customers (
   phone         text,
   company_id    uuid REFERENCES companies(id) ON DELETE SET NULL,
   internal_info text,
+  require_manual_reference boolean NOT NULL DEFAULT false,
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now()
 );
@@ -141,13 +142,141 @@ CREATE SEQUENCE invoice_number_seq;
 CREATE TABLE invoices (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id        uuid NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  customer_id     uuid NOT NULL REFERENCES customers(id) ON DELETE SET NULL,
+  company_id      uuid REFERENCES companies(id) ON DELETE SET NULL,
   invoice_number  text UNIQUE NOT NULL DEFAULT to_char(now(), 'YYYY') || '-' || lpad(nextval('invoice_number_seq')::text, 4, '0'),
-  reference       text,
-  issue_date      timestamptz NOT NULL DEFAULT now(),
+  reference       text UNIQUE,
+  issue_date      date NOT NULL DEFAULT current_date,
   days_until_due  integer NOT NULL DEFAULT 14,
-  due_date        timestamptz NOT NULL,
+  due_date        date NOT NULL DEFAULT (current_date + INTERVAL '14 days'),
+  delivery_date   date DEFAULT current_date,
   status          invoice_status NOT NULL DEFAULT 'draft',
   extra_info      text,
+  show_info_on_invoice boolean NOT NULL DEFAULT false,
+  paid            boolean NOT NULL DEFAULT false,
+  total_amount_vat_excl   numeric(12,2) NOT NULL DEFAULT 0.00,
+  total_amount_vat_incl   numeric(12,2) NOT NULL DEFAULT 0.00,
   created_at      timestamptz NOT NULL DEFAULT now(),
   updated_at      timestamptz NOT NULL DEFAULT now()
 );  
+
+ALTER TABLE invoices
+  ADD CONSTRAINT invoices_reference_format
+    CHECK (reference IS NULL OR reference ~ '^[0-9]{4,20}$');
+
+ALTER TABLE invoices
+  ADD CONSTRAINT invoices_reference_valid
+    CHECK (reference IS NULL OR fi_ref_is_valid(reference));
+
+
+CREATE OR REPLACE FUNCTION fi_ref_checksum(base text)
+RETURNS integer
+LANGUAGE plpgsql
+IMMUTABLE
+STRICT
+AS $$
+DECLARE
+  digits text := regexp_replace(base, '\D', '', 'g'); -- keep only 0–9
+  len    integer := length(digits);
+  weights integer[] := ARRAY[7, 3, 1];
+  idx    integer := 1;
+  i      integer;
+  d      integer;
+  s      integer := 0;
+BEGIN
+  IF len < 1 THEN
+    RAISE EXCEPTION 'Base for Finnish reference must contain at least one digit';
+  END IF;
+
+  -- walk from right to left
+  FOR i IN REVERSE len..1 LOOP
+    d := substr(digits, i, 1)::int;
+    s := s + d * weights[idx];
+    idx := idx + 1;
+    IF idx > 3 THEN
+      idx := 1;
+    END IF;
+  END LOOP;
+
+  s := s % 10;
+  IF s = 0 THEN
+    RETURN 0;
+  ELSE
+    RETURN 10 - s;
+  END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION fi_make_reference(base text)
+RETURNS text
+LANGUAGE plpgsql
+IMMUTABLE
+STRICT
+AS $$
+DECLARE
+  digits text := regexp_replace(base, '\D', '', 'g');
+  c      integer;
+BEGIN
+  -- 3–19 base digits → 4–20 digits including checksum
+  IF length(digits) < 3 OR length(digits) > 19 THEN
+    RAISE EXCEPTION 'Finnish reference base must be 3–19 digits, got %', length(digits);
+  END IF;
+
+  c := fi_ref_checksum(digits);
+  RETURN digits || c::text;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION fi_ref_is_valid(ref text)
+RETURNS boolean
+LANGUAGE plpgsql
+IMMUTABLE
+STRICT
+AS $$
+DECLARE
+  digits text := regexp_replace(ref, '\D', '', 'g');
+  len    integer := length(digits);
+  weights integer[] := ARRAY[7, 3, 1];
+  idx    integer := 1;
+  i      integer;
+  d      integer;
+  s      integer := 0;
+BEGIN
+  IF len < 4 OR len > 20 THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Full reference (incl. checksum) must yield sum % 10 = 0
+  FOR i IN REVERSE len..1 LOOP
+    d := substr(digits, i, 1)::int;
+    s := s + d * weights[idx];
+    idx := idx + 1;
+    IF idx > 3 THEN
+      idx := 1;
+    END IF;
+  END LOOP;
+
+  RETURN (s % 10) = 0;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION set_invoice_reference()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  must_be_manual boolean;
+BEGIN
+  SELECT require_manual_reference
+  INTO must_be_manual
+  FROM customers
+  WHERE id = NEW.customer_id;
+
+  IF NOT must_be_manual
+     AND (NEW.reference IS NULL OR btrim(NEW.reference) = '') THEN
+    NEW.reference := fi_make_reference(NEW.invoice_number);
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
