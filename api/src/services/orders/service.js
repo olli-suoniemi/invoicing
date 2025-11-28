@@ -29,7 +29,9 @@ export async function createOrder(user, orderData, company) {
   const newOrder = {
     customer_id: orderData.customer_id,
     company_id: company.org_id,
-    total_amount: orderData.total_amount,
+    total_amount_vat_excl: orderData.total_amount_vat_excl,
+    total_amount_vat_incl: orderData.total_amount_vat_incl,
+    extra_info: orderData.extra_info || '',
     status: orderData.status || 'pending',
     items: orderData.items || [],
   };

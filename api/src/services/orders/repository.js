@@ -3,7 +3,7 @@ import { sql } from "../../util/databaseConnect.js";
 
 export async function getOrdersByCompanyId(companyId) {
   const result = await sql`
-    select o.id, o.customer_id,	o.company_id, o.order_date, o.total_amount, o.status, o.created_at, o.updated_at, c.name as customer_name from orders o 
+    select o.id, o.order_number, o.customer_id,	o.company_id, o.order_date, o.total_amount_vat_excl, o.total_amount_vat_incl, o.extra_info, o.status, o.created_at, o.updated_at, c.name as customer_name from orders o 
     join customers c on o.customer_id = c.id 
     WHERE o.company_id = ${companyId}
   `;
@@ -12,13 +12,13 @@ export async function getOrdersByCompanyId(companyId) {
 
 export async function getOrderById(id) {
   const order = await sql`
-    select o.total_amount_vat_incl, o.id, o.customer_id,	o.company_id, o.order_date, o.total_amount, o.status, o.created_at, o.updated_at, c.name as customer_name from orders o 
+    select o.total_amount_vat_incl, o.order_number, o.id, o.customer_id,	o.company_id, o.order_date, o.total_amount_vat_excl, o.total_amount_vat_incl, o.extra_info, o.status, o.created_at, o.updated_at, c.name as customer_name from orders o 
     join customers c on o.customer_id = c.id 
     WHERE o.id = ${id}
   `;
 
   const items = await sql`
-    select o.id, o.quantity, o.unit_price, o.product_id, p.name as product_name, p.tax_rate, o.total_price from order_items o 
+    select o.id, o.quantity, o.unit_price_vat_excl, o.unit_price_vat_incl, o.product_id, p.name as product_name, p.ean_code, p.tax_rate, o.total_price_vat_excl, o.total_price_vat_incl from order_items o 
     join products p on o.product_id = p.id  
     WHERE o.order_id = ${id}
   `;
@@ -33,22 +33,25 @@ export async function getOrderById(id) {
 export async function createOrder(order) {
   // calculate total tax included amount
   let totalAmountVatIncl = 0;
+  let totalAmountVatExcl = 0;
   for (const item of order.items) {
-    const unitPrice = item.unit_price === null || item.unit_price === undefined ? 0 : Number(item.unit_price);
+    const unit_price_vat_excl = item.unit_price_vat_excl === null || item.unit_price_vat_excl === undefined ? 0 : Number(item.unit_price_vat_excl);
     const quantity = item.quantity ?? 0;
     const taxRate = item.tax_rate === null || item.tax_rate === undefined ? 0 : Number(item.tax_rate);
 
-    const itemTotalExclVat = unitPrice * quantity;
+    const itemTotalExclVat = unit_price_vat_excl * quantity;
     const itemTotalInclVat = itemTotalExclVat + (itemTotalExclVat * (taxRate / 100));
 
     totalAmountVatIncl += itemTotalInclVat;
+    totalAmountVatExcl += itemTotalExclVat;
   }
 
+  order.total_amount_vat_excl = totalAmountVatExcl;
   order.total_amount_vat_incl = totalAmountVatIncl;
 
   const result = await sql`
-    INSERT INTO orders (customer_id, company_id, total_amount, total_amount_vat_incl, status, order_date, created_at)
-    VALUES (${order.customer_id}, ${order.company_id}, ${order.total_amount}, ${order.total_amount_vat_incl}, ${order.status}, now(), now())
+    INSERT INTO orders (customer_id, company_id, total_amount_vat_excl, total_amount_vat_incl, status, extra_info, order_date, created_at)
+    VALUES (${order.customer_id}, ${order.company_id}, ${order.total_amount_vat_excl}, ${order.total_amount_vat_incl}, ${order.status}, ${order.extra_info}, ${order.order_date}, now())
     RETURNING *
   `;
 
@@ -56,8 +59,8 @@ export async function createOrder(order) {
 
   for (const item of order.items) {
     await sql`
-      INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price, created_at)
-      VALUES (${newOrder.id}, ${item.product_id}, ${item.quantity}, ${item.unit_price}, ${item.total_price}, now())
+      INSERT INTO order_items (order_id, product_id, quantity, unit_price_vat_excl, unit_price_vat_incl, total_price, created_at)
+      VALUES (${newOrder.id}, ${item.product_id}, ${item.quantity}, ${item.unit_price_vat_excl}, ${item.unit_price_vat_incl}, ${item.total_price}, now())
     `;
   }
 
@@ -67,26 +70,41 @@ export async function createOrder(order) {
 export async function updateOrderById(order) {
   // calculate total tax included amount
   let totalAmountVatIncl = 0;
-  for (const item of order.items) {
-    const unitPrice = item.unit_price === null || item.unit_price === undefined ? 0 : Number(item.unit_price);
-    const quantity = item.quantity ?? 0;
-    const taxRate = item.tax_rate === null || item.tax_rate === undefined ? 0 : Number(item.tax_rate);
+  let totalAmountVatExcl = 0;
 
-    const itemTotalExclVat = unitPrice * quantity;
-    const itemTotalInclVat = itemTotalExclVat + (itemTotalExclVat * (taxRate / 100));
+  for (const item of order.items || []) {
+    const quantity = Number(item.quantity ?? 0);
+    const unitPriceVatExcl = Number(item.unit_price_vat_excl ?? 0);
+    const taxRate = Number(item.tax_rate ?? 0); // e.g. 24 for 24%
 
+    // derive unit price incl. VAT
+    const unitPriceVatInclRaw = unitPriceVatExcl * (1 + taxRate / 100);
+    const unitPriceVatIncl = Math.round(unitPriceVatInclRaw * 100) / 100; // 2 decimals
+
+    const itemTotalExclVat = unitPriceVatExcl * quantity;
+    const itemTotalInclVat = unitPriceVatIncl * quantity;
+
+    // update item object so SQL uses consistent values
+    item.unit_price_vat_incl = unitPriceVatIncl;
+    item.total_price_vat_excl = itemTotalExclVat;
+    item.total_price_vat_incl = itemTotalInclVat;
+
+    totalAmountVatExcl += itemTotalExclVat;
     totalAmountVatIncl += itemTotalInclVat;
   }
 
   order.total_amount_vat_incl = totalAmountVatIncl;
+  order.total_amount_vat_excl = totalAmountVatExcl;
 
   // 1) Update the order itself
   const result = await sql`
     UPDATE orders
     SET
       customer_id = coalesce(${order.customer_id}, customer_id),
-      total_amount = coalesce(${order.total_amount}, total_amount),
+      total_amount_vat_excl = coalesce(${order.total_amount_vat_excl}, total_amount_vat_excl),
       total_amount_vat_incl = coalesce(${order.total_amount_vat_incl}, total_amount_vat_incl),
+      extra_info = coalesce(${order.extra_info}, extra_info),
+      order_date = coalesce(${order.order_date}, order_date),
       status = coalesce(${order.status}, status),
       updated_at = now()
     WHERE id = ${order.id}
@@ -127,16 +145,28 @@ export async function updateOrderById(order) {
         SET
           product_id = coalesce(${item.product_id}, product_id),
           quantity   = coalesce(${item.quantity},   quantity),
-          unit_price = coalesce(${item.unit_price}, unit_price),
-          total_price = coalesce(${item.total_price}, total_price),
+          unit_price_vat_excl   = coalesce(${item.unit_price_vat_excl}, unit_price_vat_excl),
+          unit_price_vat_incl   = coalesce(${item.unit_price_vat_incl}, unit_price_vat_incl),
+          total_price_vat_excl  = coalesce(${item.total_price_vat_excl}, total_price_vat_excl),
+          total_price_vat_incl  = coalesce(${item.total_price_vat_incl}, total_price_vat_incl),
           updated_at = now()
         WHERE id = ${item.id} AND order_id = ${order.id}
       `;
     } else {
       // New item -> INSERT
       await sql`
-        INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price, created_at, updated_at)
-        VALUES (${order.id}, ${item.product_id}, ${item.quantity}, ${item.unit_price}, ${item.total_price}, now(), now())
+        INSERT INTO order_items (order_id, product_id, quantity, unit_price_vat_excl, unit_price_vat_incl, total_price_vat_excl, total_price_vat_incl, created_at, updated_at)
+        VALUES (
+          ${order.id},
+          ${item.product_id},
+          ${item.quantity},
+          ${item.unit_price_vat_excl},
+          ${item.unit_price_vat_incl},
+          ${item.total_price_vat_excl},
+          ${item.total_price_vat_incl},
+          now(),
+          now()
+        )
       `;
     }
   }
