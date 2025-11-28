@@ -106,6 +106,32 @@ export default function OrderDetailsPage() {
 
   const items = order.items ?? [];
 
+  async function handleInvoiceCreate() {
+    try {
+        setLoading(true);
+        const res = await fetch(`/api/invoices`, { 
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ orderId: id })
+        });
+        if (!res.ok) {
+          throw new Error('Failed to create invoice');
+        }
+        const data = await res.json();
+
+        // If successful, redirect to invoice page
+        router.push(`/invoices/${data.invoice.id}`);
+    } catch (err) {
+      console.error(err);
+      toast.error(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
   return (
     <div className="flex justify-center items-start min-h-screen py-5 px-5">
       <ToastContainer />
@@ -140,9 +166,9 @@ export default function OrderDetailsPage() {
               <button
                 type="button"
                 className="btn btn-ghost"
-                onClick={() => router.push(`/orders/${id}/invoice`)}
+                onClick={handleInvoiceCreate}
               >
-                View Invoice
+                Create Invoice
               </button>
             </div>
           </div>
@@ -152,7 +178,9 @@ export default function OrderDetailsPage() {
             <span className="join-item px-3 text-gray-500 flex items-center">
               <FaUser size={18} />
             </span>
-            {order.customer_name ?? ''}
+            <Link href={`/customers/${order.customer_id}`}>
+              {order.customer_name ?? ''}
+            </Link>
           </div>
 
           {/* Order date */}
