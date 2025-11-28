@@ -98,6 +98,8 @@ export async function updateCompany(user, body) {
     email: body.email ?? company.email,
     phone: body.phone ?? company.phone,
     website: body.website ?? company.website,
+    iban: body.iban ?? company.iban,
+    logo_path: body.logo_path ?? company.logo_path,
   };
   const updated = await repo.updateCompany(allowedCompany);
 
