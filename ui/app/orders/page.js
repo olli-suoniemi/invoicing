@@ -102,7 +102,7 @@ export default function OrdersPage() {
                 <tr>
                   <th className="w-1/4 text-center">Order #</th>
                   <th className="w-1/4 text-center">Customer</th>
-                  <th className="w-1/4 text-center">Total</th>
+                  <th className="w-1/4 text-center">Total (VAT incl.) €</th>
                   <th className="w-1/4 text-center">Order date</th>
                   <th className="w-1/4 text-center">Status</th>
                 </tr>
@@ -114,13 +114,13 @@ export default function OrdersPage() {
                     className="hover cursor-pointer hover:bg-accent/10"
                     onClick={() => router.push(`/orders/${order.id}`)}
                   >
-                    <td className="text-center">{order.id ?? '-'}</td>
+                    <td className="text-center">{order.order_number ?? '-'}</td>
                     <td className="text-center">
                       {order.customer_name ?? '—'}
                     </td>
                     <td className="text-center">
-                      {order.total_amount != null
-                        ? Number(order.total_amount).toFixed(2)
+                      {order.total_amount_vat_incl != null
+                        ? Number(order.total_amount_vat_incl).toFixed(2)
                         : '—'}
                     </td>
                     <td className="text-center">
