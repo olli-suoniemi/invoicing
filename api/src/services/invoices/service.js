@@ -1,32 +1,43 @@
 // services/invoices/service.js
 import * as repo from "./repository.js";
-import { canReadInvoice, canEditInvoice } from "./policy.js";
+import { canCreateInvoice, canEditInvoice, canReadInvoice } from "./policy.js";
 import { ForbiddenError } from "../../util/errors.js";
 
-export async function getInvoice(user, id) {
-  const inv = await repo.getInvoiceById(id);
-  if (!inv) throw new NotFoundError("Invoice not found");
-  if (!canReadInvoice(user, inv)) throw new ForbiddenError("Not allowed to view this invoice");
-  return inv;
-}
-
-export async function listMyCompanyInvoices(user) {
-  if (!user?.companyId) {
-    throw new ForbiddenError("Missing company context");
+export async function createInvoiceForOrder(user, order) {
+  if (!canCreateInvoice(user)) {
+    throw new ForbiddenError("You do not have permission to create an invoice.");
   }
 
-  // Decide your admin behavior. Here we require admins to still have a companyId.
-  const companyId = user.admin ? user.companyId : user.companyId;
-  if (!companyId) {
-    throw new ForbiddenError("Admin must select a company");
-  }
+  const newInvoice = {
+    order_id: order.id,
+    customer_id: order.customer_id,
+    company_id: order.company_id,
+    total_amount_vat_excl: order.total_amount_vat_excl,
+    total_amount_vat_incl: order.total_amount_vat_incl
+  };
 
-  return repo.listCompanyInvoices(companyId, 50);
+  const invoice = await repo.createInvoice(newInvoice);
+  return invoice;
 }
 
-export async function markPaid(user, id, paid) {
-  const inv = await repo.getInvoiceById(id);
-  if (!inv) throw new NotFoundError("Invoice not found");
-  if (!canEditInvoice(user, inv)) throw new ForbiddenError("Not allowed to modify this invoice");
-  return repo.updateInvoicePaid(id, paid);
+export async function getInvoiceById(user, id) {
+  const invoice = await repo.getInvoiceById(id);
+  if (!invoice) {
+    return null;
+  }
+
+  if (!canReadInvoice(user)) {
+    throw new ForbiddenError("You do not have permission to view this invoice.");
+  }
+
+  return invoice;
+}
+
+export async function listCompanyInvoices(user, companyId, limit = 50) {
+  if (!canReadInvoice(user)) {
+    throw new ForbiddenError("You do not have permission to view invoices of this company.");
+  }
+
+  const invoices = await repo.listCompanyInvoices(companyId, limit);
+  return invoices;
 }

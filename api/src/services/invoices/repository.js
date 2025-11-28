@@ -1,27 +1,21 @@
 // services/invoices/repository.js
 import { sql } from "../../util/databaseConnect.js";
 
+export async function createInvoice(invoiceData) {
+  const result = await sql`
+    INSERT INTO invoices 
+      (order_id, customer_id, company_id, total_amount_vat_excl, total_amount_vat_incl)
+    VALUES 
+      (${invoiceData.order_id}, ${invoiceData.customer_id}, ${invoiceData.company_id}, 
+       ${invoiceData.total_amount_vat_excl}, ${invoiceData.total_amount_vat_incl})
+    RETURNING *;
+  `;
+  return result[0];
+}
+
 export async function getInvoiceById(id) {
-  const rows = await sql`select * from invoices where id = ${id} limit 1`;
-  return rows[0] ?? null;
-}
-
-export async function listCompanyInvoices(companyId, limit = 50) {
-  const rows = await sql`
-    select * from invoices
-    where company_id = ${companyId}
-    order by created_at desc
-    limit ${limit}
+  const result = await sql`
+    SELECT * FROM invoices WHERE id = ${id};
   `;
-  return rows ?? [];
-}
-
-export async function updateInvoicePaid(id, paid) {
-  const rows = await sql`
-    update invoices
-    set paid = ${paid}, updated_at = now()
-    where id = ${id}
-    returning *
-  `;
-  return rows[0] ?? null;
+  return result[0] || null;
 }
