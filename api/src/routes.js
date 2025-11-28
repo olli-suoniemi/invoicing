@@ -10,6 +10,7 @@ import * as customersService from "./services/customers/service.js";
 import * as settingsService from "./services/settings/service.js";
 import * as inventoryService from "./services/inventory/service.js";
 import * as ordersService from "./services/orders/service.js";
+import * as invoiceService from "./services/invoices/service.js";
 
 export const routes = new Hono();
 
@@ -331,6 +332,75 @@ v1.put('/orders/:id', async (c) => {
     const updated = await ordersService.updateOrderById(authUser, id, body);
 
     return c.json( updated );
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// set order completed
+v1.post('/orders/:id/complete', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  try {
+    const updated = await ordersService.setOrderCompleted(authUser, id);
+
+    return c.json( updated );
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// create invoice
+v1.post('/invoices', async (c) => {
+  const authUser = c.get('user');
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    const order = await ordersService.getOrderById(authUser, body.orderId);
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    const invoice = await invoiceService.createInvoiceForOrder(authUser, order);
+
+    if (!invoice) {
+      throw new Error('Invoice creation failed');
+    } 
+
+    await ordersService.setOrderCompleted(authUser, order.id);
+
+    console.log("Created invoice:", invoice);
+    return c.json({ invoice });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// get invoice by ID
+v1.get('/invoices/:id', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  try {
+    const invoice = await invoiceService.getInvoiceById(authUser, id);
+
+    console.log("Fetched invoice:", invoice);
+    return c.json({ invoice });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// get all invoices
+v1.get('/invoices', async (c) => {
+  const authUser = c.get('user');
+  try {
+    const invoices = await invoiceService.listCompanyInvoices(authUser);
+
+    return c.json({ invoices });
   } catch (e) {
     const status = e.status ?? 500;
     return c.json({ error: e.message ?? 'Internal error' }, status);
