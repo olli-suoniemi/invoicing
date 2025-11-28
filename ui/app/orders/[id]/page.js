@@ -4,13 +4,13 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ToastContainer, toast } from 'react-toastify';
+import { RiMoneyEuroBoxFill } from "react-icons/ri";
 
 import {
-  FaFileLines,
-  FaTag,
-  FaUser,
-  FaBox,
+  FaUser
 } from "react-icons/fa6";
+import { FaCalendarDay } from "react-icons/fa";
+import Link from 'next/link';
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
@@ -47,7 +47,7 @@ export default function OrderDetailsPage() {
     if (!order) return '';
     // Prefer some kind of human-readable order number if available
     return (
-      `Order # ${order.id}` ||
+      `Order # ${order.order_number}` ||
       ''
     );
   }, [order]);
@@ -82,10 +82,10 @@ export default function OrderDetailsPage() {
     );
   }
 
-  const totalAmountDisplay =
-    order.total_amount === null || order.total_amount === undefined
+  const totalAmountVatExclDisplay =
+    order.total_amount_vat_excl === null || order.total_amount_vat_excl === undefined
       ? '0.00'
-      : Number(order.total_amount).toFixed(2);
+      : Number(order.total_amount_vat_excl).toFixed(2);
   
   const totalAmountVatInclDisplay =
     order.total_amount_vat_incl === null || order.total_amount_vat_incl === undefined
@@ -93,7 +93,7 @@ export default function OrderDetailsPage() {
       : Number(order.total_amount_vat_incl).toFixed(2);
 
   const orderDateDisplay = order.order_date
-    ? new Date(order.order_date).toLocaleString('fi-FI')
+    ? new Date(order.order_date).toLocaleDateString('fi-FI')
     : '—';
 
   const createdAtDisplay = order.created_at
@@ -107,10 +107,10 @@ export default function OrderDetailsPage() {
   const items = order.items ?? [];
 
   return (
-    <div className="flex justify-center items-start min-h-screen py-5">
+    <div className="flex justify-center items-start min-h-screen py-5 px-5">
       <ToastContainer />
 
-      <div className="w-full max-w-6xl flex items-center gap-4">
+      <div className="w-full max-w-7xl flex items-center gap-4">
         <div className="flex w-full flex-col gap-4">
           {/* Title + buttons */}
           <div className="flex items-center justify-between">
@@ -142,7 +142,7 @@ export default function OrderDetailsPage() {
                 className="btn btn-ghost"
                 onClick={() => router.push(`/orders/${id}/invoice`)}
               >
-                Create Invoice
+                View Invoice
               </button>
             </div>
           </div>
@@ -158,23 +158,31 @@ export default function OrderDetailsPage() {
           {/* Order date */}
           <div className="join w-md">
             <span className="join-item px-3 text-gray-500 flex items-center">
-              <FaFileLines size={18} />
+              <FaCalendarDay size={18} />
             </span>
             {orderDateDisplay}
           </div>
 
-          {/* Total amount */}
+          {/* Total amount VAT excl. */}
           <div className="join w-md">
             <span className="join-item px-3 text-gray-500 flex items-center">
-              <FaTag size={18} />
+              <RiMoneyEuroBoxFill size={18} />
             </span>
-            {totalAmountDisplay} € (excl. VAT)
+            {totalAmountVatExclDisplay} € (excl. VAT)
           </div>
 
-          {/* Total amount (incl. VAT) */}
+          {/* Total VAT amount */}
           <div className="join w-md">
             <span className="join-item px-3 text-gray-500 flex items-center">
-              <FaTag size={18} />
+              <RiMoneyEuroBoxFill size={18} />
+            </span>
+            {(Number(order.total_amount_vat_incl || 0) - Number(order.total_amount_vat_excl || 0)).toFixed(2)} € (VAT)
+          </div>
+
+          {/* Total amount VAT incl. */}
+          <div className="join w-md">
+            <span className="join-item px-3 text-gray-500 flex items-center">
+              <RiMoneyEuroBoxFill size={18} />
             </span>
             {totalAmountVatInclDisplay} € (incl. VAT)
           </div>
@@ -193,6 +201,7 @@ export default function OrderDetailsPage() {
                 <thead>
                   <tr>
                     <th>Product</th>
+                    <th className="text-right">EAN</th>
                     <th className="text-right">Qty</th>
                     <th className="text-right">Unit (excl. VAT) €</th>
                     <th className="text-right">VAT %</th>
@@ -205,35 +214,48 @@ export default function OrderDetailsPage() {
                 <tbody>
                   {items.map((item) => {
                     const quantity = item.quantity ?? 0;
-                    const unitPrice =
-                      item.unit_price === null || item.unit_price === undefined
+                    const unit_price_vat_excl =
+                      item.unit_price_vat_excl === null || item.unit_price_vat_excl === undefined
                         ? 0
-                        : Number(item.unit_price);
-                    const totalPrice =
-                      item.total_price === null ||
-                      item.total_price === undefined
-                        ? quantity * unitPrice
-                        : Number(item.total_price);
-
+                        : Number(item.unit_price_vat_excl);
+                    const unit_price_vat_incl =
+                      item.unit_price_vat_incl === null || item.unit_price_vat_incl === undefined
+                        ? 0
+                        : Number(item.unit_price_vat_incl);
+                    const totalPriceVatExcl =
+                      item.total_price_vat_excl === null ||
+                      item.total_price_vat_excl === undefined
+                        ? quantity * unit_price_vat_excl
+                        : Number(item.total_price_vat_excl);
+                    const totalPriceVatIncl =
+                      item.total_price_vat_incl === null ||
+                      item.total_price_vat_incl === undefined
+                        ? quantity * unit_price_vat_incl
+                        : Number(item.total_price_vat_incl);
                     return (
                       <tr key={item.id}>
-                        <td>{item.product_name ?? item.product_id ?? '-'}</td>
+                        <td>
+                          <Link href={`/inventory/${item.product_id}`}>
+                            {item.product_name ?? item.product_id ?? '-'}
+                          </Link>
+                        </td>
+                        <td className="text-right">{item.ean_code ?? '-'}</td>
                         <td className="text-right">{quantity}</td>
                         <td className="text-right">
-                          {unitPrice.toFixed(2)}
+                          {unit_price_vat_excl.toFixed(2)}
                         </td>
                         <td className="text-right">{item.tax_rate ?? '-'}</td>
                         <td className="text-right">
-                          {(((item.tax_rate ? Number(item.tax_rate) : 0) / 100) * unitPrice).toFixed(2)}
+                          {(unit_price_vat_incl - unit_price_vat_excl).toFixed(2)}
                         </td>
                         <td className="text-right">
-                          {(unitPrice + ((item.tax_rate ? Number(item.tax_rate) : 0) / 100) * unitPrice).toFixed(2)}
+                          {unit_price_vat_incl.toFixed(2)}
                         </td>
                         <td className="text-right">
-                          {totalPrice.toFixed(2)}
+                          {totalPriceVatExcl.toFixed(2)}
                         </td>
                         <td className="text-right">
-                          {(totalPrice + ((item.tax_rate ? Number(item.tax_rate) : 0) / 100) * totalPrice).toFixed(2)}
+                          {totalPriceVatIncl.toFixed(2)}
                         </td>
                       </tr>
                     );
@@ -243,8 +265,21 @@ export default function OrderDetailsPage() {
             </div>
           )}
 
+          {/* Notes */}
+          <div className="mt-10">
+            <span className="text-gray-500">Notes</span>
+            <hr className="mt-2 border-gray-300" />
+          </div>
+          <div>
+            <p>{order.extra_info}</p>    
+          </div>
+
           {/* Meta info */}
-          <div className="mt-4 text-sm text-gray-500">
+          <div className="mt-10">
+            <span className="text-gray-500">Meta data</span>
+            <hr className="mt-2 border-gray-300" />
+          </div>
+          <div className="text-sm text-gray-500">
             <p>
               Created:{' '}
               {createdAtDisplay}
