@@ -4,26 +4,32 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import {
   FaUser,
-  FaBox,
   FaTag,
-  FaPercent,
   FaPlus,
   FaMinus,
 } from "react-icons/fa6";
 import CustomerSelect from '@/app/components/customerSelect';
 import ProductSelect from '@/app/components/productSelect';
 import { useRouter } from 'next/navigation';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { format } from 'date-fns';
+import { fi } from 'date-fns/locale';
+import { FaCalendarDay } from "react-icons/fa";
+
 
 export default function OrdersNewPage() {
   const router = useRouter();
   const [order, setOrder] = useState({
     customer_id: '',
     status: 'pending',
+    order_date: '',   // e.g. "2024-06-30"
+    extra_info: '',
     items: [
       {
         product_id: '',
         quantity: '1',
-        unit_price: '0.00', // VAT excluded
+        unit_price_vat_excl: '0.00', // VAT excluded
         tax_rate: '0.00',   // % as string, e.g. "24.00"
       },
     ],
@@ -93,8 +99,10 @@ export default function OrdersNewPage() {
     return (products || []).map((p) => ({
       value: p.id,
       label: p.name,
-      unit_price: p.unit_price, // assumed VAT-excluded
-      tax_rate: p.tax_rate,     // "123.00" etc.
+      ean_code: p.ean_code,
+      unit_price_vat_excl: p.unit_price_vat_excl,
+      unit_price_vat_incl: p.unit_price_vat_incl,
+      tax_rate: p.tax_rate,
     }));
   }, [products]);
 
@@ -105,13 +113,13 @@ export default function OrdersNewPage() {
 
       if (option) {
         updated.product_id = option.value;
-        updated.unit_price =
-          option.unit_price != null ? String(option.unit_price) : '0.00';
+        updated.unit_price_vat_excl =
+          option.unit_price_vat_excl != null ? String(option.unit_price_vat_excl) : '0.00';
         updated.tax_rate =
           option.tax_rate != null ? String(option.tax_rate) : '0.00';
       } else {
         updated.product_id = '';
-        updated.unit_price = '0.00';
+        updated.unit_price_vat_excl = '0.00';
         updated.tax_rate = '0.00';
       }
 
@@ -149,7 +157,7 @@ export default function OrdersNewPage() {
   const totalAmount = useMemo(() => {
     return order.items.reduce((sum, item) => {
       const qty = toNumber(item.quantity);
-      const priceExclVAT = toNumber(item.unit_price);
+      const priceExclVAT = toNumber(item.unit_price_vat_excl);
       const taxRate = toNumber(item.tax_rate);
       const priceInclVAT = priceExclVAT * (1 + taxRate / 100);
 
@@ -161,12 +169,14 @@ export default function OrdersNewPage() {
     setOrder({
       customer_id: '',
       status: 'pending',
+      order_date: '',
+      extra_info: '',
       items: [
         {
           tax_rate: '0.00',
           product_id: '',
           quantity: '1',
-          unit_price: '0.00',
+          unit_price_vat_excl: '0.00',
         },
       ],
     });
@@ -190,8 +200,7 @@ export default function OrdersNewPage() {
     for (const item of order.items) {
       const productId = item.product_id.trim();
       const qtyStr = item.quantity.toString().trim();
-      const priceStr = item.unit_price.toString().trim();
-      const totalPriceStr = item.total_price ? item.total_price.toString().trim() : null;
+      const priceStr = item.unit_price_vat_excl.toString().trim();
 
       if (!productId) {
         toast.error('Each item must have a product ID');
@@ -224,22 +233,17 @@ export default function OrdersNewPage() {
       itemsPayload.push({
         product_id: productId,
         quantity,
-        unit_price: unitPrice,
+        unit_price_vat_excl: unitPrice,
         tax_rate: toNumber(item.tax_rate),
-        total_price: totalPriceStr ? Number(totalPriceStr) : quantity * unitPrice,
       });
     }
-
-    const total_amount = itemsPayload.reduce(
-      (sum, it) => sum + it.quantity * it.unit_price,
-      0
-    );
 
     const payload = {
       customer_id: customerId,
       status: order.status || 'pending',
-      total_amount,         // numeric(12,2)
+      order_date: order.order_date,
       items: itemsPayload,  // for order_items
+      extra_info: order.extra_info,
     };
 
     try {
@@ -255,7 +259,9 @@ export default function OrdersNewPage() {
       }
 
       resetForm();
-      toast.success('New order created!');
+      
+      router.push('/orders');
+      toast.success('Order created successfully');
     } catch (err) {
       console.error(err);
       toast.error('Failed to create order');
@@ -278,7 +284,7 @@ export default function OrdersNewPage() {
         {
           product_id: '',
           quantity: '1',
-          unit_price: '0.00',
+          unit_price_vat_excl: '0.00',
           tax_rate: '0.00',
         },
       ],
@@ -293,6 +299,28 @@ export default function OrdersNewPage() {
     });
   };
 
+  const totals = useMemo(() => {
+    let excl = 0;
+    let incl = 0;
+
+    for (const item of order.items) {
+      const qty = toNumber(item.quantity);
+      const priceExcl = toNumber(item.unit_price_vat_excl);
+      const taxRate = toNumber(item.tax_rate);
+
+      const priceIncl = priceExcl * (1 + taxRate / 100);
+      excl += qty * priceExcl;
+      incl += qty * priceIncl;
+    }
+
+    return {
+      excl,
+      incl,
+      vat: incl - excl,
+    };
+  }, [order.items]);
+
+  
   return (
     <div className="flex justify-center items-start min-h-screen py-5">
       <ToastContainer />
@@ -333,39 +361,98 @@ export default function OrdersNewPage() {
             </div>
           </div>
 
-          {/* Customer */}
-          <div className="w-2xl flex items-center gap-4 my-5">
-            <label className="label w-32 flex items-center gap-2">
-              <FaUser size={18} />
-              <span className="label-text">Customer</span>
-            </label>
-            <div className="flex-1">
-              <CustomerSelect
-                customerOptions={customerOptions}
-                selectedOption={selectedCustomer}
-                handleCustomerChangeInSelect={handleCustomerChangeInSelect}
+          {/* Order Details */}
+          <div className="mt-10 mb-2 w-7/12">
+            <span className="text-gray-500">Order details</span>
+            <hr className="mt-2 mb-4 border-gray-300" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-10 gap-y-5 w-7/12">
+            {/* ROW 1 LEFT: Customer */}
+            <div className="flex items-center gap-4 h-full">
+              <label className="w-32 flex items-center gap-2 text-sm text-gray-500">
+                <FaUser size={18} />
+                Customer
+              </label>
+              <div className="flex-1">
+                <CustomerSelect
+                  customerOptions={customerOptions}
+                  selectedOption={selectedCustomer}
+                  handleCustomerChangeInSelect={handleCustomerChangeInSelect}
+                  instanceId="order-new-customer"
+                />
+              </div>
+            </div>
+
+            {/* ROW 1 RIGHT: Total excl. VAT */}
+            <div className="flex items-center gap-4 h-full">
+              <label className="w-40 flex items-center text-sm text-gray-500">
+                Total (excl. VAT)
+              </label>
+              <div className="flex-1 text-right font-medium">
+                {totals.excl.toFixed(2)} €
+              </div>
+            </div>
+
+            {/* ROW 2: Status / VAT */}
+            <div className="flex items-center gap-4 h-full">
+              <label className="w-32 flex items-center gap-2 text-sm text-gray-500">
+                <FaTag size={18} />
+                <span className="label-text">Status</span>
+              </label>
+              <div className="flex-1">
+                <select
+                  className="select select-bordered w-full h-11 text-md max-w-none"
+                  value={order.status}
+                  onChange={(e) =>
+                    setOrder((s) => ({ ...s, status: e.target.value }))
+                  }
+                >
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 h-full">
+              <label className="w-40 flex items-center text-sm text-gray-500">
+                VAT
+              </label>
+              <div className="flex-1 text-right font-medium">
+                {totals.vat.toFixed(2)} €
+              </div>
+            </div>
+
+            {/* ROW 3: Order date / Total incl. VAT */}
+            <div className="flex items-center gap-4 h-full">
+              <label className="w-32 flex items-center gap-2 text-sm text-gray-500">
+                <FaCalendarDay size={18} />
+                <span className="label-text">Order date</span>
+              </label>
+              <DatePicker
+                selected={order.order_date ? new Date(order.order_date) : null}
+                onChange={(date) => {
+                  const formatted = date ? format(date, 'yyyy-MM-dd') : '';
+                  setOrder((s) => ({ ...s, order_date: formatted }));
+                }}
+                dateFormat="dd.MM.yyyy"
+                locale={fi}
+                wrapperClassName="flex-1"
+                className="input input-bordered w-full h-11 text-sm"
               />
+            </div>
+
+            <div className="flex items-center gap-4 h-full">
+              <label className="w-40 flex items-center text-sm text-gray-500">
+                Total (incl. VAT)
+              </label>
+              <div className="flex-1 text-right font-semibold">
+                {totals.incl.toFixed(2)} €
+              </div>
             </div>
           </div>
 
-          {/* Status */}
-          <div className="w-2xl flex items-center gap-4">
-            <label className="label w-32 flex items-center gap-2">
-              <FaUser size={18} />
-              <span className="label-text">Status</span>
-            </label>
-            <select
-              className="select select-bordered w-full h-11 text-md flex-1"
-              value={order.status}
-              onChange={(e) =>
-                setOrder((s) => ({ ...s, status: e.target.value }))
-              }
-            >
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
 
 
           {/* Items header */}
@@ -379,22 +466,28 @@ export default function OrdersNewPage() {
             <table className="table w-full">
               <thead>
                 <tr>
-                  <th className="w-3/10">Product</th>
-                  <th className="w-2/10 text-right">Qty</th>
-                  <th className="w-2/10 text-right">Unit (excl. VAT)</th>
+                  <th className="w-2/5">Product</th>
+                  <th className="w-1/10 text-right">EAN</th>
+                  <th className="w-1/10 text-right">Qty</th>
+                  <th className="w-1/5 text-right">Unit (excl. VAT) €</th>
                   <th className="w-1/10 text-right">VAT %</th>
-                  <th className="w-1/10 text-right">Unit (incl. VAT)</th>
-                  <th className="w-1/10 text-right">Amount</th>
+                  <th className="w-1/10 text-right">VAT €</th>
+                  <th className="w-1/5 text-right">Unit (incl. VAT) €</th>
+                  <th className="w-1/5 text-right">Total (excl. VAT) €</th>
+                  <th className="w-1/5 text-right">Total (incl. VAT) €</th>
                   <th className="w-10"></th>
                 </tr>
               </thead>
+
               <tbody>
                 {order.items.map((item, index) => {
                   const qty = toNumber(item.quantity);
-                  const priceExclVAT = toNumber(item.unit_price);
-                  const taxRate = toNumber(item.tax_rate); // e.g. 24 => 24%
+                  const priceExclVAT = toNumber(item.unit_price_vat_excl);
+                  const taxRate = toNumber(item.tax_rate);
                   const priceInclVAT = priceExclVAT * (1 + taxRate / 100);
-                  const lineTotal = qty * priceInclVAT;    // total incl. VAT (change if you want excl.)
+                  const vatAmount = priceExclVAT * (taxRate / 100);
+                  const totalExcl = qty * priceExclVAT;
+                  const lineTotal = qty * priceInclVAT;
 
                   const selectedProductOption =
                     productOptions.find((opt) => opt.value === item.product_id) || null;
@@ -411,7 +504,15 @@ export default function OrdersNewPage() {
                             router.push(`/inventory/${opt.value}`);
                           }}
                           placeholder="Search a product..."
+                          instanceId={`order-new-product-${index}`}
                         />
+                      </td>
+
+                      {/* EAN */}
+                      <td className="text-right">
+                        {selectedProductOption
+                          ? selectedProductOption.ean_code || '—'
+                          : '—'}
                       </td>
 
                       {/* Quantity */}
@@ -422,7 +523,9 @@ export default function OrdersNewPage() {
                           step="1"
                           className="input input-md input-bordered w-full text-right"
                           value={item.quantity}
-                          onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                          onChange={(e) =>
+                            updateItem(index, 'quantity', e.target.value)
+                          }
                         />
                       </td>
 
@@ -433,14 +536,21 @@ export default function OrdersNewPage() {
                           min="0"
                           step="0.01"
                           className="input input-md input-bordered w-full text-right"
-                          value={item.unit_price}
-                          onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
+                          value={item.unit_price_vat_excl}
+                          onChange={(e) =>
+                            updateItem(index, 'unit_price_vat_excl', e.target.value)
+                          }
                         />
                       </td>
 
-                      {/* VAT rate – read-only */}
+                      {/* VAT rate – read-only text */}
                       <td className="text-right">
                         {`${taxRate.toFixed(2)} %`}
+                      </td>
+
+                      {/* VAT amount – read-only */}
+                      <td className="text-right">
+                        {vatAmount.toFixed(2)}
                       </td>
 
                       {/* Unit price (VAT included) – read-only */}
@@ -448,7 +558,12 @@ export default function OrdersNewPage() {
                         {priceInclVAT.toFixed(2)}
                       </td>
 
-                      {/* Line total (qty * unit incl. VAT) */}
+                      {/* Total (excl. VAT) – read-only */}
+                      <td className="text-right">
+                        {totalExcl.toFixed(2)}
+                      </td>
+
+                      {/* Total (incl. VAT) – read-only */}
                       <td className="text-right align-middle">
                         {lineTotal.toFixed(2)}
                       </td>
@@ -470,7 +585,7 @@ export default function OrdersNewPage() {
 
                 {/* Add-row line like Odoo */}
                 <tr>
-                  <td colSpan={7}>
+                  <td colSpan={10}>
                     <button
                       type="button"
                       className="btn btn-outline btn-sm mt-2"
@@ -484,23 +599,19 @@ export default function OrdersNewPage() {
             </table>
           </div>
 
-          {/* Total amount (read-only) */}
+
+          {/* Text area for extra info */}
           <div className="mt-10 mb-4">
-            <span className="text-gray-500">Summary</span>
+            <span className="text-gray-500">Notes</span>
             <hr className="mt-2 mb-1 border-gray-300" />
           </div>
-          <div className="join w-md">
-            <span className="join-item px-3 text-gray-500 flex items-center">
-              <FaTag size={18} />
-            </span>
-            <input
-              type="text"
-              className="input input-bordered join-item w-full"
-              readOnly
-              value={totalAmount.toFixed(2)}
-              placeholder="Total amount"
-            />
-          </div>
+          <textarea
+            className="textarea textarea-bordered w-2xl h-24"
+            value={order.extra_info}
+            onChange={(e) =>
+              setOrder((s) => ({ ...s, extra_info: e.target.value }))
+            }
+          ></textarea>
         </div>
       </div>
     </div>
