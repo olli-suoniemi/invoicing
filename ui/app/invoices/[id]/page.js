@@ -82,28 +82,41 @@ export default function InvoiceDetailsPage() {
     }
 
     const totalAmountVatExclDisplay =
-        invoice.total_amount_vat_excl === null || invoice.total_amount_vat_excl === undefined
+        invoice.total_amount_vat_excl == null
             ? '0.00'
             : Number(invoice.total_amount_vat_excl).toFixed(2);
 
     const totalAmountVatInclDisplay =
-        invoice.total_amount_vat_incl === null || invoice.total_amount_vat_incl === undefined
+        invoice.total_amount_vat_incl == null
             ? '0.00'
             : Number(invoice.total_amount_vat_incl).toFixed(2);
 
-    const orderDateDisplay = invoice.order_date
-        ? new Date(invoice.order_date).toLocaleDateString('fi-FI')
+    const vatAmountDisplay = (
+        Number(invoice.total_amount_vat_incl || 0) -
+        Number(invoice.total_amount_vat_excl || 0)
+    ).toFixed(2);
+
+    const issueDateDisplay = invoice.issue_date
+        ? new Date(invoice.issue_date).toLocaleDateString('fi-FI')
         : '—';
 
-    const createdAtDisplay = invoice.created_at
-        ? new Date(invoice.created_at).toLocaleString('fi-FI')
+    const deliveryDateDisplay = invoice.delivery_date
+        ? new Date(invoice.delivery_date).toLocaleDateString('fi-FI')
         : '—';
 
-    const updatedAtDisplay = invoice.updated_at
-        ? new Date(invoice.updated_at).toLocaleString('fi-FI')
+    const dueDateDisplay = invoice.due_date
+        ? new Date(invoice.due_date).toLocaleDateString('fi-FI')
         : '—';
 
-    const items = invoice.items ?? [];
+    const daysUntilDueDisplay =
+        invoice.days_until_due == null ? '—' : String(invoice.days_until_due);
+
+    const usesCustomReference = Boolean(invoice.customer?.require_manual_reference);
+
+    const referenceDisplay =
+        invoice.reference ??
+        (usesCustomReference ? '—' : 'Auto-generated');
+
 
     return (
         <div className="flex justify-center items-start min-h-screen py-5 px-5">
@@ -146,55 +159,146 @@ export default function InvoiceDetailsPage() {
                         </div>
                     </div>
 
-                    {/* Client & basic info */}
-                    <div className="join w-md">
-                        <span className="join-item px-3 text-gray-500 flex items-center">
-                            <FaUser size={18} />
-                        </span>
-                        <Link href={`/customers/${invoice.customer_id}`}>
-                            {invoice.customer_name ?? ''}
-                        </Link>
+                    {/* Invoice details */}
+                    <div className="mt-8 w-7/12">
+                        <span className="text-gray-500">Invoice details</span>
+                        <hr className="mt-2 mb-4 border-gray-300" />
                     </div>
 
-                    {/* invoice date */}
-                    <div className="join w-md">
-                        <span className="join-item px-3 text-gray-500 flex items-center">
-                            <FaCalendarDay size={18} />
-                        </span>
-                        {orderDateDisplay}
+                    <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-x-10 gap-y-5 w-7/12">
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <FaUser size={16} />
+                                <span>Customer</span>
+                            </div>
+                            <div className="flex-1 text-sm">
+                                <Link
+                                    href={`/customers/${invoice.customer_id}`}
+                                    className="underline break-words"
+                                >
+                                    {invoice.customer?.name ?? '—'}
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <RiMoneyEuroBoxFill size={16} />
+                                <span>Total (excl. VAT)</span>
+                            </div>
+                            <div className="flex-1 text-sm text-right">
+                                {totalAmountVatExclDisplay} €
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <FaUser size={16} />
+                                <span>Order</span>
+                            </div>
+                            <div className="flex-1 text-sm">
+                                {invoice.order ? (
+                                    <Link
+                                        href={`/orders/${invoice.order_id}`}
+                                        className="underline break-words"
+                                    >
+                                        {`Order #${invoice.order.order_number || invoice.order.id}`}
+                                    </Link>
+                                ) : (
+                                    '—'
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <FaCalendarDay size={16} />
+                                <span>Issue date</span>
+                            </div>
+                            <div className="flex-1 text-sm text-right">
+                                {issueDateDisplay}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <RiMoneyEuroBoxFill size={16} />
+                                <span>VAT amount</span>
+                            </div>
+                            <div className="flex-1 text-sm">
+                                {vatAmountDisplay} €
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <FaCalendarDay size={16} />
+                                <span>Delivery date</span>
+                            </div>
+                            <div className="flex-1 text-sm text-right">
+                                {deliveryDateDisplay}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <RiMoneyEuroBoxFill size={16} />
+                                <span>Total (incl. VAT)</span>
+                            </div>
+                            <div className="flex-1 text-sm font-semibold">
+                                {totalAmountVatInclDisplay} €
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <FaCalendarDay size={16} />
+                                <span>Days until due</span>
+                            </div>
+                            <div className="flex-1 text-sm text-right">
+                                {daysUntilDueDisplay}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <FaCalendarDay size={16} />
+                                <span>Due date</span>
+                            </div>
+                            <div className="flex-1 text-sm">
+                                {dueDateDisplay}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <FaCalendarDay size={16} />
+                                <span>Custom reference?</span>
+                            </div>
+                            <div className="flex-1 text-sm text-right">
+                                {usesCustomReference ? 'Yes' : 'No'}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <FaCalendarDay size={16} />
+                                <span>Reference</span>
+                            </div>
+                            <div className="flex-1 text-sm">
+                                {referenceDisplay}
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Total amount VAT excl. */}
-                    <div className="join w-md">
-                        <span className="join-item px-3 text-gray-500 flex items-center">
-                            <RiMoneyEuroBoxFill size={18} />
-                        </span>
-                        {totalAmountVatExclDisplay} € (excl. VAT)
-                    </div>
-
-                    {/* Total VAT amount */}
-                    <div className="join w-md">
-                        <span className="join-item px-3 text-gray-500 flex items-center">
-                            <RiMoneyEuroBoxFill size={18} />
-                        </span>
-                        {(Number(invoice.total_amount_vat_incl || 0) - Number(invoice.total_amount_vat_excl || 0)).toFixed(2)} € (VAT)
-                    </div>
-
-                    {/* Total amount VAT incl. */}
-                    <div className="join w-md">
-                        <span className="join-item px-3 text-gray-500 flex items-center">
-                            <RiMoneyEuroBoxFill size={18} />
-                        </span>
-                        {totalAmountVatInclDisplay} € (incl. VAT)
-                    </div>
 
                     {/* Items section */}
                     <div className="mt-4">
-                        <span className="text-gray-500">invoice items</span>
+                        <span className="text-gray-500">Items of the order</span>
                         <hr className="mt-2 mb-1 border-gray-300" />
                     </div>
 
-                    {items.length === 0 ? (
+                    {invoice.order.items.length === 0 ? (
                         <p className="text-gray-500">No items in this invoice.</p>
                     ) : (
                         <div className="overflow-x-auto">
@@ -213,7 +317,7 @@ export default function InvoiceDetailsPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {items.map((item) => {
+                                    {invoice.order.items.map((item) => {
                                         const quantity = item.quantity ?? 0;
                                         const unit_price_vat_excl =
                                             item.unit_price_vat_excl === null || item.unit_price_vat_excl === undefined
@@ -236,7 +340,7 @@ export default function InvoiceDetailsPage() {
                                         return (
                                             <tr key={item.id}>
                                                 <td>
-                                                    <Link href={`/inventory/${item.product_id}`}>
+                                                    <Link href={`/inventory/${item.product_id}`} className="underline">
                                                         {item.product_name ?? item.product_id ?? '-'}
                                                     </Link>
                                                 </td>
@@ -283,11 +387,11 @@ export default function InvoiceDetailsPage() {
                     <div className="text-sm text-gray-500">
                         <p>
                             Created:{' '}
-                            {createdAtDisplay}
+                            {new Date(invoice.created_at).toLocaleString('fi-FI')}
                         </p>
                         <p>
                             Updated:{' '}
-                            {updatedAtDisplay}
+                            {new Date(invoice.updated_at).toLocaleString('fi-FI')}
                         </p>
                     </div>
                 </div>
