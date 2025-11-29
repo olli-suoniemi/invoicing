@@ -1,3 +1,117 @@
+
+CREATE OR REPLACE FUNCTION fi_ref_checksum(base text)
+RETURNS integer
+LANGUAGE plpgsql
+IMMUTABLE
+STRICT
+AS $$
+DECLARE
+  digits text := regexp_replace(base, '\D', '', 'g'); -- keep only 0–9
+  len    integer := length(digits);
+  weights integer[] := ARRAY[7, 3, 1];
+  idx    integer := 1;
+  i      integer;
+  d      integer;
+  s      integer := 0;
+BEGIN
+  IF len < 1 THEN
+    RAISE EXCEPTION 'Base for Finnish reference must contain at least one digit';
+  END IF;
+
+  -- walk from right to left
+  FOR i IN REVERSE len..1 LOOP
+    d := substr(digits, i, 1)::int;
+    s := s + d * weights[idx];
+    idx := idx + 1;
+    IF idx > 3 THEN
+      idx := 1;
+    END IF;
+  END LOOP;
+
+  s := s % 10;
+  IF s = 0 THEN
+    RETURN 0;
+  ELSE
+    RETURN 10 - s;
+  END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION fi_make_reference(base text)
+RETURNS text
+LANGUAGE plpgsql
+IMMUTABLE
+STRICT
+AS $$
+DECLARE
+  digits text := regexp_replace(base, '\D', '', 'g');
+  c      integer;
+BEGIN
+  -- 3–19 base digits → 4–20 digits including checksum
+  IF length(digits) < 3 OR length(digits) > 19 THEN
+    RAISE EXCEPTION 'Finnish reference base must be 3–19 digits, got %', length(digits);
+  END IF;
+
+  c := fi_ref_checksum(digits);
+  RETURN digits || c::text;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION fi_ref_is_valid(ref text)
+RETURNS boolean
+LANGUAGE plpgsql
+IMMUTABLE
+STRICT
+AS $$
+DECLARE
+  digits text := regexp_replace(ref, '\D', '', 'g');
+  len    integer := length(digits);
+  weights integer[] := ARRAY[7, 3, 1];
+  idx    integer := 1;
+  i      integer;
+  d      integer;
+  s      integer := 0;
+BEGIN
+  IF len < 4 OR len > 20 THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Full reference (incl. checksum) must yield sum % 10 = 0
+  FOR i IN REVERSE len..1 LOOP
+    d := substr(digits, i, 1)::int;
+    s := s + d * weights[idx];
+    idx := idx + 1;
+    IF idx > 3 THEN
+      idx := 1;
+    END IF;
+  END LOOP;
+
+  RETURN (s % 10) = 0;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION set_invoice_reference()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  must_be_manual boolean;
+BEGIN
+  SELECT require_manual_reference
+  INTO must_be_manual
+  FROM customers
+  WHERE id = NEW.customer_id;
+
+  IF NOT must_be_manual
+     AND (NEW.reference IS NULL OR btrim(NEW.reference) = '') THEN
+    NEW.reference := fi_make_reference(NEW.invoice_number);
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
 -- Extensions used by this schema
 CREATE EXTENSION IF NOT EXISTS citext;
 
@@ -168,115 +282,3 @@ ALTER TABLE invoices
   ADD CONSTRAINT invoices_reference_valid
     CHECK (reference IS NULL OR fi_ref_is_valid(reference));
 
-
-CREATE OR REPLACE FUNCTION fi_ref_checksum(base text)
-RETURNS integer
-LANGUAGE plpgsql
-IMMUTABLE
-STRICT
-AS $$
-DECLARE
-  digits text := regexp_replace(base, '\D', '', 'g'); -- keep only 0–9
-  len    integer := length(digits);
-  weights integer[] := ARRAY[7, 3, 1];
-  idx    integer := 1;
-  i      integer;
-  d      integer;
-  s      integer := 0;
-BEGIN
-  IF len < 1 THEN
-    RAISE EXCEPTION 'Base for Finnish reference must contain at least one digit';
-  END IF;
-
-  -- walk from right to left
-  FOR i IN REVERSE len..1 LOOP
-    d := substr(digits, i, 1)::int;
-    s := s + d * weights[idx];
-    idx := idx + 1;
-    IF idx > 3 THEN
-      idx := 1;
-    END IF;
-  END LOOP;
-
-  s := s % 10;
-  IF s = 0 THEN
-    RETURN 0;
-  ELSE
-    RETURN 10 - s;
-  END IF;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION fi_make_reference(base text)
-RETURNS text
-LANGUAGE plpgsql
-IMMUTABLE
-STRICT
-AS $$
-DECLARE
-  digits text := regexp_replace(base, '\D', '', 'g');
-  c      integer;
-BEGIN
-  -- 3–19 base digits → 4–20 digits including checksum
-  IF length(digits) < 3 OR length(digits) > 19 THEN
-    RAISE EXCEPTION 'Finnish reference base must be 3–19 digits, got %', length(digits);
-  END IF;
-
-  c := fi_ref_checksum(digits);
-  RETURN digits || c::text;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION fi_ref_is_valid(ref text)
-RETURNS boolean
-LANGUAGE plpgsql
-IMMUTABLE
-STRICT
-AS $$
-DECLARE
-  digits text := regexp_replace(ref, '\D', '', 'g');
-  len    integer := length(digits);
-  weights integer[] := ARRAY[7, 3, 1];
-  idx    integer := 1;
-  i      integer;
-  d      integer;
-  s      integer := 0;
-BEGIN
-  IF len < 4 OR len > 20 THEN
-    RETURN FALSE;
-  END IF;
-
-  -- Full reference (incl. checksum) must yield sum % 10 = 0
-  FOR i IN REVERSE len..1 LOOP
-    d := substr(digits, i, 1)::int;
-    s := s + d * weights[idx];
-    idx := idx + 1;
-    IF idx > 3 THEN
-      idx := 1;
-    END IF;
-  END LOOP;
-
-  RETURN (s % 10) = 0;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION set_invoice_reference()
-RETURNS trigger
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  must_be_manual boolean;
-BEGIN
-  SELECT require_manual_reference
-  INTO must_be_manual
-  FROM customers
-  WHERE id = NEW.customer_id;
-
-  IF NOT must_be_manual
-     AND (NEW.reference IS NULL OR btrim(NEW.reference) = '') THEN
-    NEW.reference := fi_make_reference(NEW.invoice_number);
-  END IF;
-
-  RETURN NEW;
-END;
-$$;
