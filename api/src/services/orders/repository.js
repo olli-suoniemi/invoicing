@@ -35,15 +35,24 @@ export async function createOrder(order) {
   let totalAmountVatIncl = 0;
   let totalAmountVatExcl = 0;
   for (const item of order.items) {
-    const unit_price_vat_excl = item.unit_price_vat_excl === null || item.unit_price_vat_excl === undefined ? 0 : Number(item.unit_price_vat_excl);
-    const quantity = item.quantity ?? 0;
-    const taxRate = item.tax_rate === null || item.tax_rate === undefined ? 0 : Number(item.tax_rate);
+    const quantity = Number(item.quantity ?? 0);
+    const unitPriceVatExcl = Number(item.unit_price_vat_excl ?? 0);
+    const taxRate = Number(item.tax_rate ?? 0); // e.g. 24 for 24%
 
-    const itemTotalExclVat = unit_price_vat_excl * quantity;
-    const itemTotalInclVat = itemTotalExclVat + (itemTotalExclVat * (taxRate / 100));
+    // derive unit price incl. VAT
+    const unitPriceVatInclRaw = unitPriceVatExcl * (1 + taxRate / 100);
+    const unitPriceVatIncl = Math.round(unitPriceVatInclRaw * 100) / 100; // 2 decimals
 
-    totalAmountVatIncl += itemTotalInclVat;
+    const itemTotalExclVat = unitPriceVatExcl * quantity;
+    const itemTotalInclVat = unitPriceVatIncl * quantity;
+
+    // update item object so SQL uses consistent values
+    item.unit_price_vat_incl = unitPriceVatIncl;
+    item.total_price_vat_excl = itemTotalExclVat;
+    item.total_price_vat_incl = itemTotalInclVat;
+
     totalAmountVatExcl += itemTotalExclVat;
+    totalAmountVatIncl += itemTotalInclVat;
   }
 
   order.total_amount_vat_excl = totalAmountVatExcl;
@@ -59,8 +68,8 @@ export async function createOrder(order) {
 
   for (const item of order.items) {
     await sql`
-      INSERT INTO order_items (order_id, product_id, quantity, unit_price_vat_excl, unit_price_vat_incl, total_price, created_at)
-      VALUES (${newOrder.id}, ${item.product_id}, ${item.quantity}, ${item.unit_price_vat_excl}, ${item.unit_price_vat_incl}, ${item.total_price}, now())
+      INSERT INTO order_items (order_id, product_id, quantity, unit_price_vat_excl, unit_price_vat_incl, total_price_vat_excl, total_price_vat_incl, created_at)
+      VALUES (${newOrder.id}, ${item.product_id}, ${item.quantity}, ${item.unit_price_vat_excl}, ${item.unit_price_vat_incl}, ${item.total_price_vat_excl}, ${item.total_price_vat_incl}, now())
     `;
   }
 
