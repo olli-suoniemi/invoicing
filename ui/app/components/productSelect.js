@@ -121,6 +121,7 @@ export default function ProductSelect({
   placeholder = 'Search a product...',
   onEdit,
   isDisabled = false,        // 👈 new prop
+  instanceId = 'product-select',   // 👈 NEW
 }) {
   const [portalTarget, setPortalTarget] = useState(null);
 
@@ -131,6 +132,7 @@ export default function ProductSelect({
 
   return (
     <Select
+      instanceId={instanceId}      // 👈 KEY FIX
       className="react-select-container"
       classNamePrefix="react-select"
       styles={selectStyles}

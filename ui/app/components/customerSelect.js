@@ -6,6 +6,8 @@ const CustomerSelect = ({
   selectedOption,
   handleCustomerChangeInSelect,
   handleInputChangeSelect,
+  isDisabled = false,
+  instanceId = 'customer-select',   // 👈 NEW (with default)
 }) => {
   const selectStyles = {
     // main input
@@ -81,6 +83,7 @@ const CustomerSelect = ({
   return (
     <div className="w-full">
       <CreatableSelect
+        instanceId={instanceId}    
         styles={selectStyles}
         className="react-select-container"
         classNamePrefix="react-select"
@@ -93,6 +96,7 @@ const CustomerSelect = ({
         isSearchable
         placeholder="Select or type a customer..."
         value={selectedOption}
+        isDisabled={isDisabled}
       />
     </div>
   );
