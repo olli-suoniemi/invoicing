@@ -386,6 +386,18 @@ v1.get('/invoices/:id', async (c) => {
   try {
     const invoice = await invoiceService.getInvoiceById(authUser, id);
 
+    const customer = await customersService.getCustomerById(
+      authUser, 
+      { org_id: invoice.company_id }, 
+      invoice.customer_id
+    );
+
+    const order = await ordersService.getOrderById(authUser, invoice.order_id);
+
+    invoice.order = order;
+
+    invoice.customer = customer;
+
     console.log("Fetched invoice:", invoice);
     return c.json({ invoice });
   } catch (e) {
