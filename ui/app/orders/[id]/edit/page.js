@@ -554,62 +554,103 @@ export default function OrderDetailsPage() {
             </div>
           </div>
 
-          {/* Customer */}
-          <div className="w-2xl flex items-center gap-4 my-5">
-            <label className="label w-32 flex items-center gap-2">
-              <FaUser size={18} />
-              <span className="label-text">Customer</span>
-            </label>
-            <div className="flex-1">
-              <CustomerSelect
-                customerOptions={customerOptions}
-                selectedOption={selectedCustomer}
-                handleCustomerChangeInSelect={handleCustomerChangeInSelect}
-                isDisabled={!canEdit}
+          {/* Order details */}
+          <div className="mt-10 mb-2 w-7/12">
+            <span className="text-gray-500">Order details</span>
+            <hr className="mt-2 mb-4 border-gray-300" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-10 gap-y-5 w-7/12">
+
+            {/* ROW 1 LEFT: Customer */}
+            <div className="flex items-center gap-4 h-full">
+              <label className="w-32 flex items-center gap-2 text-sm text-gray-500">
+                <FaUser size={18} />
+                <span className="label-text">Customer</span>
+              </label>
+              <div className="flex-1">
+                <CustomerSelect
+                  customerOptions={customerOptions}
+                  selectedOption={selectedCustomer}
+                  handleCustomerChangeInSelect={handleCustomerChangeInSelect}
+                  isDisabled={!canEdit}
+                  instanceId="order-edit-customer" 
+                />
+              </div>
+            </div>
+
+            {/* ROW 1 RIGHT: Total excl. VAT */}
+            <div className="flex items-center gap-4 h-full">
+              <label className="w-40 flex items-center text-sm text-gray-500">
+                Total (excl. VAT)
+              </label>
+              <div className="flex-1 text-right font-medium">
+                {totalAmountVatExclDisplay} €
+              </div>
+            </div>
+
+            {/* ROW 2 LEFT: Status */}
+            <div className="flex items-center gap-4 h-full">
+              <label className="w-32 flex items-center gap-2 text-sm text-gray-500">
+                <RiProgress8Line size={18} />
+                <span className="label-text">Status</span>
+              </label>
+              <select
+                className="select select-bordered w-full h-11 text-sm flex-1"
+                value={order.status}
+                onChange={(e) =>
+                  setOrder((s) => ({ ...s, status: e.target.value }))
+                }
+                disabled={!canEdit}
+              >
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            {/* ROW 2 RIGHT: VAT amount */}
+            <div className="flex items-center gap-4 h-full">
+              <label className="w-40 flex items-center text-sm text-gray-500">
+                VAT
+              </label>
+              <div className="flex-1 text-right font-medium">
+                {totalVatAmountDisplay} €
+              </div>
+            </div>
+
+            {/* ROW 3 LEFT: Order date */}
+            <div className="flex items-center gap-4 h-full">
+              <label className="w-32 flex items-center gap-2 text-sm text-gray-500">
+                <FaCalendarDay size={18} />
+                <span className="label-text">Order date</span>
+              </label>
+
+              <DatePicker
+                selected={order.order_date ? new Date(order.order_date) : null}
+                onChange={(date) => {
+                  const formatted = date ? format(date, 'yyyy-MM-dd') : '';
+                  setOrder((s) => ({ ...s, order_date: formatted }));
+                }}
+                dateFormat="dd.MM.yyyy"
+                locale={fi}
+                wrapperClassName="flex-1"
+                className="input input-bordered w-full h-11 text-sm"
+                disabled={!canEdit}
               />
+            </div>
+
+            {/* ROW 3 RIGHT: Total incl. VAT */}
+            <div className="flex items-center gap-4 h-full">
+              <label className="w-40 flex items-center text-sm text-gray-500">
+                Total (incl. VAT)
+              </label>
+              <div className="flex-1 text-right font-semibold">
+                {totalAmountVatInclDisplay} €
+              </div>
             </div>
           </div>
 
-          {/* Status */}
-          <div className="w-2xl flex items-center gap-4">
-            <label className="label w-32 flex items-center gap-2">
-              <RiProgress8Line size={18} />
-              <span className="label-text">Status</span>
-            </label>
-            <select
-              className="select select-bordered w-full h-11 text-sm flex-1"
-              value={order.status}
-              onChange={(e) =>
-                setOrder((s) => ({ ...s, status: e.target.value }))
-              }
-              disabled={!canEdit}
-            >
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
-
-          {/* Order date */}
-          <div className="w-2xl flex items-center gap-4 mt-4">
-            <label className="label w-32 flex items-center gap-2">
-              <FaCalendarDay size={18} />
-              <span className="label-text">Order date</span>
-            </label>
-
-            <DatePicker
-              selected={order.order_date ? new Date(order.order_date) : null}
-              onChange={(date) => {
-                const formatted = date ? format(date, 'yyyy-MM-dd') : '';
-                setOrder((s) => ({ ...s, order_date: formatted }));
-              }}
-              dateFormat="dd.MM.yyyy"
-              locale={fi}
-              wrapperClassName="flex-1"                        // ⬅️ flex item
-              className="input input-bordered w-full h-11 text-sm" // ⬅️ full width inside
-              disabled={!canEdit}
-            />
-          </div>
 
           {/* Items header */}
           <div className="mt-10 mb-2">
@@ -661,6 +702,7 @@ export default function OrderDetailsPage() {
                             router.push(`/inventory/${opt.value}`);
                           }}
                           placeholder="Search a product..."
+                          instanceId={`order-edit-product-${index}`}  // 👈 important
                           isDisabled={!canEdit}
                         />
                       </td>
@@ -759,42 +801,6 @@ export default function OrderDetailsPage() {
                 </tr>
               </tbody>  
             </table>
-          </div>
-
-                    
-          {/* Summary */}
-          <div className="mt-10 mb-4">
-            <span className="text-gray-500">Summary</span>
-            <hr className="mt-2 mb-1 border-gray-300" />
-          </div>
-
-          <div className="space-y-2 flex flex-col">
-            <div className="join w-md">
-              <span className="join-item px-3 text-gray-500 flex items-center">
-                <RiMoneyEuroBoxFill size={18} />
-              </span>
-              <span className="join-item px-3">
-                {totalAmountVatExclDisplay} € (excl. VAT)
-              </span>
-            </div>
-
-            <div className="join w-md">
-              <span className="join-item px-3 text-gray-500 flex items-center">
-                <RiMoneyEuroBoxFill size={18} />
-              </span>
-              <span className="join-item px-3">
-                {totalVatAmountDisplay} € (VAT)
-              </span>
-            </div>
-
-            <div className="join w-md">
-              <span className="join-item px-3 text-gray-500 flex items-center">
-                <RiMoneyEuroBoxFill size={18} />
-              </span>
-              <span className="join-item px-3 font-semibold">
-                {totalAmountVatInclDisplay} € (incl. VAT)
-              </span>
-            </div>
           </div>
 
           {/* Text area for extra info */}
