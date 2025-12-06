@@ -33,11 +33,19 @@ export async function getInvoiceById(user, id) {
   return invoice;
 }
 
-export async function listCompanyInvoices(user, companyId, limit = 50) {
+export async function listCompanyInvoices(user, limit = 50) {
   if (!canReadInvoice(user)) {
     throw new ForbiddenError("You do not have permission to view invoices of this company.");
   }
 
-  const invoices = await repo.listCompanyInvoices(companyId, limit);
+  const invoices = await repo.listCompanyInvoices(limit);
   return invoices;
+}
+
+export async function updateInvoiceById(user, invoiceId, updateData) {
+  if (!canEditInvoice(user)) {
+    throw new ForbiddenError("You do not have permission to edit this invoice.");
+  }
+
+  await repo.updateInvoiceById({id: invoiceId, ...updateData});
 }

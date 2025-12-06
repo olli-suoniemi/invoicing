@@ -19,3 +19,29 @@ export async function getInvoiceById(id) {
   `;
   return result[0] || null;
 }
+
+export async function listCompanyInvoices(limit = 50) {
+  const result = await sql`
+    SELECT invoices.*, c.name as customer_name FROM invoices
+    join customers c on invoices.customer_id = c.id 
+    ORDER BY created_at DESC
+    LIMIT ${limit};
+  `;
+  return result;
+}
+
+export async function updateInvoiceById(updateData) {
+  await sql`
+    UPDATE invoices
+    SET
+      reference = coalesce(${updateData.reference}, reference),
+      issue_date = coalesce(${updateData.issue_date}, issue_date),
+      days_until_due = coalesce(${updateData.days_until_due}, days_until_due),
+      due_date = coalesce(${updateData.due_date}, due_date),
+      delivery_date = coalesce(${updateData.delivery_date}, delivery_date),
+      extra_info = coalesce(${updateData.extra_info}, extra_info),
+      show_info_on_invoice = coalesce(${updateData.show_info_on_invoice}, show_info_on_invoice),
+      updated_at = now()
+    WHERE id = ${updateData.id};
+  `;
+}
