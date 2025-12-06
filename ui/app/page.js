@@ -13,7 +13,7 @@ export default function DashboardPage() {
 
         <ToastContainer newestOnTop closeOnClick={true} />
         
-        <div className="grid grid-cols-3 gap-20 text-center">
+        <div className="grid grid-cols-3 gap-15 text-center mt-10">
           <Link
             href={"/customers"}
             className="p-10 rounded-md shadow-md cursor-pointer focus:outline-none bg-base-300 hover:shadow-xl transition-shadow duration-300"
@@ -33,11 +33,29 @@ export default function DashboardPage() {
           </Link>
 
           <Link
+            href="/invoices"
+            className="p-10 rounded-md shadow-md cursor-pointer focus:outline-none bg-base-300 hover:shadow-xl transition-shadow duration-300"
+          >
+            <div className="flex flex-col items-center">
+              <h2 className="text-2xl font-semibold">Invoices</h2>
+            </div>
+          </Link>
+
+          <Link
             href="/inventory"
             className="p-10 rounded-md shadow-md cursor-pointer focus:outline-none bg-base-300 hover:shadow-xl transition-shadow duration-300"
           >
             <div className="flex flex-col items-center">
               <h2 className="text-2xl font-semibold">Inventory</h2>
+            </div>
+          </Link>
+
+          <Link
+            href="/settings"
+            className="p-10 rounded-md shadow-md cursor-pointer focus:outline-none bg-base-300 hover:shadow-xl transition-shadow duration-300"
+          >
+            <div className="flex flex-col items-center">
+              <h2 className="text-2xl font-semibold">Settings</h2>
             </div>
           </Link>
         </div>
