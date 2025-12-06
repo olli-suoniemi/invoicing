@@ -246,6 +246,7 @@ CREATE TABLE order_items (
   unit_price_vat_incl     numeric(12,2) NOT NULL DEFAULT 0.00,
   total_price_vat_excl    numeric(12,2) NOT NULL DEFAULT 0.00,
   total_price_vat_incl    numeric(12,2) NOT NULL DEFAULT 0.00,
+  tax_rate                numeric(5,2) NOT NULL DEFAULT 0.00,
   created_at              timestamptz NOT NULL DEFAULT now(),
   updated_at              timestamptz NOT NULL DEFAULT now()
 );
@@ -268,6 +269,7 @@ CREATE TABLE invoices (
   extra_info      text,
   show_info_on_invoice boolean NOT NULL DEFAULT false,
   paid            boolean NOT NULL DEFAULT false,
+  paid_date       date,
   total_amount_vat_excl   numeric(12,2) NOT NULL DEFAULT 0.00,
   total_amount_vat_incl   numeric(12,2) NOT NULL DEFAULT 0.00,
   created_at      timestamptz NOT NULL DEFAULT now(),

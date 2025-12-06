@@ -292,7 +292,8 @@ INSERT INTO order_items
         unit_price_vat_incl, 
         total_price_vat_excl, 
         total_price_vat_incl, 
-        created_at
+        created_at,
+        tax_rate
     )
 VALUES 
     (
@@ -303,5 +304,6 @@ VALUES
         24.80, 
         20.00, 
         24.80, 
-        now()
+        now(),
+        24.00
     );
