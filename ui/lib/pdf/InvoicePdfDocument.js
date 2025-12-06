@@ -215,55 +215,59 @@ const styles = StyleSheet.create({
   },
 });
 
-export function InvoicePdfDocument({ order, referenceBarcode, companyLogo }) {
-  const items = order.items ?? [];
+export function InvoicePdfDocument({ invoice, referenceBarcode, companyLogo }) {
+  const items = invoice.order.items ?? [];
 
   const totalAmount =
-    order.total_amount == null ? 0 : Number(order.total_amount);
+    invoice.total_amount_vat_excl == null 
+      ? 0 
+      : Number(invoice.total_amount_vat_excl);
   const totalAmountVatIncl =
-    order.total_amount_vat_incl == null
+    invoice.total_amount_vat_incl == null
       ? totalAmount
-      : Number(order.total_amount_vat_incl);
-
+      : Number(invoice.total_amount_vat_incl);
   const vatAmount = totalAmountVatIncl - totalAmount;
 
   // Try to get a single tax rate (fall back to first item)
   let taxRate = 0;
-  if (order.tax_rate != null) {
-    taxRate = Number(order.tax_rate);
+  if (invoice.tax_rate != null) {
+    taxRate = Number(invoice.tax_rate);
   } else if (items.length > 0 && items[0].tax_rate != null) {
     taxRate = Number(items[0].tax_rate);
   }
 
-  const invoiceNumber = order.invoice_number ?? order.id ?? '';
-  const reference =
-    order.payment_reference ??
-    order.reference ??
-    invoiceNumber ??
-    '';
-  const ourReference = order.our_reference ?? order.reference_code ?? '';
+  const invoiceNumber = invoice.invoice_number ?? invoice.id ?? '';
+  const paymentReference = invoice.reference ?? invoiceNumber ?? '';
 
-  const orderDate = order.order_date
-    ? new Date(order.order_date).toLocaleDateString('fi-FI')
+  const orderDate = invoice.order.order_date
+    ? new Date(invoice.order.order_date).toLocaleDateString('fi-FI')
     : '';
-  const dueDate = order.due_date
-    ? new Date(order.due_date).toLocaleDateString('fi-FI')
+  const dueDate = invoice.due_date
+    ? new Date(invoice.due_date).toLocaleDateString('fi-FI')
     : '';
+  const issueDate = invoice.issue_date
+    ? new Date(invoice.issue_date).toLocaleDateString('fi-FI')
+    : '';
+  const deliveryDate = invoice.delivery_date
+    ? new Date(invoice.delivery_date).toLocaleDateString('fi-FI')
+    : '';
+  
+  const extraInfo = invoice.extra_info ?? invoice.show_info_on_invoice ?? '';
+  const daysUntilDue = invoice.days_until_due ?? '';
 
-  const companyName = order.company_name ?? 'Yritys Oy';
-  const companyAddress = order.company_address ?? '';
-  const companyPostal = order.company_postal_code ?? '';
-  const companyCity = order.company_city ?? '';
-  const companyEmail = order.company_email ?? 'toimisto@example.com';
-  const companyWebsite = order.company_website ?? 'https://example.com';
-  const businessId = order.company_business_id ?? 'Y-tunnus: 0000000-0';
-  const iban = order.company_iban ?? 'FI00 0000 0000 0000 00';
-  const bic = order.company_bic ?? 'BIC: BANKFIHH';
+  const companyName = invoice.company_name ?? '';
+  const companyAddress = invoice.company_address ?? '';
+  const companyPostal = invoice.company_postal_code ?? '';
+  const companyCity = invoice.company_city ?? '';
+  const companyEmail = invoice.company_email ?? '';
+  const companyWebsite = invoice.company_website ?? '';
+  const businessId = invoice.company_business_id ?? '';
+  const iban = invoice.company_iban ?? '';
 
-  const customerName = order.customer_name ?? '';
-  const customerAddress = order.customer_address ?? '';
-  const customerPostal = order.customer_postal_code ?? '';
-  const customerCity = order.customer_city ?? '';
+  const customerName = invoice.customer_name ?? '';
+  const customerAddress = invoice.customer_address ?? '';
+  const customerPostal = invoice.customer_postal_code ?? '';
+  const customerCity = invoice.customer_city ?? '';
 
   return (
     <Document>
@@ -314,23 +318,27 @@ export function InvoicePdfDocument({ order, referenceBarcode, companyLogo }) {
             <View style={styles.detailBox}>
               <View style={styles.headerInfoRow}>
                 <Text style={styles.headerInfoLabel}>Laskun numero</Text>
-                <Text style={styles.headerInfoValue}>123456789</Text>
-              </View>
-              <View style={styles.headerInfoRow}>
-                <Text style={styles.headerInfoLabel}>Maksun viite</Text>
-                <Text style={styles.headerInfoValue}>Matkailu KP4392 TOI6401</Text>
+                <Text style={styles.headerInfoValue}>{invoiceNumber}</Text>
               </View>
               <View style={styles.headerInfoRow}>
                 <Text style={styles.headerInfoLabel}>Laskun päiväys</Text>
-                <Text style={styles.headerInfoValue}>{orderDate}</Text>
+                <Text style={styles.headerInfoValue}>{issueDate}</Text>
+              </View>
+              <View style={styles.headerInfoRow}>
+                <Text style={styles.headerInfoLabel}>Tilauspäivä</Text>
+                <Text style={styles.headerInfoValue}>{deliveryDate}</Text>
               </View>
               <View style={styles.headerInfoRow}>
                 <Text style={styles.headerInfoLabel}>Eräpäivä</Text>
                 <Text style={styles.headerInfoValue}>{dueDate}</Text>
               </View>
               <View style={styles.headerInfoRow}>
-                <Text style={styles.headerInfoLabel}>Viitteemme</Text>
-                <Text style={styles.headerInfoValue}>{ourReference}</Text>
+                <Text style={styles.headerInfoLabel}>Maksuaika</Text>
+                <Text style={styles.headerInfoValue}>{daysUntilDue} pv</Text>
+              </View>
+              <View style={styles.headerInfoRow}>
+                <Text style={styles.headerInfoLabel}>Maksun viite</Text>
+                <Text style={styles.headerInfoValue}>{paymentReference}</Text>
               </View>
             </View>
           </View>
@@ -398,11 +406,11 @@ export function InvoicePdfDocument({ order, referenceBarcode, companyLogo }) {
             items.map((item) => {
               const quantity = item.quantity ?? 0;
               const unitPrice =
-                item.unit_price == null ? 0 : Number(item.unit_price);
+                item.unit_price_vat_excl == null ? 0 : Number(item.unit_price_vat_excl);
               const totalPrice =
-                item.total_price == null
+                item.total_price_vat_incl == null
                   ? quantity * unitPrice
-                  : Number(item.total_price);
+                  : Number(item.total_price_vat_incl);
 
               return (
                 <View key={item.id} style={styles.itemsRow}>
@@ -479,6 +487,13 @@ export function InvoicePdfDocument({ order, referenceBarcode, companyLogo }) {
           </View>
         </View>
 
+        {/* Extra info */}
+        {extraInfo && (
+          <View style={{ marginTop: 20, marginBottom: 40 }}>
+            <Text>{extraInfo}</Text>
+          </View>
+        )}
+
         {/* FOOTER: company details just above payment slip */}
         <View style={styles.footerContainer}>
           {/* Company details directly above the payment box */}
@@ -528,12 +543,12 @@ export function InvoicePdfDocument({ order, referenceBarcode, companyLogo }) {
 
                 <View style={styles.paymentColRight}>
                   <Text style={styles.paymentLabel}>Viite</Text>
-                  <Text style={styles.paymentValue}>Matkailu KP4392 TOI6401</Text>
+                  <Text style={styles.paymentValue}>{paymentReference}</Text>
 
                   <Text style={[styles.paymentLabel]}>
                     Eräpäivä
                   </Text>
-                  <Text style={styles.paymentValue}>10.12.2025</Text>
+                  <Text style={styles.paymentValue}>{dueDate}</Text>
 
                   <Text style={[styles.paymentLabel]}>
                     Summa
@@ -547,7 +562,7 @@ export function InvoicePdfDocument({ order, referenceBarcode, companyLogo }) {
                 <>
                   <Image style={styles.barcodeImage} src={referenceBarcode} />
                   <Text style={{ textAlign: 'center', marginTop: 4 }}>
-                    {order.barcodeData}
+                    {invoice.barcodeData}
                   </Text>
                 </>
               )}
