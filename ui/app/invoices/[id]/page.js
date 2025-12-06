@@ -152,7 +152,7 @@ export default function InvoiceDetailsPage() {
                             <button
                                 type="button"
                                 className="btn btn-ghost"
-                                onClick={() => window.open(`/api/invoices/${id}/invoice`, '_blank')}
+                                onClick={() => window.open(`/api/invoices/${id}/print`, '_blank')}
                             >
                                 Print Invoice
                             </button>
@@ -165,7 +165,7 @@ export default function InvoiceDetailsPage() {
                         <hr className="mt-2 mb-4 border-gray-300" />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-x-10 gap-y-5 w-7/12">
+                    <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-x-10 gap-y-2 w-7/12">
                         <div className="flex items-center gap-4 h-full">
                             <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
                                 <FaUser size={16} />
@@ -183,11 +183,13 @@ export default function InvoiceDetailsPage() {
 
                         <div className="flex items-center gap-4 h-full">
                             <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <RiMoneyEuroBoxFill size={16} />
-                                <span>Total (excl. VAT)</span>
+                                <FaCalendarDay size={16} />
+                                <span>Delivery date</span>
                             </div>
-                            <div className="flex-1 text-sm text-right">
-                                {totalAmountVatExclDisplay} €
+                            <div className="flex-1">
+                                <div className="h-10 flex items-center text-sm justify-self-end">
+                                    {deliveryDateDisplay}
+                                </div>
                             </div>
                         </div>
 
@@ -213,50 +215,24 @@ export default function InvoiceDetailsPage() {
                         <div className="flex items-center gap-4 h-full">
                             <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
                                 <FaCalendarDay size={16} />
-                                <span>Issue date</span>
-                            </div>
-                            <div className="flex-1 text-sm text-right">
-                                {issueDateDisplay}
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <RiMoneyEuroBoxFill size={16} />
-                                <span>VAT amount</span>
-                            </div>
-                            <div className="flex-1 text-sm">
-                                {vatAmountDisplay} €
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <FaCalendarDay size={16} />
-                                <span>Delivery date</span>
-                            </div>
-                            <div className="flex-1 text-sm text-right">
-                                {deliveryDateDisplay}
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <RiMoneyEuroBoxFill size={16} />
-                                <span>Total (incl. VAT)</span>
-                            </div>
-                            <div className="flex-1 text-sm font-semibold">
-                                {totalAmountVatInclDisplay} €
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <FaCalendarDay size={16} />
                                 <span>Days until due</span>
                             </div>
-                            <div className="flex-1 text-sm text-right">
-                                {daysUntilDueDisplay}
+                            <div className="flex-1">
+                                <div className="h-10 flex items-center text-sm justify-self-end">
+                                    {daysUntilDueDisplay}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <RiMoneyEuroBoxFill size={16} />
+                                <span>Total (excl. VAT)</span>
+                            </div>
+                            <div className="flex-1">
+                                <div className="h-10 flex items-center text-sm">
+                                    {totalAmountVatExclDisplay} €
+                                </div>
                             </div>
                         </div>
 
@@ -265,8 +241,22 @@ export default function InvoiceDetailsPage() {
                                 <FaCalendarDay size={16} />
                                 <span>Due date</span>
                             </div>
-                            <div className="flex-1 text-sm">
-                                {dueDateDisplay}
+                            <div className="flex-1">
+                                <div className="h-10 flex items-center text-sm justify-self-end">
+                                    {dueDateDisplay}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <RiMoneyEuroBoxFill size={16} />
+                                <span>VAT amount</span>
+                            </div>
+                            <div className="flex-1">
+                                <div className="h-10 flex items-center text-sm">
+                                    {vatAmountDisplay} €
+                                </div>
                             </div>
                         </div>
 
@@ -275,8 +265,22 @@ export default function InvoiceDetailsPage() {
                                 <FaCalendarDay size={16} />
                                 <span>Custom reference?</span>
                             </div>
-                            <div className="flex-1 text-sm text-right">
-                                {usesCustomReference ? 'Yes' : 'No'}
+                            <div className="flex-1">
+                                <div className="h-10 flex items-center text-sm justify-self-end">
+                                    {usesCustomReference ? 'Yes' : 'No'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <RiMoneyEuroBoxFill size={16} />
+                                <span>Total (incl. VAT)</span>
+                            </div>
+                            <div className="flex-1">
+                                <div className="h-10 flex items-center text-sm">
+                                    {totalAmountVatInclDisplay} €
+                                </div>
                             </div>
                         </div>
 
@@ -285,12 +289,25 @@ export default function InvoiceDetailsPage() {
                                 <FaCalendarDay size={16} />
                                 <span>Reference</span>
                             </div>
-                            <div className="flex-1 text-sm">
-                                {referenceDisplay}
+                            <div className="flex-1">
+                                <div className="h-10 flex items-center text-sm justify-self-end">
+                                    {referenceDisplay}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                                <FaCalendarDay size={16} />
+                                <span>Issue date</span>
+                            </div>
+                            <div className="flex-1">
+                                <div className="h-10 flex items-center text-sm">
+                                    {issueDateDisplay}
+                                </div>
                             </div>
                         </div>
                     </div>
-
 
                     {/* Items section */}
                     <div className="mt-4">
