@@ -398,7 +398,6 @@ v1.get('/invoices/:id', async (c) => {
 
     invoice.customer = customer;
 
-    console.log("Fetched invoice:", invoice);
     return c.json({ invoice });
   } catch (e) {
     const status = e.status ?? 500;
@@ -413,6 +412,35 @@ v1.get('/invoices', async (c) => {
     const invoices = await invoiceService.listCompanyInvoices(authUser);
 
     return c.json({ invoices });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// update invoice by ID
+v1.put('/invoices/:id', async (c) => {
+  const authUser = c.get('user');
+  const id = c.req.param('id');
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    await invoiceService.updateInvoiceById(authUser, id, body);
+
+    const invoice = await invoiceService.getInvoiceById(authUser, id);
+
+    const customer = await customersService.getCustomerById(
+      authUser, 
+      { org_id: invoice.company_id }, 
+      invoice.customer_id
+    );
+
+    const order = await ordersService.getOrderById(authUser, invoice.order_id);
+
+    invoice.order = order;
+
+    invoice.customer = customer;
+
+    return c.json( invoice );
   } catch (e) {
     const status = e.status ?? 500;
     return c.json({ error: e.message ?? 'Internal error' }, status);
