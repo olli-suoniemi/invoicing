@@ -26,13 +26,6 @@ const NavBar = () => {
     }
   };
 
-  const handleClick = () => {
-    const elem = document.activeElement;
-    if (elem) {
-      elem?.blur();
-    }
-  };
-
   return (
     <div className="navbar bg-neutral-content py-6 shadow-md">
       <div className="navbar-start">
@@ -54,6 +47,14 @@ const NavBar = () => {
           <div>
             <Link className="btn btn-ghost" href="/orders">
               Orders
+            </Link>
+          </div>
+        </div>
+
+        <div className="dropdown dropdown-hover">
+          <div>
+            <Link className="btn btn-ghost" href="/invoices">
+              Invoices
             </Link>
           </div>
         </div>
