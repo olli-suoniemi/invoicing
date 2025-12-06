@@ -3,7 +3,7 @@ import { sql } from "../../util/databaseConnect.js";
 
 export async function getOrdersByCompanyId(companyId) {
   const result = await sql`
-    select o.id, o.order_number, o.customer_id,	o.company_id, o.order_date, o.total_amount_vat_excl, o.total_amount_vat_incl, o.extra_info, o.status, o.created_at, o.updated_at, c.name as customer_name from orders o 
+    select o.*, c.name as customer_name from orders o 
     join customers c on o.customer_id = c.id 
     WHERE o.company_id = ${companyId}
   `;
@@ -12,13 +12,13 @@ export async function getOrdersByCompanyId(companyId) {
 
 export async function getOrderById(id) {
   const order = await sql`
-    select o.total_amount_vat_incl, o.order_number, o.id, o.customer_id,	o.company_id, o.order_date, o.total_amount_vat_excl, o.total_amount_vat_incl, o.extra_info, o.status, o.created_at, o.updated_at, c.name as customer_name from orders o 
+    select o.*, c.name as customer_name from orders o 
     join customers c on o.customer_id = c.id 
     WHERE o.id = ${id}
   `;
 
   const items = await sql`
-    select o.id, o.quantity, o.unit_price_vat_excl, o.unit_price_vat_incl, o.product_id, p.name as product_name, p.ean_code, p.tax_rate, o.total_price_vat_excl, o.total_price_vat_incl from order_items o 
+    select o.*, p.name as product_name, p.ean_code from order_items o 
     join products p on o.product_id = p.id  
     WHERE o.order_id = ${id}
   `;
@@ -68,8 +68,8 @@ export async function createOrder(order) {
 
   for (const item of order.items) {
     await sql`
-      INSERT INTO order_items (order_id, product_id, quantity, unit_price_vat_excl, unit_price_vat_incl, total_price_vat_excl, total_price_vat_incl, created_at)
-      VALUES (${newOrder.id}, ${item.product_id}, ${item.quantity}, ${item.unit_price_vat_excl}, ${item.unit_price_vat_incl}, ${item.total_price_vat_excl}, ${item.total_price_vat_incl}, now())
+      INSERT INTO order_items (order_id, product_id, quantity, unit_price_vat_excl, unit_price_vat_incl, total_price_vat_excl, total_price_vat_incl, created_at, tax_rate)
+      VALUES (${newOrder.id}, ${item.product_id}, ${item.quantity}, ${item.unit_price_vat_excl}, ${item.unit_price_vat_incl}, ${item.total_price_vat_excl}, ${item.total_price_vat_incl}, now(), ${item.tax_rate})
     `;
   }
 
@@ -164,7 +164,7 @@ export async function updateOrderById(order) {
     } else {
       // New item -> INSERT
       await sql`
-        INSERT INTO order_items (order_id, product_id, quantity, unit_price_vat_excl, unit_price_vat_incl, total_price_vat_excl, total_price_vat_incl, created_at, updated_at)
+        INSERT INTO order_items (order_id, product_id, quantity, unit_price_vat_excl, unit_price_vat_incl, total_price_vat_excl, total_price_vat_incl, created_at, updated_at, tax_rate)
         VALUES (
           ${order.id},
           ${item.product_id},
@@ -174,7 +174,8 @@ export async function updateOrderById(order) {
           ${item.total_price_vat_excl},
           ${item.total_price_vat_incl},
           now(),
-          now()
+          now(),
+          ${item.tax_rate}
         )
       `;
     }
