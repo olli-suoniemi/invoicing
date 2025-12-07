@@ -3,7 +3,6 @@
 import React, { useMemo, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { MdEmail } from "react-icons/md";
-import { TbHexagonNumber7Filled } from "react-icons/tb";
 import { FaUser, FaShield } from "react-icons/fa6";
 
 export default function NewUserPage() {
@@ -11,7 +10,6 @@ export default function NewUserPage() {
     firstName: '',
     lastName: '',
     email: '',
-    companyId: '',
     role: 'user',
   });
 
@@ -21,11 +19,45 @@ export default function NewUserPage() {
     return values.some(v => (v ?? '').toString().trim() !== '');
   }, [person]);
 
-  const handleSave = () => {
-    const payload = { type: 'person', ...person };
-    // Do your submit here (fetch/axios/action)
-    // await saveCustomer(payload)
-    toast.success('New customer created!');
+  const handleSave = async () => {
+    if (!person.firstName && !person.lastName && !person.email) {
+      toast.error("Please fill in name, last name, and email.");
+      return;
+    }
+
+    const payload = {
+      first_name: person.firstName,
+      last_name: person.lastName,
+      email: person.email,
+      role: person.role,
+    };
+
+    try {
+      const resp = await fetch('/api/settings/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || 'Upstream error');
+      }
+
+      // Success
+      toast.success("User created successfully.");
+      // Reset form
+      setPerson({
+        firstName: '',
+        lastName: '',
+        email: '',
+        role: 'user',
+      });
+    } catch (error) {
+      toast.error(`Error creating user: ${error}`);
+    }
   };
 
   return (
@@ -49,7 +81,6 @@ export default function NewUserPage() {
                     firstName: '',
                     lastName: '',
                     email: '',
-                    companyId: '',
                     role: 'user',
                   });
                 }}
@@ -106,20 +137,6 @@ export default function NewUserPage() {
               placeholder="Email"
               value={person.email}
               onChange={(e) => setPerson(s => ({ ...s, email: e.target.value }))}
-            />
-          </div>
-
-          {/* Company ID */}
-          <div className="join w-md">
-            <span className="join-item px-3 text-gray-500 flex items-center">
-              <TbHexagonNumber7Filled size={18} />
-            </span>
-            <input
-              type="text"
-              className="input input-bordered join-item w-full"
-              placeholder="Company ID"
-              value={person.companyId}
-              onChange={(e) => setPerson(s => ({ ...s, companyId: e.target.value }))}
             />
           </div>
 
