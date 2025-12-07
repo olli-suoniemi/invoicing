@@ -25,3 +25,30 @@ export async function GET(req) {
   const data = await resp.json();
   return NextResponse.json({ users: data.users });
 }
+
+export async function POST(req) {
+  // Middleware has attached it for protected paths
+  const authz = req.headers.get("authorization");
+  if (!authz) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await req.json().catch(() => ({}));
+
+  const resp = await fetch(`${apiURL}/v1/users`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: authz, // forward as-is
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    return NextResponse.json({ error: err.error || "Upstream error" }, { status: resp.status });
+  }
+
+  const data = await resp.json();
+  return NextResponse.json({ user: data.user });
+}
