@@ -214,6 +214,7 @@ export default function InvoiceEditPage() {
         reference: invoice.reference || null,
         extra_info: invoice.extra_info || null,
         show_info_on_invoice: invoice.show_info_on_invoice || false,
+        status: invoice.status || null,
       };
 
       const resp = await fetch(`/api/invoices/${id}`, {
