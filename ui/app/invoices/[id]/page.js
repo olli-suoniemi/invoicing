@@ -51,6 +51,66 @@ export default function InvoiceDetailsPage() {
         );
     }, [invoice]);
 
+    const handleMarkingAsSent = async () => {
+        // PUT to update invoice status to "sent"
+        const payload = { 
+            reference: invoice.reference,
+            issue_date: invoice.issue_date,
+            days_until_due: invoice.days_until_due,
+            due_date: invoice.due_date,
+            delivery_date: invoice.delivery_date,
+            extra_info: invoice.extra_info,
+            show_info_on_invoice: invoice.show_info_on_invoice,
+            status: 'sent' 
+        };
+        try {
+            const res = await fetch(`/api/invoices/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) {
+                throw new Error('Failed to update invoice status');
+            }
+            const data = await res.json();
+            setInvoice(data.invoice);
+            toast.success('Invoice marked as sent');
+        } catch (err) {
+            console.error(err);
+            toast.error(`Error: ${err.message}`);
+        }
+    };
+
+    const handleMarkingAsPaid = async () => {
+        // PUT to update invoice status to "paid"
+        const payload = { 
+            reference: invoice.reference,
+            issue_date: invoice.issue_date,
+            days_until_due: invoice.days_until_due,
+            due_date: invoice.due_date,
+            delivery_date: invoice.delivery_date,
+            extra_info: invoice.extra_info,
+            show_info_on_invoice: invoice.show_info_on_invoice,
+            status: 'paid' 
+        };
+        try {
+            const res = await fetch(`/api/invoices/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) {
+                throw new Error('Failed to update invoice status');
+            }
+            const data = await res.json();
+            setInvoice(data.invoice);
+            toast.success('Invoice marked as paid');
+        } catch (err) {
+            console.error(err);
+            toast.error(`Error: ${err.message}`);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-start min-h-screen py-5">
@@ -155,6 +215,20 @@ export default function InvoiceDetailsPage() {
                                 onClick={() => window.open(`/api/invoices/${id}/print`, '_blank')}
                             >
                                 Print Invoice
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-ghost"
+                                onClick={handleMarkingAsSent}
+                            >
+                                Mark as sent
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-ghost"
+                                onClick={handleMarkingAsPaid}
+                            >
+                                Mark as paid
                             </button>
                         </div>
                     </div>
@@ -392,9 +466,10 @@ export default function InvoiceDetailsPage() {
                         <span className="text-gray-500">Notes</span>
                         <hr className="mt-2 border-gray-300" />
                     </div>
-                    <div>
-                        <p>{invoice.extra_info}</p>
+                    <div className="whitespace-pre-line">
+                        {invoice.extra_info}
                     </div>
+
 
                     {/* Meta info */}
                     <div className="mt-10">
