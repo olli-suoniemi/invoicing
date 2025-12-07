@@ -325,7 +325,7 @@ export function InvoicePdfDocument({ invoice, referenceBarcode, companyLogo }) {
                 <Text style={styles.headerInfoValue}>{issueDate}</Text>
               </View>
               <View style={styles.headerInfoRow}>
-                <Text style={styles.headerInfoLabel}>Tilauspäivä</Text>
+                <Text style={styles.headerInfoLabel}>Toimituspäivä</Text>
                 <Text style={styles.headerInfoValue}>{deliveryDate}</Text>
               </View>
               <View style={styles.headerInfoRow}>
