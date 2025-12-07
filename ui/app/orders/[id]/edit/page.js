@@ -10,7 +10,7 @@ import { fi } from 'date-fns/locale';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ToastContainer, toast } from 'react-toastify';
-import { RiProgress8Line, RiMoneyEuroBoxFill } from "react-icons/ri";
+import { RiProgress8Line } from "react-icons/ri";
 import {
   FaUser,
   FaPlus,
@@ -63,7 +63,7 @@ export default function OrderDetailsPage() {
 
         setOrder({
           customer_id: ord.customer_id ?? '',
-          status: ord.status ?? 'pending',
+          status: ord.status ?? 'draft',
           extra_info: ord.extra_info || '',
           order_date: formatOrderDateForInput(ord.order_date),
           total_amount_vat_excl: ord.total_amount_vat_excl ?? 0,
@@ -232,14 +232,14 @@ export default function OrderDetailsPage() {
     });
   };
 
-  const canEdit = initialOrder?.status === 'pending';
+  const allowedToEdit = initialOrder?.status === 'draft' || initialOrder?.status === 'cancelled';
 
   const normalizeForCompare = (ord) => {
     if (!ord) return null;
 
     return {
       customer_id: ord.customer_id ?? '',
-      status: ord.status ?? 'pending',
+      status: ord.status ?? 'draft',
       order_date: ord.order_date ? formatOrderDateForInput(ord.order_date) : '',
       extra_info: ord.extra_info || '',
       items: (ord.items || []).map((it) => ({
@@ -315,7 +315,7 @@ export default function OrderDetailsPage() {
       total_amount_vat_excl: initialOrder.total_amount_vat_excl ?? 0,
       total_amount_vat_incl: initialOrder.total_amount_vat_incl ?? 0,
       customer_id: initialOrder.customer_id ?? '',
-      status: initialOrder.status ?? 'pending',
+      status: initialOrder.status ?? 'draft',
       extra_info: initialOrder.extra_info || '',
       order_date: formatOrderDateForInput(initialOrder.order_date), // ⬅️ here
       items:
@@ -345,11 +345,6 @@ export default function OrderDetailsPage() {
 
   const handleSave = async () => {
     if (!order) return;
-
-    if (!canEdit) {
-      toast.error('Only pending orders can be edited.');
-      return;
-    }
 
     const customerId = order.customer_id.trim();
     if (!customerId) {
@@ -408,7 +403,7 @@ export default function OrderDetailsPage() {
 
     const payload = {
       customer_id: customerId,
-      status: order.status || 'pending',
+      status: order.status || 'draft',
       extra_info: order.extra_info || '',
       order_date: order.order_date,
       items: itemsPayload,
@@ -437,7 +432,7 @@ export default function OrderDetailsPage() {
           total_amount_vat_excl: updated.total_amount_vat_excl ?? 0,
           total_amount_vat_incl: updated.total_amount_vat_incl ?? 0,
           customer_id: updated.customer_id ?? '',
-          status: updated.status ?? 'pending',
+          status: updated.status ?? 'draft',
           extra_info: updated.extra_info || '',
           order_date: formatOrderDateForInput(updated.order_date),
           items:
@@ -514,11 +509,11 @@ export default function OrderDetailsPage() {
             </h1>
             <div className="flex items-center gap-2">
               <span className="badge badge-neutral">
-                {order.status ?? 'pending'}
+                {order.status ?? 'draft'}
               </span>
-              {!canEdit && (
+              {!allowedToEdit && (
                 <span className="text-xs text-gray-500">
-                  Only orders in <b>pending</b> status can be edited.
+                  Only orders in <b>draft</b> or <b>cancelled</b> should be edited.
                 </span>
               )}
             </div>
@@ -534,20 +529,20 @@ export default function OrderDetailsPage() {
                 type="button"
                 className="btn btn-ghost"
                 onClick={resetForm}
-                disabled={!hasChanges || saving || !canEdit}
+                disabled={!hasChanges || saving}
               >
                 Reset
               </button>
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={!hasChanges || saving || !canEdit}
+                disabled={!hasChanges || saving}
                 className={`btn btn-primary ${
-                  !hasChanges || !canEdit
+                  !hasChanges
                     ? 'btn-disabled opacity-50 cursor-not-allowed'
                     : ''
                 }`}
-                aria-disabled={!hasChanges || saving || !canEdit}
+                aria-disabled={!hasChanges || saving}
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>
@@ -573,7 +568,6 @@ export default function OrderDetailsPage() {
                   customerOptions={customerOptions}
                   selectedOption={selectedCustomer}
                   handleCustomerChangeInSelect={handleCustomerChangeInSelect}
-                  isDisabled={!canEdit}
                   instanceId="order-edit-customer" 
                 />
               </div>
@@ -601,9 +595,8 @@ export default function OrderDetailsPage() {
                 onChange={(e) =>
                   setOrder((s) => ({ ...s, status: e.target.value }))
                 }
-                disabled={!canEdit}
               >
-                <option value="pending">Pending</option>
+                <option value="draft">Draft</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
@@ -636,7 +629,6 @@ export default function OrderDetailsPage() {
                 locale={fi}
                 wrapperClassName="flex-1"
                 className="input input-bordered w-full h-11 text-sm"
-                disabled={!canEdit}
               />
             </div>
 
@@ -702,8 +694,7 @@ export default function OrderDetailsPage() {
                             router.push(`/inventory/${opt.value}`);
                           }}
                           placeholder="Search a product..."
-                          instanceId={`order-edit-product-${index}`}  // 👈 important
-                          isDisabled={!canEdit}
+                          instanceId={`order-edit-product-${index}`}
                         />
                       </td>
 
@@ -727,7 +718,6 @@ export default function OrderDetailsPage() {
                           onChange={(e) =>
                             updateItem(index, 'quantity', e.target.value)
                           }
-                          disabled={!canEdit}
                         />
                       </td>
 
@@ -742,7 +732,6 @@ export default function OrderDetailsPage() {
                           onChange={(e) =>
                             updateItem(index, 'unit_price_vat_excl', e.target.value)
                           }
-                          disabled={!canEdit}
                         />
                       </td>
 
@@ -777,7 +766,7 @@ export default function OrderDetailsPage() {
                           type="button"
                           className="btn btn-ghost btn-xs"
                           onClick={() => removeItem(index)}
-                          disabled={order.items.length === 1 || !canEdit}
+                          disabled={order.items.length === 1}
                         >
                           <FaMinus />
                         </button>
@@ -793,7 +782,6 @@ export default function OrderDetailsPage() {
                       type="button"
                       className="btn btn-outline btn-sm mt-2"
                       onClick={addItem}
-                      disabled={!canEdit}
                     >
                       <FaPlus className="mr-1" /> Add a product
                     </button>
@@ -814,7 +802,6 @@ export default function OrderDetailsPage() {
             onChange={(e) =>
               setOrder((s) => ({ ...s, extra_info: e.target.value }))
             }
-            disabled={!canEdit}
           ></textarea>
 
           {/* Meta info */}
