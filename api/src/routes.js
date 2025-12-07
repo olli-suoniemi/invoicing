@@ -67,6 +67,19 @@ v1.get("/users", async (c) => {
   }
 });
 
+// create user
+v1.post("/users", async (c) => {
+  const authUser = c.get("user");
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    const user = await settingsService.createUser(authUser, body);
+    return c.json({ user });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? "Internal error" }, status);
+  }
+});
+
 // get user by ID
 v1.get('/users/:id', async (c) => {
   const authUser = c.get('user');
