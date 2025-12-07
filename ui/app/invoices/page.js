@@ -130,12 +130,14 @@ export default function InvoicesPage() {
                         : '—'}
                     </td>
                     <td className="text-center">
-                      {invoice.status ? (
-                        <span className="badge badge-neutral">
-                          {invoice.status}
-                        </span>
-                      ) : (
-                        '—'
+                      {invoice.status === 'paid' && (
+                        <span className="badge badge-success badge-lg">Paid</span>
+                      )}
+                      {invoice.status === 'sent' && (
+                        <span className="badge badge-primary badge-lg">Sent</span>
+                      )}
+                      {invoice.status === 'draft' && (
+                        <span className="badge badge-neutral badge-lg">Draft</span>
                       )}
                     </td>
                   </tr>
