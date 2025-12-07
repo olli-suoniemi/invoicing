@@ -56,7 +56,8 @@ export default function NewUserPage() {
         role: 'user',
       });
     } catch (error) {
-      toast.error(`Error creating user: ${error}`);
+      console.error(error);
+      toast.error(`Error creating user: ${error.message || error}`);
     }
   };
 

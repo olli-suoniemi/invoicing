@@ -17,13 +17,15 @@ export default function InvoicesPage() {
       try {
         const response = await fetch('/api/invoices');
         if (!response.ok) {
-          throw new Error('Failed to fetch invoices');
+          // try to read error message from body
+          const { error } = await response.json().catch(() => ({}));
+          throw new Error(error || `Failed to fetch invoices (${response.status})`);
         }
         const data = await response.json();
         setInvoices(data.invoices ?? []);
       } catch (error) {
         console.error(error);
-        toast.error(`Error: ${error.message}`);
+        toast.error(error.message || 'Error fetching invoices');
       } finally {
         setLoading(false);
       }

@@ -245,7 +245,7 @@ export default function InvoiceEditPage() {
       toast.success('Invoice updated!');
     } catch (err) {
       console.error(err);
-      toast.error(err.message || 'Failed to update invoice');
+      toast.error(`Error updating invoice: ${err.message || err}`);
     } finally {
       setSaving(false);
     }

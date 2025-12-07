@@ -17,13 +17,15 @@ export default function CustomersPage() {
       try {
         const response = await fetch('/api/customers');
         if (!response.ok) {
-          throw new Error('Failed to fetch customers');
+          // try to read error message from body
+          const { error } = await response.json().catch(() => ({}));
+          throw new Error(error || `Failed to fetch customers (${response.status})`);
         }
         const data = await response.json();
         setCustomers(data.customers ?? []);
-        console.log(data);
       } catch (error) {
-        toast.error(`Error: ${error.message}`);
+        console.error(error);
+        toast.error(error.message || 'Error fetching customers');
       } finally {
         setLoading(false);
       }

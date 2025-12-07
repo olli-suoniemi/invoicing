@@ -17,13 +17,15 @@ export default function OrdersPage() {
       try {
         const response = await fetch('/api/orders');
         if (!response.ok) {
-          throw new Error('Failed to fetch orders');
+          // try to read error message from body
+          const { error } = await response.json().catch(() => ({}));
+          throw new Error(error || `Failed to fetch orders (${response.status})`);
         }
         const data = await response.json();
         setOrders(data.orders ?? []);
       } catch (error) {
         console.error(error);
-        toast.error(`Error: ${error.message}`);
+        toast.error(error.message || 'Error fetching orders');
       } finally {
         setLoading(false);
       }

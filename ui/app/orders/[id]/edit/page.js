@@ -463,7 +463,7 @@ export default function OrderDetailsPage() {
       toast.success('Order updated!');
     } catch (err) {
       console.error(err);
-      toast.error(err.message || 'Failed to update order');
+      toast.error(`Error updating order: ${err.message || err}`);
     } finally {
       setSaving(false);
     }

@@ -264,7 +264,7 @@ export default function OrdersNewPage() {
       toast.success('Order created successfully');
     } catch (err) {
       console.error(err);
-      toast.error('Failed to create order');
+      toast.error(`Error creating order: ${err.message || err}`);
     }
   };
 

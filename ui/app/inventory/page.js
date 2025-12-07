@@ -16,12 +16,15 @@ export default function InventoryPage() {
       try {
         const response = await fetch('/api/inventory');
         if (!response.ok) {
-          throw new Error('Failed to fetch inventory');
+          // try to read error message from body
+          const { error } = await response.json().catch(() => ({}));
+          throw new Error(error || `Failed to fetch inventory (${response.status})`);
         }
         const data = await response.json();
         setInventory(data.inventory ?? []);
       } catch (error) {
-        toast.error(`Error: ${error.message}`);
+        console.error(error);
+        toast.error(error.message || 'Error fetching inventory');
       } finally {
         setLoading(false);
       }

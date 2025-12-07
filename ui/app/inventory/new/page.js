@@ -87,7 +87,7 @@ export default function InventoryNewPage() {
       toast.success('New product created!');
     } catch (err) {
       console.error(err);
-      toast.error('Failed to create product');
+      toast.error(`Error creating product: ${err.message || err}`);
     }
   };
 

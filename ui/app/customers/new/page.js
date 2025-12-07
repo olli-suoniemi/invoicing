@@ -228,7 +228,7 @@ export default function CustomerNewPage() {
       toast.success('New customer created!');
     } catch (err) {
       console.error(err);
-      toast.error('Failed to create customer');
+      toast.error(`Error creating customer: ${err.message || err}`);
     }
   };
 
