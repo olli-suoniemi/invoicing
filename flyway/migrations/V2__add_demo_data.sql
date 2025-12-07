@@ -255,7 +255,7 @@ VALUES
         current_date, 
         30.00, 
         37.20, 
-        'pending',
+        'draft',
         now()
     );
 
