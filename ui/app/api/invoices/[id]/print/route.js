@@ -125,7 +125,6 @@ export async function GET(req, { params }) {
     console.error('Error reading logo image:', e);
   }
 
-  console.log('Invoice', invoice.order.items); // --- IGNORE ---
   // ---- Render PDF ----
   const buffer = await renderToBuffer(
     <InvoicePdfDocument
