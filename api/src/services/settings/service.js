@@ -12,6 +12,8 @@ import {
 } from "./policy.js";
 import { ForbiddenError } from "../../util/errors.js";
 
+import { firebaseAdmin } from '../../firebase_admin.js'; // adjust path
+
 export async function createUserDuringLogin(authUser, body) {
   if (!canCreateUser(authUser)) {
     throw new ForbiddenError("Not allowed to create users");
@@ -40,6 +42,56 @@ export async function createUserDuringLogin(authUser, body) {
 
   return repo.createUser(newUser);
 }
+
+export async function createUser(requestor, body) {
+  if (!canCreateUser(requestor)) {
+    throw new ForbiddenError("Not allowed to create users");
+  }
+
+  // 1) Create user in Firebase Auth
+  // You have a few options here:
+  //  - generate a random password and send it to them separately
+  //  - or create the user without password and send an email link reset, etc.
+  // For demo, we generate a random temp password.
+  const tempPassword =
+    Math.random().toString(36).slice(-10) + 'A1!'; // ensure complexity if you want
+
+  const fbUser = await firebaseAdmin.auth().createUser({
+    email: body.email,
+    password: tempPassword,
+    displayName: `${body.first_name || ''} ${body.last_name || ''}`.trim(),
+    disabled: false,
+  });
+
+  // 2) Set custom claims based on role
+  const isAdmin = body.role === 'admin';
+  await firebaseAdmin.auth().setCustomUserClaims(fbUser.uid, { admin: isAdmin });
+
+  // 3) Create user in your database
+  const newUser = {
+    firebase_uid: fbUser.uid,
+    role: isAdmin ? 'admin' : 'user',
+    first_name: body.first_name || '',
+    last_name: body.last_name || '',
+    email: body.email || '',
+    created_at: new Date(),
+    updated_at: new Date(),
+    last_login: null,
+  };
+
+  try {
+    const created = await repo.createUser(newUser);
+
+    // Add the user to the company
+    const added = await repo.addUserToCompany(created.id);
+    return added;
+  } catch (e) {
+    // Optional: rollback Auth user if DB insert fails
+    await firebaseAdmin.auth().deleteUser(fbUser.uid).catch(() => {});
+    throw e;
+  }
+}
+
 
 export function listUsers(user) {
   if (!canReadAllUsers(user)) {
