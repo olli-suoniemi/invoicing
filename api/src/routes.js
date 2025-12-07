@@ -166,6 +166,11 @@ v1.get('/customers', async (c) => {
     // get main company of the auth user
     const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
 
+    if (!company) {
+      // no throw, just respond
+      return c.json({ error: 'User has no associated company' }, 403);
+    }
+
     const customers = await customersService.listCompanyCustomersById(company.org_id);
 
     return c.json({ customers });
@@ -183,6 +188,11 @@ v1.get('/customers/:id', async (c) => {
     // get main company of the auth user
     const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
 
+    if (!company) {
+      // no throw, just respond
+      return c.json({ error: 'User has no associated company' }, 403);
+    }
+    
     const customer = await customersService.getCustomerById(authUser, company, id);
 
     return c.json({ customer });
@@ -200,6 +210,11 @@ v1.post('/customers', async (c) => {
     // get main company of the auth user
     const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
 
+    if (!company) {
+      // no throw, just respond
+      return c.json({ error: 'User has no associated company' }, 403);
+    }
+    
     console.log("Creating customer for company:", company, "with data:", body);
 
     const customer = await customersService.createCustomer(company, body);
@@ -234,6 +249,11 @@ v1.get('/inventory', async (c) => {
     // get main company of the auth user
     const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
 
+    if (!company) {
+      // no throw, just respond
+      return c.json({ error: 'User has no associated company' }, 403);
+    }
+
     const inventory = await inventoryService.listCompanyInventoryById(company.org_id);
 
     return c.json({ inventory });
@@ -266,6 +286,11 @@ v1.post('/inventory', async (c) => {
     // get main company of the auth user
     const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
 
+    if (!company) {
+      // no throw, just respond
+      return c.json({ error: 'User has no associated company' }, 403);
+    }
+
     const item = await inventoryService.addInventoryItem(authUser, company, body);
 
     return c.json({ inventory: item });
@@ -297,6 +322,11 @@ v1.get('/orders', async (c) => {
     // get main company of the auth user
     const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
 
+    if (!company) {
+      // no throw, just respond
+      return c.json({ error: 'User has no associated company' }, 403);
+    }
+
     const orders = await ordersService.listCompanyOrders(authUser, company.org_id);
 
     return c.json({ orders });
@@ -326,6 +356,11 @@ v1.post('/orders', async (c) => {
   const body = await c.req.json().catch(() => ({}));
   try {
     const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+
+    if (!company) {
+      // no throw, just respond
+      return c.json({ error: 'User has no associated company' }, 403);
+    }
 
     const order = await ordersService.createOrder(authUser, body, company);
 
