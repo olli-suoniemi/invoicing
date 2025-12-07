@@ -41,6 +41,7 @@ export async function updateInvoiceById(updateData) {
       delivery_date = coalesce(${updateData.delivery_date}, delivery_date),
       extra_info = coalesce(${updateData.extra_info}, extra_info),
       show_info_on_invoice = coalesce(${updateData.show_info_on_invoice}, show_info_on_invoice),
+      status = coalesce(${updateData.status}, status),
       updated_at = now()
     WHERE id = ${updateData.id};
   `;
