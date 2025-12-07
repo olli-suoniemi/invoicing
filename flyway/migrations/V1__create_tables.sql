@@ -64,31 +64,28 @@ IMMUTABLE
 STRICT
 AS $$
 DECLARE
-  digits text := regexp_replace(ref, '\D', '', 'g');
-  len    integer := length(digits);
-  weights integer[] := ARRAY[7, 3, 1];
-  idx    integer := 1;
-  i      integer;
-  d      integer;
-  s      integer := 0;
+  digits          text := regexp_replace(ref, '\D', '', 'g');
+  len             integer := length(digits);
+  base            text;
+  given_checksum  integer;
+  expected_checksum integer;
 BEGIN
+  -- Full reference (incl. checksum) must be 4–20 digits
   IF len < 4 OR len > 20 THEN
     RETURN FALSE;
   END IF;
 
-  -- Full reference (incl. checksum) must yield sum % 10 = 0
-  FOR i IN REVERSE len..1 LOOP
-    d := substr(digits, i, 1)::int;
-    s := s + d * weights[idx];
-    idx := idx + 1;
-    IF idx > 3 THEN
-      idx := 1;
-    END IF;
-  END LOOP;
+  -- Separate base and checksum digit
+  base := substr(digits, 1, len - 1);
+  given_checksum := substr(digits, len, 1)::int;
 
-  RETURN (s % 10) = 0;
+  -- Compare with recomputed checksum
+  expected_checksum := fi_ref_checksum(base);
+
+  RETURN given_checksum = expected_checksum;
 END;
 $$;
+
 
 CREATE OR REPLACE FUNCTION set_invoice_reference()
 RETURNS trigger
@@ -164,6 +161,7 @@ CREATE TABLE users (
 CREATE TABLE user_org_roles (
   user_id     uuid REFERENCES users(id)           ON DELETE CASCADE,
   org_id      uuid REFERENCES companies(id)       ON DELETE CASCADE,
+  -- the role is not currently used, but reserved for future use
   role        text CHECK (role IN ('owner','member')) NOT NULL,
   is_main     boolean NOT NULL DEFAULT true,
   created_at  timestamptz NOT NULL DEFAULT now(),
@@ -230,7 +228,7 @@ CREATE TABLE orders (
   order_date              date NOT NULL DEFAULT current_date,
   total_amount_vat_excl   numeric(12,2) NOT NULL DEFAULT 0.00,
   total_amount_vat_incl   numeric(12,2) NOT NULL DEFAULT 0.00,
-  status                  text CHECK (status IN ('pending','completed','cancelled')) NOT NULL DEFAULT 'pending',
+  status                  text CHECK (status IN ('draft','completed','cancelled')) NOT NULL DEFAULT 'draft',
   extra_info              text,
   created_at              timestamptz NOT NULL DEFAULT now(),
   updated_at              timestamptz NOT NULL DEFAULT now()
@@ -284,3 +282,13 @@ ALTER TABLE invoices
   ADD CONSTRAINT invoices_reference_valid
     CHECK (reference IS NULL OR fi_ref_is_valid(reference));
 
+
+CREATE TRIGGER set_invoice_reference_before_insert
+BEFORE INSERT ON invoices
+FOR EACH ROW
+EXECUTE FUNCTION set_invoice_reference();
+
+CREATE TRIGGER set_invoice_reference_before_ins_upd
+BEFORE INSERT OR UPDATE ON invoices
+FOR EACH ROW
+EXECUTE FUNCTION set_invoice_reference();
