@@ -155,3 +155,61 @@ docker compose --profile flyway run --rm \
 ```bash
 psql -h localhost -U devuser -d localdev
 ```
+
+
+### Deployment
+
+On local machine. Authenticate to GHCR:
+
+```bash
+echo "<YOUR_GITHUB_PERSONAL_ACCESS_TOKEN>" | docker login ghcr.io -u olli-suoniemi --password-stdin
+```
+
+Build & push images to GHCR:
+
+```bash
+docker build -t ghcr.io/olli-suoniemi/wigcrm/ui:latest -f ui/Dockerfile ui/
+docker build -t ghcr.io/olli-suoniemi/wigcrm/api:latest -f api/Dockerfile api/
+docker build -t ghcr.io/olli-suoniemi/wigcrm/flyway:latest -f flyway/Dockerfile flyway/
+```
+
+```bash
+docker push ghcr.io/olli-suoniemi/wigcrm/ui:latest
+docker push ghcr.io/olli-suoniemi/wigcrm/api:latest
+docker push ghcr.io/olli-suoniemi/wigcrm/flyway:latest
+```
+
+Remember to set the images public in GHCR.
+
+Copy docker-stack.yml to VPS
+
+```bash
+scp ~/Projects/WigCRM/docker-stack.yml olli@olli.codes:/home/olli/crm/docker-stack.yml
+```
+
+<br>
+
+In VPS, pull images:
+
+```bash
+docker pull ghcr.io/olli-suoniemi/wigcrm/ui:latest
+docker pull ghcr.io/olli-suoniemi/wigcrm/api:latest
+docker pull ghcr.io/olli-suoniemi/wigcrm/flyway:latest
+```
+
+
+<br>
+
+Deploy:
+
+```bash
+docker stack deploy -c docker-stack.yml crm
+```
+
+Redeploy:
+
+```bash
+docker service update --force --with-registry-auth --image ghcr.io/olli-suoniemi/wigcrm/ui:latest crm_ui
+docker service update --force --with-registry-auth --image ghcr.io/olli-suoniemi/wigcrm/api:latest crm_api    
+docker service update --force --with-registry-auth --image ghcr.io/olli-suoniemi/wigcrm/flyway:latest crm_flyway  
+```
