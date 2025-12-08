@@ -51,12 +51,17 @@ export default function OrdersNewPage() {
     (async () => {
       try {
         const r = await fetch('/api/customers'); // change if your endpoint is different
-        if (!r.ok) throw new Error('Failed to load customers');
+        
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.error || 'Upstream error');
+        }
+
         const data = await r.json();
         setCustomers(data.customers || []);
       } catch (e) {
         console.error(e);
-        toast.error(e.message || 'Failed to load customers');
+        toast.error(`Error loading customers: ${e.message || e}`);
       }
     })();
   }, []);
@@ -66,13 +71,18 @@ export default function OrdersNewPage() {
     (async () => {
       try {
         const r = await fetch('/api/inventory'); // change if your endpoint is different
-        if (!r.ok) throw new Error('Failed to load products');
+        
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.error || 'Upstream error');
+        }
+
         const data = await r.json();
         console.log('Loaded products:', data.inventory);
         setProducts(data.inventory || []);
       } catch (e) {
         console.error(e);
-        toast.error(e.message || 'Failed to load products');
+        toast.error(`Error loading products: ${e.message || e}`);
       }
     })();
   }, []);
