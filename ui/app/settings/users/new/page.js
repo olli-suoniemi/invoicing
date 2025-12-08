@@ -4,19 +4,28 @@ import React, { useMemo, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { MdEmail } from "react-icons/md";
 import { FaUser, FaShield } from "react-icons/fa6";
+import { useRouter } from 'next/navigation';
+
+const initialPerson = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  role: 'user',
+};
 
 export default function NewUserPage() {
-  const [person, setPerson] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    role: 'user',
-  });
+  const [person, setPerson] = useState(initialPerson);
+  const router = useRouter();
 
-  // Determine if *any* field in the currently visible form has text
+  // Any text anywhere (for enabling Save)
   const hasText = useMemo(() => {
     const values = Object.values(person);
     return values.some(v => (v ?? '').toString().trim() !== '');
+  }, [person]);
+
+  // Any change compared to initial state (for enabling Reset)
+  const hasChanges = useMemo(() => {
+    return JSON.stringify(person) !== JSON.stringify(initialPerson);
   }, [person]);
 
   const handleSave = async () => {
@@ -39,22 +48,18 @@ export default function NewUserPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
-      })
+      });
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
         throw new Error(err.error || 'Upstream error');
       }
 
-      // Success
       toast.success("User created successfully.");
-      // Reset form
-      setPerson({
-        firstName: '',
-        lastName: '',
-        email: '',
-        role: 'user',
-      });
+      setPerson(initialPerson);
+
+      const id = (await resp.json()).user.id; 
+      router.push(`/settings/users/${id}`)
     } catch (error) {
       console.error(error);
       toast.error(`Error creating user: ${error.message || error}`);
@@ -63,9 +68,8 @@ export default function NewUserPage() {
 
   return (
     <div className="flex justify-center items-start min-h-screen py-5">
-
       <ToastContainer />
-      
+
       <div className="w-full max-w-4xl flex items-center gap-4">
         <div className="flex w-full flex-col gap-4">
 
@@ -75,15 +79,10 @@ export default function NewUserPage() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="btn btn-ghost"
+                className={`btn btn-ghost ${!hasChanges ? 'btn-disabled opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!hasChanges}
                 onClick={() => {
-                  // Reset form
-                  setPerson({
-                    firstName: '',
-                    lastName: '',
-                    email: '',
-                    role: 'user',
-                  });
+                  setPerson(initialPerson);
                 }}
               >
                 Reset
@@ -99,7 +98,7 @@ export default function NewUserPage() {
               </button>
             </div>
           </div>
-          
+
           {/* Name */}
           <div className="join w-md">
             <span className="join-item px-3 text-gray-500 flex items-center">
