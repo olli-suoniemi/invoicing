@@ -21,7 +21,7 @@ Web-based invoice generation and customer relationship management
 
 ### Schema structure
 
-![Database](database.jpg)
+![Database](database.png)
 
 ### Authentication
 
