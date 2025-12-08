@@ -1,7 +1,7 @@
 // app/login/page.js
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { auth } from "@/lib/firebaseClient";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,6 +9,14 @@ import { MdEmail } from "react-icons/md";
 import { FaLock } from "react-icons/fa";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+function LoginPageContent() {
   const [email, setEmail] = useState("test@gmail.com");
   const [password, setPassword] = useState("test@gmail.com");
   const [err, setErr] = useState("");
@@ -22,7 +30,7 @@ export default function LoginPage() {
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await cred.user.getIdToken(true);
-      
+
       // 1) Create the session cookie in Next.js (httpOnly)
       const r = await fetch("/api/auth/login", {
         method: "POST",
@@ -40,7 +48,7 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idToken,
-          email                       
+          email,
         }),
       });
       if (!upsert.ok) {
@@ -82,7 +90,9 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        <button type="submit" className="btn">Sign in</button>
+        <button type="submit" className="btn">
+          Sign in
+        </button>
       </form>
       {err && <p className="text-red-500 mt-4">{err}</p>}
     </div>
