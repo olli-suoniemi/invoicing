@@ -1,0 +1,159 @@
+version: "3.9"
+
+services:
+  ui:
+    image: ghcr.io/olli-suoniemi/wigcrm/ui:latest
+    depends_on:
+      - api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ui.rule=Host(`crm.olli.codes`)"
+      - "traefik.http.routers.ui.entrypoints=websecure"
+      - "traefik.http.routers.ui.tls.certresolver=myresolver"
+      - "traefik.http.services.ui.loadbalancer.server.port=3000"
+
+      # Define HSTS middleware
+      - "traefik.http.middlewares.hsts.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.hsts.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.hsts.headers.stsPreload=true"
+
+      # Attach HSTS middleware to this router
+      - "traefik.http.routers.ui.middlewares=hsts"
+    networks:
+      - internal
+      - proxy
+    deploy:
+      update_config:
+        order: start-first
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 30s
+
+  api:
+    image: ghcr.io/olli-suoniemi/wigcrm/api:latest
+    depends_on:
+      - database
+      - flyway
+      - redis
+    environment:
+      PGUSER_FILE: /run/secrets/PGUSER
+      PGPASSWORD_FILE: /run/secrets/PGPASSWORD
+      PGDATABASE_FILE: /run/secrets/PGDATABASE
+      PGHOST_FILE: /run/secrets/PGHOST
+      PGPORT_FILE: /run/secrets/PGPORT
+    secrets:
+      - PGUSER
+      - PGPASSWORD
+      - PGDATABASE
+      - PGHOST
+      - PGPORT
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`crm.olli.codes`) && PathPrefix(`/api`)"
+      - "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.routers.api.middlewares=api-stripprefix"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=myresolver"
+      - "traefik.http.services.api.loadbalancer.server.port=7777"
+    networks:
+      - internal
+      - proxy
+    deploy:
+      update_config:
+        order: start-first
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 30s
+
+  redis:
+    image: redis:latest
+    command: >
+      redis-server --maxmemory 500mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+    networks:
+      - internal
+
+  database:
+    image: postgres:16.1
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    secrets:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - PGUSER
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+      POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB
+      PGUSER_FILE: /run/secrets/PGUSER
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d `cat $$POSTGRES_DB_FILE` -U `cat $$PGUSER_FILE`" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  flyway:
+    image: ghcr.io/olli-suoniemi/wigcrm/flyway:latest
+    depends_on:
+      - database
+    environment:
+      FLYWAY_USER_FILE: /run/secrets/FLYWAY_USER
+      FLYWAY_PASSWORD_FILE: /run/secrets/FLYWAY_PASSWORD
+      FLYWAY_URL_FILE: /run/secrets/FLYWAY_URL
+    secrets:
+      - FLYWAY_USER
+      - FLYWAY_PASSWORD
+      - FLYWAY_URL
+    networks:
+      - internal
+    deploy:
+      restart_policy:
+        condition: none 
+
+volumes:
+  db-data:
+  flyway-sql:
+    driver: local 
+
+secrets:
+  PGUSER:
+    external: true
+  PGPASSWORD:
+    external: true
+  PGDATABASE:
+    external: true
+  PGHOST:
+    external: true
+  PGPORT:
+    external: true
+
+  POSTGRES_USER:
+    external: true
+  POSTGRES_PASSWORD:
+    external: true
+  POSTGRES_DB:
+    external: true
+
+  FLYWAY_USER:
+    external: true
+  FLYWAY_PASSWORD:
+    external: true
+  FLYWAY_URL:
+    external: true 
+
+networks:
+  proxy:
+    external: true
+  internal:
+    driver: overlay
