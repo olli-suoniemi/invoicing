@@ -1,15 +1,45 @@
 import { postgres } from "../deps.js";
 
 const decoder = new TextDecoder("utf-8");
+const ENV = Deno.env.get("ENV") ?? "local";
+const isLocal = ENV === "local";
 
-const ENV = Deno.env.get("ENV");
+function readSecret(path) {
+  try {
+    return decoder.decode(Deno.readFileSync(path)).trim();
+  } catch {
+    return "";
+  }
+}
 
-const PGUSER = ENV === "local" ? Deno.env.get("PGUSER") : "" ?? decoder.decode(Deno.readFileSync("/run/secrets/CRM_PGUSER")) ?? "";
-const PGPASSWORD = ENV === "local" ? Deno.env.get("PGPASSWORD") : "" ?? decoder.decode(Deno.readFileSync("/run/secrets/CRM_PGPASSWORD")) ?? "";
-const PGDATABASE = ENV === "local" ? Deno.env.get("PGDATABASE") : "" ?? decoder.decode(Deno.readFileSync("/run/secrets/CRM_PGDATABASE")) ?? "";
-const PGHOST = ENV === "local" ? Deno.env.get("PGHOST") : "" ?? decoder.decode(Deno.readFileSync("/run/secrets/CRM_PGHOST")) ?? "";
-const PGPORT = ENV === "local" ? Deno.env.get("PGPORT") : "" ?? decoder.decode(Deno.readFileSync("/run/secrets/CRM_PGPORT")) ?? "";
+const PGUSER = isLocal
+  ? (Deno.env.get("PGUSER") ?? "")
+  : readSecret("/run/secrets/CRM_PGUSER");
+
+const PGPASSWORD = isLocal
+  ? (Deno.env.get("PGPASSWORD") ?? "")
+  : readSecret("/run/secrets/CRM_PGPASSWORD");
+
+const PGDATABASE = isLocal
+  ? (Deno.env.get("PGDATABASE") ?? "")
+  : readSecret("/run/secrets/CRM_PGDATABASE");
+
+const PGHOST = isLocal
+  ? (Deno.env.get("PGHOST") ?? "")
+  : readSecret("/run/secrets/CRM_PGHOST");
+
+const PGPORT = isLocal
+  ? (Deno.env.get("PGPORT") ?? "")
+  : readSecret("/run/secrets/CRM_PGPORT");
+
 let sql;
+
+console.log("Database connection parameters:");
+console.log(`PGUSER: ${PGUSER}`);
+console.log(`PGPASSWORD: ${PGPASSWORD ? "****" : "(not set)"}`);
+console.log(`PGDATABASE: ${PGDATABASE}`);
+console.log(`PGHOST: ${PGHOST}`);
+console.log(`PGPORT: ${PGPORT}`);
 
 try {
   sql = postgres({
@@ -24,7 +54,6 @@ try {
   throw error;
 }
 
-// Test the connection
 try {
   await sql`SELECT 1;`;
   console.log("Database connection successful!");
