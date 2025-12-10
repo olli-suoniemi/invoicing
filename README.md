@@ -209,7 +209,44 @@ docker stack deploy -c docker-stack.yml crm
 Redeploy:
 
 ```bash
-docker service update --force --with-registry-auth --image ghcr.io/olli-suoniemi/wigcrm/ui:latest crm_ui
-docker service update --force --with-registry-auth --image ghcr.io/olli-suoniemi/wigcrm/api:latest crm_api    
+docker service update --force --with-registry-auth --image ghcr.io/olli-suoniemi/wigcrm/ui:latest crm_crm-ui
+docker service update --force --with-registry-auth --image ghcr.io/olli-suoniemi/wigcrm/api:latest crm_crm-api    
 docker service update --force --with-registry-auth --image ghcr.io/olli-suoniemi/wigcrm/flyway:latest crm_flyway  
+docker service update --force portfolio_traefik
 ```
+
+Displaying logs:
+
+```bash
+docker ps \
+  --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+```
+
+```bash
+docker ps \
+  --filter "name=crm_" \
+  --format 'table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Ports}}'
+```
+
+CRM-API production version container uses Docker secrets.
+The CRM_FIREBASE_SERVICE_JSON is created out of a file. The file is deleted after the secret creation.
+
+```bash
+echo -n "" | docker secret create CRM_ADMIN_IDS -
+echo -n "" | docker secret create CRM_FORWARD_EMAIL_API_KEY -
+docker secret create CRM_FIREBASE_SERVICE_JSON ~/crm/secrets/firebase-service-account.json
+echo -n "password" | docker secret create FLYWAY_PASSWORD -
+echo -n "jdbc:postgresql://database:5432/crm" | docker secret create CRM_FLYWAY_URL -
+echo -n "user" | docker secret create FLYWAY_USER -
+echo -n "crm" | docker secret create CRM_PGDATABASE -
+echo -n "database" | docker secret create CRM_PGHOST -
+echo -n "password" | docker secret create CRM_PGPASSWORD -
+echo -n "5432" | docker secret create CRM_PGPORT -
+echo -n "user" | docker secret create CRM_PGUSER -
+echo -n "crm" | docker secret create CRM_POSTGRES_DB -
+echo -n "password" | docker secret create CRM_POSTGRES_PASSWORD -
+echo -n "user" | docker secret create CRM_POSTGRES_USER -
+```
+
+The local version uses values from env file.
+
