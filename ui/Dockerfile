@@ -28,7 +28,7 @@ FROM node:22-bookworm-slim AS runner
 
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
-    HOST=0.0.0.0 \
+    HOSTNAME=0.0.0.0 \
     PORT=3000
 
 WORKDIR /app
