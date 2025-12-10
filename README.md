@@ -250,3 +250,39 @@ echo -n "user" | docker secret create CRM_POSTGRES_USER -
 
 The local version uses values from env file.
 
+Changing secrets, remove the stack:
+
+```bash
+docker stack rm crm
+```
+
+Remove one secret:
+
+```bash
+docker secret remove CRM_ADMIN_IDS
+docker secret remove CRM_FORWARD_EMAIL_API_KEY
+docker secret remove CRM_FIREBASE_SERVICE_JSON
+docker secret remove FLYWAY_PASSWORD
+docker secret remove CRM_FLYWAY_URL
+docker secret remove FLYWAY_USER
+docker secret remove CRM_PGDATABASE
+docker secret remove CRM_PGHOST
+docker secret remove CRM_PGPASSWORD
+docker secret remove CRM_PGPORT
+docker secret remove CRM_PGUSER
+docker secret remove CRM_POSTGRES_DB
+docker secret remove CRM_POSTGRES_PASSWORD
+docker secret remove CRM_POSTGRES_USER
+```
+
+Remove all secrets:
+
+```bash
+docker secret ls -q | xargs docker secret rm
+```
+
+Deploy stack:
+
+```bash
+docker stack deploy -c docker-stack.yml crm
+```
