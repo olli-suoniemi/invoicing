@@ -50,6 +50,9 @@ services:
       - CRM_PGDATABASE
       - CRM_PGHOST
       - CRM_PGPORT
+      - CRM_FIREBASE_SERVICE_JSON
+      - CRM_ADMIN_IDS
+      - CRM_FORWARD_EMAIL_API_KEY
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.crm-api.rule=Host(`crm.olli.codes`) && PathPrefix(`/api`)"
@@ -89,19 +92,18 @@ services:
       - CRM_POSTGRES_USER
       - CRM_POSTGRES_PASSWORD
       - CRM_POSTGRES_DB
-      - CRM_PGUSER
     environment:
-      CRM_POSTGRES_USER_FILE: /run/secrets/CRM_POSTGRES_USER
-      CRM_POSTGRES_PASSWORD_FILE: /run/secrets/CRM_POSTGRES_PASSWORD
-      CRM_POSTGRES_DB_FILE: /run/secrets/CRM_POSTGRES_DB
-      CRM_PGUSER_FILE: /run/secrets/CRM_PGUSER
+      POSTGRES_USER_FILE: /run/secrets/CRM_POSTGRES_USER
+      POSTGRES_PASSWORD_FILE: /run/secrets/CRM_POSTGRES_PASSWORD
+      POSTGRES_DB_FILE: /run/secrets/CRM_POSTGRES_DB
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d `cat $$CRM_POSTGRES_DB_FILE` -U `cat $$CRM_PGUSER_FILE`" ]
+      test: [ "CMD-SHELL", "pg_isready -d `cat $$POSTGRES_DB_FILE` -U `cat $$POSTGRES_USER_FILE`" ]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - internal
+
 
   flyway:
     image: ghcr.io/olli-suoniemi/wigcrm/flyway:latest
@@ -138,18 +140,18 @@ secrets:
   CRM_PGPORT:
     external: true
 
-  POSTGRES_USER:
+  CRM_POSTGRES_USER:
     external: true
-  POSTGRES_PASSWORD:
+  CRM_POSTGRES_PASSWORD:
     external: true
-  POSTGRES_DB:
+  CRM_POSTGRES_DB:
     external: true
 
   FLYWAY_USER:
     external: true
   FLYWAY_PASSWORD:
     external: true
-  FLYWAY_URL:
+  CRM_FLYWAY_URL:
     external: true 
 
   CRM_ADMIN_IDS:
