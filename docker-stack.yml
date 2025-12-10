@@ -1,16 +1,16 @@
 version: "3.9"
 
 services:
-  ui:
+  crm-ui:
     image: ghcr.io/olli-suoniemi/wigcrm/ui:latest
     depends_on:
-      - api
+      - crm-api
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ui.rule=Host(`crm.olli.codes`)"
-      - "traefik.http.routers.ui.entrypoints=websecure"
-      - "traefik.http.routers.ui.tls.certresolver=myresolver"
-      - "traefik.http.services.ui.loadbalancer.server.port=3000"
+      - "traefik.http.routers.crm-ui.rule=Host(`crm.olli.codes`)"
+      - "traefik.http.routers.crm-ui.entrypoints=websecure"
+      - "traefik.http.routers.crm-ui.tls.certresolver=myresolver"
+      - "traefik.http.services.crm-ui.loadbalancer.server.port=3000"
 
       # Define HSTS middleware
       - "traefik.http.middlewares.hsts.headers.stsSeconds=31536000"
@@ -18,7 +18,7 @@ services:
       - "traefik.http.middlewares.hsts.headers.stsPreload=true"
 
       # Attach HSTS middleware to this router
-      - "traefik.http.routers.ui.middlewares=hsts"
+      - "traefik.http.routers.crm-ui.middlewares=hsts"
     networks:
       - internal
       - proxy
@@ -32,32 +32,32 @@ services:
         max_attempts: 5
         window: 30s
 
-  api:
+  crm-api:
     image: ghcr.io/olli-suoniemi/wigcrm/api:latest
     depends_on:
       - database
       - flyway
       - redis
     environment:
-      PGUSER_FILE: /run/secrets/PGUSER
-      PGPASSWORD_FILE: /run/secrets/PGPASSWORD
-      PGDATABASE_FILE: /run/secrets/PGDATABASE
-      PGHOST_FILE: /run/secrets/PGHOST
-      PGPORT_FILE: /run/secrets/PGPORT
+      CRM_PGUSER_FILE: /run/secrets/CRM_PGUSER
+      CRM_PGPASSWORD_FILE: /run/secrets/CRM_PGPASSWORD
+      CRM_PGDATABASE_FILE: /run/secrets/CRM_PGDATABASE
+      CRM_PGHOST_FILE: /run/secrets/CRM_PGHOST
+      CRM_PGPORT_FILE: /run/secrets/CRM_PGPORT
     secrets:
-      - PGUSER
-      - PGPASSWORD
-      - PGDATABASE
-      - PGHOST
-      - PGPORT
+      - CRM_PGUSER
+      - CRM_PGPASSWORD
+      - CRM_PGDATABASE
+      - CRM_PGHOST
+      - CRM_PGPORT
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`crm.olli.codes`) && PathPrefix(`/api`)"
-      - "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api"
-      - "traefik.http.routers.api.middlewares=api-stripprefix"
-      - "traefik.http.routers.api.entrypoints=websecure"
-      - "traefik.http.routers.api.tls.certresolver=myresolver"
-      - "traefik.http.services.api.loadbalancer.server.port=7777"
+      - "traefik.http.routers.crm-api.rule=Host(`crm.olli.codes`) && PathPrefix(`/api`)"
+      - "traefik.http.middlewares.crm-api-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.routers.crm-api.middlewares=crm-api-stripprefix"
+      - "traefik.http.routers.crm-api.entrypoints=websecure"
+      - "traefik.http.routers.crm-api.tls.certresolver=myresolver"
+      - "traefik.http.services.crm-api.loadbalancer.server.port=7777"
     networks:
       - internal
       - proxy
@@ -86,17 +86,17 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     secrets:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-      - PGUSER
+      - CRM_POSTGRES_USER
+      - CRM_POSTGRES_PASSWORD
+      - CRM_POSTGRES_DB
+      - CRM_PGUSER
     environment:
-      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
-      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
-      POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB
-      PGUSER_FILE: /run/secrets/PGUSER
+      CRM_POSTGRES_USER_FILE: /run/secrets/CRM_POSTGRES_USER
+      CRM_POSTGRES_PASSWORD_FILE: /run/secrets/CRM_POSTGRES_PASSWORD
+      CRM_POSTGRES_DB_FILE: /run/secrets/CRM_POSTGRES_DB
+      CRM_PGUSER_FILE: /run/secrets/CRM_PGUSER
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d `cat $$POSTGRES_DB_FILE` -U `cat $$PGUSER_FILE`" ]
+      test: [ "CMD-SHELL", "pg_isready -d `cat $$CRM_POSTGRES_DB_FILE` -U `cat $$CRM_PGUSER_FILE`" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -110,11 +110,11 @@ services:
     environment:
       FLYWAY_USER_FILE: /run/secrets/FLYWAY_USER
       FLYWAY_PASSWORD_FILE: /run/secrets/FLYWAY_PASSWORD
-      FLYWAY_URL_FILE: /run/secrets/FLYWAY_URL
+      CRM_FLYWAY_URL_FILE: /run/secrets/CRM_FLYWAY_URL
     secrets:
       - FLYWAY_USER
       - FLYWAY_PASSWORD
-      - FLYWAY_URL
+      - CRM_FLYWAY_URL
     networks:
       - internal
     deploy:
@@ -127,15 +127,15 @@ volumes:
     driver: local 
 
 secrets:
-  PGUSER:
+  CRM_PGUSER:
     external: true
-  PGPASSWORD:
+  CRM_PGPASSWORD:
     external: true
-  PGDATABASE:
+  CRM_PGDATABASE:
     external: true
-  PGHOST:
+  CRM_PGHOST:
     external: true
-  PGPORT:
+  CRM_PGPORT:
     external: true
 
   POSTGRES_USER:
@@ -151,6 +151,15 @@ secrets:
     external: true
   FLYWAY_URL:
     external: true 
+
+  CRM_ADMIN_IDS:
+    external: true
+  CRM_FIREBASE_SERVICE_JSON:
+    external: true
+  CRM_FORWARD_EMAIL_API_KEY:
+    external: true
+
+  
 
 networks:
   proxy:
