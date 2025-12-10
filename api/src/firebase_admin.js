@@ -7,7 +7,14 @@ if (!admin.apps.length) {
     admin.initializeApp({ projectId: config.firebaseProjectId });
   } else {
     // Real Firebase via ADC or service account if ever used
-    admin.initializeApp();
+    if (config.firebase_service_json) {
+      const serviceAccount = JSON.parse(config.firebase_service_json);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    } else {
+      console.warn("No Firebase service account JSON provided.");
+    }
   }
 }
 
