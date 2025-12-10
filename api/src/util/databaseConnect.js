@@ -1,11 +1,14 @@
 import { postgres } from "../deps.js";
 
-const PGUSER = Deno.env.get("PGUSER");
-const PGPASSWORD = Deno.env.get("PGPASSWORD");
-const PGDATABASE = Deno.env.get("PGDATABASE");
-const PGHOST = Deno.env.get("PGHOST");
-const PGPORT = Deno.env.get("PGPORT");
+const decoder = new TextDecoder("utf-8");
 
+const ENV = Deno.env.get("ENV");
+
+const PGUSER = ENV === "local" ? Deno.env.get("PGUSER") : "" ?? decoder.decode(Deno.readFileSync("/run/secrets/CRM_PGUSER")) ?? "";
+const PGPASSWORD = ENV === "local" ? Deno.env.get("PGPASSWORD") : "" ?? decoder.decode(Deno.readFileSync("/run/secrets/CRM_PGPASSWORD")) ?? "";
+const PGDATABASE = ENV === "local" ? Deno.env.get("PGDATABASE") : "" ?? decoder.decode(Deno.readFileSync("/run/secrets/CRM_PGDATABASE")) ?? "";
+const PGHOST = ENV === "local" ? Deno.env.get("PGHOST") : "" ?? decoder.decode(Deno.readFileSync("/run/secrets/CRM_PGHOST")) ?? "";
+const PGPORT = ENV === "local" ? Deno.env.get("PGPORT") : "" ?? decoder.decode(Deno.readFileSync("/run/secrets/CRM_PGPORT")) ?? "";
 let sql;
 
 try {
