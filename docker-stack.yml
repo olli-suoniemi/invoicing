@@ -3,6 +3,8 @@ version: "3.9"
 services:
   crm-ui:
     image: ghcr.io/olli-suoniemi/wigcrm/ui:latest
+    environment:
+      ENV: production 
     depends_on:
       - crm-api
     labels:
