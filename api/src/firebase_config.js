@@ -1,30 +1,25 @@
+// firebase_config.js
 const decoder = new TextDecoder("utf-8");
 const ENV = Deno.env.get("ENV") ?? "local";
 
-function readSecret(path) {
-  try {
-    return decoder.decode(Deno.readFileSync(path)).trim();
-  } catch {
-    return "";
-  }
-}
-
 export const config = {
   firebaseEmulatorHost:
-    ENV === "local"
-      ? (Deno.env.get("FIREBASE_AUTH_EMULATOR_HOST") ?? "")
+    ENV === "local" && Deno.env.get("USE_FIREBASE_EMULATOR") === "1"
+      ? Deno.env.get("FIREBASE_AUTH_EMULATOR_HOST") ?? ""
       : "",
-      
+
   firebaseProjectId:
-    Deno.env.get("FIREBASE_PROJECT_ID") ?? "",
+    Deno.env.get("FIREBASE_PROJECT_ID") ?? "invoicing",
 
   adminIds:
-    ENV === "local"
-      ? (Deno.env.get("ADMIN_IDS") ?? "")
-      : readSecret("/run/secrets/CRM_ADMIN_IDS"),
+    (Deno.env.get("ADMIN_IDS") ??
+      decoder.decode(Deno.readFileSync("/run/secrets/CRM_ADMIN_IDS") ?? new Uint8Array()))
+      .toString(),
 
   firebase_service_json:
+    // in prod you read this from the Docker secret;
+    // in local you can leave it empty and use ADC instead if you want
     ENV === "local"
-      ? ""
-      : readSecret("/run/secrets/CRM_FIREBASE_SERVICE_JSON"),
+      ? Deno.env.get("FIREBASE_SERVICE_JSON") ?? ""
+      : decoder.decode(Deno.readFileSync("/run/secrets/CRM_FIREBASE_SERVICE_JSON")),
 };

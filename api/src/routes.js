@@ -31,7 +31,7 @@ v1.get("/me", (c) => {
 
 // create a new user during login process
 v1.post("/users/login", async (c) => {
-  const authUser = c.get("authUser"); // NOTE: from requireFirebaseAuth
+  const authUser = c.get("authUser");
   const body = await c.req.json().catch(() => ({}));
 
   try {
@@ -42,6 +42,7 @@ v1.post("/users/login", async (c) => {
     return c.json({ error: e.message ?? "Internal error" }, status);
   }
 });
+
 
 // 2) From here on, require local DB user (internalId)
 v1.use("*", requireLocalUser);

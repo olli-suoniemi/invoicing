@@ -8,13 +8,6 @@ function getBearerToken(c) {
   return authz.startsWith("Bearer ") ? authz.slice(7) : null;
 }
 
-async function verifyEitherToken(raw) {
-  try {
-    return await firebaseAdmin.auth().verifyIdToken(raw);
-  } catch (_) {}
-  return await firebaseAdmin.auth().verifySessionCookie(raw, true);
-}
-
 // 1) Just Firebase auth (no DB)
 export async function requireFirebaseAuth(c, next) {
   if (c.req.method === "OPTIONS") return next();
@@ -23,7 +16,7 @@ export async function requireFirebaseAuth(c, next) {
   if (!raw) return c.json({ error: "Missing token" }, 401);
 
   try {
-    const decoded = await verifyEitherToken(raw);
+    const decoded = await firebaseAdmin.auth().verifyIdToken(raw);
 
     const adminIds = (config.adminIds ?? "")
       .split(",")

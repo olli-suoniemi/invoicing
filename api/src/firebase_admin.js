@@ -1,20 +1,35 @@
+// src/firebase_admin.js
 import admin from "firebase-admin";
 import { config } from "./firebase_config.js";
 
+const ENV = Deno.env.get("ENV") ?? "local";
+
 if (!admin.apps.length) {
-  // If using emulator, no credentials needed, just provide projectId
-  if (config.firebaseEmulatorHost) {
-    admin.initializeApp({ projectId: config.firebaseProjectId });
+  // LOCAL DEV + emulator
+  if (ENV === "local" && config.firebaseEmulatorHost) {
+    console.log(
+      "[firebase_admin] Using Firebase Auth emulator at",
+      config.firebaseEmulatorHost,
+    );
+
+    // This is what tells the Admin SDK to talk to the emulator
+    Deno.env.set("FIREBASE_AUTH_EMULATOR_HOST", config.firebaseEmulatorHost);
+
+    admin.initializeApp({
+      projectId: config.firebaseProjectId,
+    });
+  } else if (config.firebase_service_json) {
+    // REAL Firebase via service account (prod / non-emulator)
+    console.log("[firebase_admin] Using Firebase service account JSON");
+    const serviceAccount = JSON.parse(config.firebase_service_json);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
   } else {
-    // Real Firebase via ADC or service account if ever used
-    if (config.firebase_service_json) {
-      const serviceAccount = JSON.parse(config.firebase_service_json);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-      });
-    } else {
-      console.warn("No Firebase service account JSON provided.");
-    }
+    console.warn(
+      "[firebase_admin] No service account JSON provided; using default credentials",
+    );
+    admin.initializeApp();
   }
 }
 
