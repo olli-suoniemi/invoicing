@@ -27,22 +27,13 @@ function LoginPageContent() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setErr("");
+
     try {
+      // 1) Firebase login
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await cred.user.getIdToken(true);
 
-      // 1) Create the session cookie in Next.js (httpOnly)
-      const r = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
-      if (!r.ok) throw new Error("Failed to create session");
-
-
-      // 2) Ask our backend to create the user if missing. It will not create new
-      // users if they already exist. If so it only updates last login time.
-      // (no password needed; send only idToken + profile we want to store)
+      // 2) Call backend via Next API to upsert user
       const upsert = await fetch("/api/auth/login/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -51,11 +42,26 @@ function LoginPageContent() {
           email,
         }),
       });
+
       if (!upsert.ok) {
         const { error } = await upsert.json().catch(() => ({}));
         throw new Error(error || "Failed to create user");
       }
 
+      // 3) Store the ID token in a cookie for middleware
+      const maxAgeSeconds = 7 * 24 * 60 * 60; // 7 days
+      document.cookie = [
+        `session=${idToken}`,
+        "path=/",
+        `max-age=${maxAgeSeconds}`,
+        "samesite=lax",
+        // in prod over https you *should* add "secure"
+        window.location.protocol === "https:" ? "secure" : "",
+      ]
+        .filter(Boolean)
+        .join("; ");
+
+      // 4) Redirect
       router.push(redirect);
     } catch (e) {
       setErr(e.message || "Login failed");
