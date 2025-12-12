@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { MdEmail } from "react-icons/md";
 import { FaUser, FaShield } from "react-icons/fa6";
 import { useRouter } from 'next/navigation';
@@ -17,10 +17,14 @@ export default function NewUserPage() {
   const [person, setPerson] = useState(initialPerson);
   const router = useRouter();
 
-  // Any text anywhere (for enabling Save)
-  const hasText = useMemo(() => {
-    const values = Object.values(person);
-    return values.some(v => (v ?? '').toString().trim() !== '');
+  // Has the user typed *anything* or changed role?
+  const canSave = useMemo(() => {
+    return (
+      person.firstName.trim() !== '' ||
+      person.lastName.trim() !== '' ||
+      person.email.trim() !== '' ||
+      person.role !== initialPerson.role
+    );
   }, [person]);
 
   // Any change compared to initial state (for enabling Reset)
@@ -29,6 +33,8 @@ export default function NewUserPage() {
   }, [person]);
 
   const handleSave = async () => {
+    if (!canSave) return; // extra safety
+
     if (!person.firstName && !person.lastName && !person.email) {
       toast.error("Please fill in name, last name, and email.");
       return;
@@ -44,22 +50,20 @@ export default function NewUserPage() {
     try {
       const resp = await fetch('/api/settings/users', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
+      const data = await resp.json().catch(() => ({}));
+
       if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || 'Upstream error');
+        throw new Error(data.error || 'Upstream error');
       }
 
       toast.success("User created successfully.");
       setPerson(initialPerson);
 
-      const id = (await resp.json()).user.id; 
-      router.push(`/settings/users/${id}`)
+      router.push(`/settings/users`);
     } catch (error) {
       console.error(error);
       toast.error(`Error creating user: ${error.message || error}`);
@@ -68,8 +72,6 @@ export default function NewUserPage() {
 
   return (
     <div className="flex justify-center items-start min-h-screen py-5">
-      <ToastContainer />
-
       <div className="w-full max-w-4xl flex items-center gap-4">
         <div className="flex w-full flex-col gap-4">
 
@@ -79,27 +81,29 @@ export default function NewUserPage() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className={`btn btn-ghost ${!hasChanges ? 'btn-disabled opacity-50 cursor-not-allowed' : ''}`}
+                className={`btn btn-ghost ${
+                  !hasChanges ? 'btn-disabled opacity-50 cursor-not-allowed' : ''
+                }`}
                 disabled={!hasChanges}
-                onClick={() => {
-                  setPerson(initialPerson);
-                }}
+                onClick={() => setPerson(initialPerson)}
               >
                 Reset
               </button>
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={!hasText}
-                className={`btn btn-primary ${!hasText ? 'btn-disabled opacity-50 cursor-not-allowed' : ''}`}
-                aria-disabled={!hasText}
+                disabled={!canSave}
+                className={`btn btn-primary ${
+                  !canSave ? 'btn-disabled opacity-50 cursor-not-allowed' : ''
+                }`}
+                aria-disabled={!canSave}
               >
                 Save
               </button>
             </div>
           </div>
 
-          {/* Name */}
+          {/* First name */}
           <div className="join w-md">
             <span className="join-item px-3 text-gray-500 flex items-center">
               <FaUser size={18} />
@@ -113,6 +117,7 @@ export default function NewUserPage() {
             />
           </div>
 
+          {/* Last name */}
           <div className="join w-md">
             <span className="join-item px-3 text-gray-500 flex items-center">
               <FaUser size={18} />

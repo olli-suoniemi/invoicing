@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { useParams, useRouter } from 'next/navigation';
 import { MdEmail } from "react-icons/md";
 import { FaMapMarkerAlt, FaFolder } from "react-icons/fa";
@@ -49,7 +49,6 @@ export default function CompanyPage() {
           phone: data.company.phone ?? '',
           website: data.company.website ?? '',
           iban: data.company.iban ?? '',
-          logo_path: data.company.logo_path ?? '',
           invoiceStreet: data.company.invoicingAddress?.address ?? '',
           invoiceCity: data.company.invoicingAddress?.city ?? '',
           invoicePostalCode: data.company.invoicingAddress?.postal_code ?? '',
@@ -61,7 +60,6 @@ export default function CompanyPage() {
           deliveryState: data.company.deliveryAddress?.state ?? '',
           deliveryCountry: data.company.deliveryAddress?.country ?? '',
         });
-        console.log('Loaded company:', data.company);
       } catch (e) {
         toast.error(e.message || 'Load failed');
       } finally {
@@ -96,7 +94,6 @@ export default function CompanyPage() {
       (initial.phone ?? '') !== form.phone ||
       (initial.website ?? '') !== form.website ||
       (initial.iban ?? '') !== form.iban ||
-      (initial.logo_path ?? '') !== form.logo_path ||
       (initial.invoicingAddress?.address ?? '') !== form.invoiceStreet ||
       (initial.invoicingAddress?.city ?? '') !== form.invoiceCity ||
       (initial.invoicingAddress?.postal_code ?? '') !== form.invoicePostalCode ||
@@ -124,7 +121,6 @@ export default function CompanyPage() {
       phone: initial.phone ?? '',
       website: initial.website ?? '',
       iban: initial.iban ?? '',
-      logo_path: initial.logo_path ?? '',
       invoiceStreet: initial.invoicingAddress?.address ?? '',
       invoiceCity: initial.invoicingAddress?.city ?? '',
       invoicePostalCode: initial.invoicingAddress?.postal_code ?? '',
@@ -165,7 +161,6 @@ export default function CompanyPage() {
         phone: data.company.phone ?? '',
         website: data.company.website ?? '',
         iban: data.company.iban ?? '',
-        logo_path: data.company.logo_path ?? '',
         invoiceStreet: data.company.invoicingAddress?.address ?? '',
         invoiceCity: data.company.invoicingAddress?.city ?? '',
         invoicePostalCode: data.company.invoicingAddress?.postal_code ?? '',
@@ -378,20 +373,6 @@ export default function CompanyPage() {
                 value={form.iban}
                 onChange={onChange('iban')}
                 placeholder="FI XX XXXX XXXX XXXX XX"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className='join px-1 pb-2'>
-                <span className="label-text">Logo Path</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaFolder size={18} />
-                </span>
-              </div>
-              <input className="input input-bordered"
-                value={form.logo_path}
-                onChange={onChange('logo_path')}
-                placeholder="/path/to/logo.png"
               />
             </label>
           </div>
@@ -632,8 +613,6 @@ export default function CompanyPage() {
                 : '—'}
             </div>
           </div>
-
-          <ToastContainer />
         </div>
       </div>
     </div>

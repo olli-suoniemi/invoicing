@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { useParams, useRouter } from 'next/navigation';
 import { FaUser, FaShield } from "react-icons/fa6";
 import LoadingSpinner from '@/app/components/loadingSpinner';
@@ -86,7 +86,6 @@ export default function UserPage() {
   if (loading) return <LoadingSpinner />;
   if (!initial) return <div className="p-6">User not found</div>;
 
-  console.log({ initial, form, hasChanges });
   return (
     <div className="min-h-screen py-5">
       <div className="w-full max-w-3xl mx-auto px-6">
@@ -168,8 +167,6 @@ export default function UserPage() {
                 : '—'}
             </div>
           </div>
-
-          <ToastContainer />
         </div>
       </div>
     </div>
