@@ -34,13 +34,6 @@ const PGPORT = isLocal
 
 let sql;
 
-console.log("Database connection parameters:");
-console.log(`PGUSER: ${PGUSER}`);
-console.log(`PGPASSWORD: ${PGPASSWORD ? "****" : "(not set)"}`);
-console.log(`PGDATABASE: ${PGDATABASE}`);
-console.log(`PGHOST: ${PGHOST}`);
-console.log(`PGPORT: ${PGPORT}`);
-
 try {
   sql = postgres({
     user: PGUSER,
