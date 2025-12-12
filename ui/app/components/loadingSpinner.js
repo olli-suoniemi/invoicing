@@ -1,8 +1,10 @@
 // components/LoadingSpinner.js
 export default function LoadingSpinner() {
   return (
-    <div className="fixed inset-0 grid place-items-center">
-      <div className="w-10 h-10 border-4 border-t-4 border-t-neutral border-neutral-content rounded-full animate-spin" />
-    </div>
+      <div className="flex justify-center items-center min-h-screen py-5">
+        <div className="w-full max-w-4xl flex items-center justify-center">
+          <span className="loading loading-spinner loading-lg" />
+        </div>
+      </div>
   );
 }
