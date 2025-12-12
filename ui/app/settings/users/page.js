@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { FaPlus } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import LoadingSpinner from '../../components/loadingSpinner';
+import LoadingSpinner from '@/components/loadingSpinner';
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);

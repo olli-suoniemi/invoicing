@@ -5,7 +5,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { RiMoneyEuroBoxFill } from "react-icons/ri";
-import LoadingSpinner from '../../components/loadingSpinner';
+import LoadingSpinner from '@/components/loadingSpinner';
 
 import {
     FaUser
