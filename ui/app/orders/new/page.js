@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import {
   FaUser,
   FaTag,
@@ -17,24 +17,24 @@ import { format } from 'date-fns';
 import { fi } from 'date-fns/locale';
 import { FaCalendarDay } from "react-icons/fa";
 
+const INITIAL_ORDER = {
+  customer_id: '',
+  status: 'draft',
+  order_date: '',
+  extra_info: '',
+  items: [
+    {
+      product_id: '',
+      quantity: '1',
+      unit_price_vat_excl: '0.00',
+      tax_rate: '0.00',
+    },
+  ],
+};
 
 export default function OrdersNewPage() {
   const router = useRouter();
-  const [order, setOrder] = useState({
-    customer_id: '',
-    status: 'pending',
-    order_date: '',   // e.g. "2024-06-30"
-    extra_info: '',
-    items: [
-      {
-        product_id: '',
-        quantity: '1',
-        unit_price_vat_excl: '0.00', // VAT excluded
-        tax_rate: '0.00',   // % as string, e.g. "24.00"
-      },
-    ],
-  });
-
+  const [order, setOrder] = useState(INITIAL_ORDER);
 
   // Customers loaded from backend
   const [customers, setCustomers] = useState([]);
@@ -78,7 +78,6 @@ export default function OrdersNewPage() {
         }
 
         const data = await r.json();
-        console.log('Loaded products:', data.inventory);
         setProducts(data.inventory || []);
       } catch (e) {
         console.error(e);
@@ -155,13 +154,8 @@ export default function OrdersNewPage() {
     }));
   };
 
-  // Is there any text in the form?
-  const hasText = useMemo(() => {
-    if (order.customer_id.trim()) return true;
-    if (order.status && order.status !== 'pending') return true;
-    return order.items.some(item =>
-      Object.values(item).some(v => (v ?? '').toString().trim() !== '')
-    );
+  const hasChanges = useMemo(() => {
+    return JSON.stringify(order) !== JSON.stringify(INITIAL_ORDER);
   }, [order]);
 
   const totalAmount = useMemo(() => {
@@ -176,20 +170,7 @@ export default function OrdersNewPage() {
   }, [order.items]);
 
   const resetForm = () => {
-    setOrder({
-      customer_id: '',
-      status: 'pending',
-      order_date: '',
-      extra_info: '',
-      items: [
-        {
-          tax_rate: '0.00',
-          product_id: '',
-          quantity: '1',
-          unit_price_vat_excl: '0.00',
-        },
-      ],
-    });
+    setOrder(INITIAL_ORDER);
     setSelectedCustomer(null);
   };
 
@@ -200,7 +181,12 @@ export default function OrdersNewPage() {
       return;
     }
 
-    if (!order.items.length) {
+    if (!order.order_date) {
+      toast.error('Order date is required');
+      return;
+    }
+
+    if (order.items[0].product_id.trim() === '' && order.items.length === 1) {
       toast.error('At least one order item is required');
       return;
     }
@@ -250,7 +236,7 @@ export default function OrdersNewPage() {
 
     const payload = {
       customer_id: customerId,
-      status: order.status || 'pending',
+      status: order.status || 'draft',
       order_date: order.order_date,
       items: itemsPayload,  // for order_items
       extra_info: order.extra_info,
@@ -270,8 +256,8 @@ export default function OrdersNewPage() {
 
       resetForm();
       
+      toast.success('New order created!');
       router.push('/orders');
-      toast.success('Order created successfully');
     } catch (err) {
       console.error(err);
       toast.error(`Error creating order: ${err.message || err}`);
@@ -333,7 +319,6 @@ export default function OrdersNewPage() {
   
   return (
     <div className="flex justify-center items-start min-h-screen py-5">
-      <ToastContainer />
 
       <div className="w-full px-10 flex items-center gap-4">
         <div className="flex w-full flex-col">
@@ -360,11 +345,11 @@ export default function OrdersNewPage() {
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={!hasText}
+                disabled={!hasChanges}
                 className={`btn btn-primary ${
-                  !hasText ? 'btn-disabled opacity-50 cursor-not-allowed' : ''
+                  !hasChanges ? 'btn-disabled opacity-50 cursor-not-allowed' : ''
                 }`}
-                aria-disabled={!hasText}
+                aria-disabled={!hasChanges}
               >
                 Save
               </button>
@@ -418,7 +403,7 @@ export default function OrdersNewPage() {
                     setOrder((s) => ({ ...s, status: e.target.value }))
                   }
                 >
-                  <option value="pending">Pending</option>
+                  <option value="draft">Draft</option>
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
                 </select>

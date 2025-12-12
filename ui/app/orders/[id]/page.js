@@ -3,8 +3,9 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { RiMoneyEuroBoxFill } from "react-icons/ri";
+import LoadingSpinner from '../../components/loadingSpinner';
 
 import {
   FaUser
@@ -29,7 +30,6 @@ export default function OrderDetailsPage() {
           throw new Error('Failed to fetch order');
         }
         const data = await res.json();
-        console.log(data);
         // API returns { order: {...} }
         setOrder(data.order ?? null);
       } catch (err) {
@@ -54,19 +54,13 @@ export default function OrderDetailsPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-start min-h-screen py-5">
-        <ToastContainer />
-        <div className="w-full max-w-4xl flex items-center justify-center">
-          <span className="loading loading-spinner loading-lg" />
-        </div>
-      </div>
+      <LoadingSpinner />
     );
   }
 
   if (!order) {
     return (
       <div className="flex justify-center items-start min-h-screen py-5">
-        <ToastContainer />
         <div className="w-full max-w-4xl flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Order not found</h1>
@@ -126,12 +120,13 @@ export default function OrderDetailsPage() {
         }
         const data = await res.json();
 
+        toast.success('New invoice created!');
+
         // If successful, redirect to invoice page
         router.push(`/invoices/${data.invoice.id}`);
     } catch (err) {
       console.error(err);
       toast.error(`Error: ${err.message}`);
-    } finally {
       setLoading(false);
     }
   }
@@ -139,7 +134,6 @@ export default function OrderDetailsPage() {
 
   return (
     <div className="flex justify-center items-start min-h-screen py-5 px-5">
-      <ToastContainer />
 
       <div className="w-full max-w-7xl flex items-center gap-4">
         <div className="flex w-full flex-col gap-4">
@@ -150,7 +144,7 @@ export default function OrderDetailsPage() {
                 {displayTitle || 'Order details'}
               </h1>
               <span className="badge badge-neutral mt-1 w-fit">
-                {order.status ?? 'pending'}
+                {order.status ?? 'dratft'}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -172,6 +166,7 @@ export default function OrderDetailsPage() {
                 type="button"
                 className="btn btn-ghost"
                 onClick={handleInvoiceCreate}
+                disabled={loading}
               >
                 Create Invoice
               </button>
@@ -184,7 +179,7 @@ export default function OrderDetailsPage() {
             <hr className="mt-2 mb-4 border-gray-300" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-x-10 gap-y-5 w-7/12">
+          <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-x-10 gap-y-2 w-7/12">
             <div className="flex items-center gap-4 h-full">
               <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
                 <FaUser size={16} />
@@ -205,8 +200,10 @@ export default function OrderDetailsPage() {
                 <RiMoneyEuroBoxFill size={16} />
                 <span>Total (excl. VAT)</span>
               </div>
-              <div className="flex-1 text-sm text-right">
-                {totalAmountVatExclDisplay} €
+              <div className="flex-1">
+                <div className="h-10 flex items-center text-sm justify-self-end">
+                  {totalAmountVatExclDisplay} €
+                </div>
               </div>
             </div>
 
@@ -225,8 +222,10 @@ export default function OrderDetailsPage() {
                 <RiMoneyEuroBoxFill size={16} />
                 <span>VAT amount</span>
               </div>
-              <div className="flex-1 text-sm text-right">
-                {vatAmountDisplay} €
+              <div className="flex-1">
+                <div className="h-10 flex items-center text-sm justify-self-end">
+                  {vatAmountDisplay} €
+                </div>
               </div>
             </div>
 
@@ -236,7 +235,9 @@ export default function OrderDetailsPage() {
                 <span>Total (incl. VAT)</span>
               </div>
               <div className="flex-1 text-sm font-semibold">
-                {totalAmountVatInclDisplay} €
+                <div className="h-10 flex items-center text-sm">
+                  {totalAmountVatInclDisplay} €
+                </div>
               </div>
             </div>
           </div>

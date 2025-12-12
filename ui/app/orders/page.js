@@ -2,10 +2,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { FaPlus } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import LoadingSpinner from '@/components/loadingSpinner';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -36,19 +37,13 @@ export default function OrdersPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-start min-h-screen py-5">
-        <ToastContainer />
-        <div className="w-full max-w-4xl flex items-center justify-center">
-          <span className="loading loading-spinner loading-lg" />
-        </div>
-      </div>
+      <LoadingSpinner />
     );
   }
 
   if (!orders) {
     return (
       <div className="flex justify-center items-start min-h-screen py-5">
-        <ToastContainer />
         <div className="w-full max-w-4xl flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Orders not found</h1>
@@ -145,18 +140,6 @@ export default function OrdersPage() {
             </table>
           </div>
         )}
-
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
       </div>
     </div>
   );

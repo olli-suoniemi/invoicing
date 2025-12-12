@@ -3,8 +3,9 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { RiMoneyEuroBoxFill } from "react-icons/ri";
+import LoadingSpinner from '../../components/loadingSpinner';
 
 import {
     FaUser
@@ -29,7 +30,6 @@ export default function OrderDetailsPage() {
                     throw new Error('Failed to fetch order');
                 }
                 const data = await res.json();
-                console.log(data);
                 // API returns { order: {...} }
                 setOrder(data.order ?? null);
             } catch (err) {
@@ -54,19 +54,13 @@ export default function OrderDetailsPage() {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-start min-h-screen py-5">
-                <ToastContainer />
-                <div className="w-full max-w-4xl flex items-center justify-center">
-                    <span className="loading loading-spinner loading-lg" />
-                </div>
-            </div>
+        <LoadingSpinner />
         );
     }
 
     if (!order) {
         return (
             <div className="flex justify-center items-start min-h-screen py-5">
-                <ToastContainer />
                 <div className="w-full max-w-4xl flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                         <h1 className="text-3xl font-bold">Order not found</h1>
@@ -108,7 +102,6 @@ export default function OrderDetailsPage() {
 
     return (
         <div className="flex justify-center items-start min-h-screen py-5 px-5">
-            <ToastContainer />
 
             <div className="w-full max-w-7xl flex items-center gap-4">
                 <div className="flex w-full flex-col gap-4">
@@ -119,7 +112,7 @@ export default function OrderDetailsPage() {
                                 {displayTitle || 'Order details'}
                             </h1>
                             <span className="badge badge-neutral mt-1 w-fit">
-                                {order.status ?? 'pending'}
+                                {order.status ?? 'draft'}
                             </span>
                         </div>
                         <div className="flex items-center gap-2">

@@ -9,7 +9,7 @@ import { fi } from 'date-fns/locale';
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { RiProgress8Line } from "react-icons/ri";
 import {
   FaUser,
@@ -424,7 +424,6 @@ export default function OrderDetailsPage() {
 
       const data = await resp.json();
       const updated = data.order ?? null;
-      console.log('Order updated, server returned:', updated);
 
       if (updated) {
         setInitialOrder(updated);
@@ -472,7 +471,6 @@ export default function OrderDetailsPage() {
   if (loading || !order || !initialOrder) {
     return (
       <div className="flex justify-center items-start min-h-screen py-5">
-        <ToastContainer />
         <div className="w-full max-w-4xl flex items-center justify-center">
           <span className="loading loading-spinner loading-lg" />
         </div>
@@ -498,7 +496,6 @@ export default function OrderDetailsPage() {
 
   return (
     <div className="flex justify-center items-start min-h-screen py-5">
-      <ToastContainer />
 
       <div className="w-full px-10 flex items-center gap-4">
         <div className="flex w-full flex-col">

@@ -22,7 +22,6 @@ export default function OrderInvoicePreviewPage() {
       const res = await fetch(`/api/orders/${id}/invoice`);
       if (!res.ok) return; // add error handling as you like
       const data = await res.json();
-      console.log('Fetched order data for invoice preview:', data); // --- IGNORE ---
       setOrder(data.order ?? null);
     })();
   }, [id]);
