@@ -215,8 +215,6 @@ v1.post('/customers', async (c) => {
       // no throw, just respond
       return c.json({ error: 'User has no associated company' }, 403);
     }
-    
-    console.log("Creating customer for company:", company, "with data:", body);
 
     const customer = await customersService.createCustomer(company, body);
 
@@ -233,7 +231,6 @@ v1.put('/customers/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json().catch(() => ({}));
   try {
-    console.log("Updating customer ID:", id, "with data:", body);
     const updated = await customersService.updateCustomer(id, body);
 
     return c.json( updated );
@@ -420,7 +417,6 @@ v1.post('/invoices', async (c) => {
 
     await ordersService.setOrderCompleted(authUser, order.id);
 
-    console.log("Created invoice:", invoice);
     return c.json({ invoice });
   } catch (e) {
     const status = e.status ?? 500;
