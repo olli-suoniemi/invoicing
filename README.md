@@ -248,7 +248,10 @@ echo -n "password" | docker secret create CRM_POSTGRES_PASSWORD -
 echo -n "user" | docker secret create CRM_POSTGRES_USER -
 ```
 
-The local version uses values from env file.
+The envs used in UI container are in .env.production. Next recognizes these env variables
+automatically, and they are baked into the container during build time.
+
+The local version uses values from env file called .env.local.
 
 Changing secrets, remove the stack:
 
@@ -285,4 +288,56 @@ Deploy stack:
 
 ```bash
 docker stack deploy -c docker-stack.yml crm
+```
+
+
+## Testing production env in local
+
+Init:
+
+```bash
+docker swarm init
+```
+
+If multiple IPs:
+
+```bash
+hostname -I
+```
+
+Replace with actual IP:
+```bash
+docker swarm init --advertise-addr 192.168.1.42
+```
+
+Secrets:
+
+```bash
+echo -n "user"     | docker secret create CRM_PGUSER -
+echo -n "password" | docker secret create CRM_PGPASSWORD -
+echo -n "crm"      | docker secret create CRM_PGDATABASE -
+echo -n "database" | docker secret create CRM_PGHOST -
+echo -n "5432"     | docker secret create CRM_PGPORT -
+
+echo -n "crm" | docker secret create CRM_POSTGRES_DB -
+echo -n "password" | docker secret create CRM_POSTGRES_PASSWORD -
+echo -n "user" | docker secret create CRM_POSTGRES_USER -
+
+docker secret create CRM_FIREBASE_SERVICE_JSON ./.secrets/firebase-service-account.json
+docker secret create CRM_ADMIN_IDS ./.secrets/ADMIN_IDS.txt
+docker secret create CRM_FORWARD_EMAIL_API_KEY ./.secrets/FORWARD_EMAIL_API_KEY.txt
+
+echo -n "user"     | docker secret create FLYWAY_USER -
+echo -n "password" | docker secret create FLYWAY_PASSWORD -
+echo -n "jdbc:postgresql://database:5432/crm" | docker secret create CRM_FLYWAY_URL -
+```
+
+Networks:
+```bash
+docker network create --driver overlay proxy
+docker network create --driver overlay internal
+```
+
+```bash
+docker stack deploy -c docker-stack.yml crm-test
 ```
