@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { FaBox, FaBarcode, FaFileLines, FaTag, FaPercent } from "react-icons/fa6";
+import { useRouter } from 'next/navigation';
 
 export default function InventoryNewPage() {
+  const router = useRouter();
   const [product, setProduct] = useState({
     name: '',
     ean_code: '',
@@ -85,6 +87,7 @@ export default function InventoryNewPage() {
         tax_rate: '',
       });
       toast.success('New product created!');
+      router.push('/inventory'); 
     } catch (err) {
       console.error(err);
       toast.error(`Error creating product: ${err.message || err}`);
@@ -103,7 +106,6 @@ export default function InventoryNewPage() {
 
   return (
     <div className="flex justify-center items-start min-h-screen py-5">
-      <ToastContainer />
 
       <div className="w-full max-w-4xl flex items-center gap-4">
         <div className="flex w-full flex-col gap-4">
@@ -111,6 +113,13 @@ export default function InventoryNewPage() {
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Add new product</h1>
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => router.back()}
+              >
+                &larr; Back
+              </button>
               <button
                 type="button"
                 className="btn btn-ghost"

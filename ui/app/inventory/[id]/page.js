@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { FaBox } from 'react-icons/fa';
 import {
   FaBarcode,
@@ -11,7 +11,7 @@ import {
   FaTag,
   FaPercent,
 } from 'react-icons/fa6';
-import LoadingSpinner from '@/app/components/loadingSpinner';
+import LoadingSpinner from '@/components/loadingSpinner';
 
 export default function InventoryDetailsPage() {
   const { id } = useParams();
@@ -244,7 +244,6 @@ export default function InventoryDetailsPage() {
             <p className="text-gray-500">
               We couldn&rsquo;t find a product with id <code>{id}</code>.
             </p>
-            <ToastContainer />
           </div>
         </div>
       </div>
@@ -415,8 +414,6 @@ export default function InventoryDetailsPage() {
                 : '—'}
             </div>
           </div>
-
-          <ToastContainer />
         </div>
       </div>
     </div>
