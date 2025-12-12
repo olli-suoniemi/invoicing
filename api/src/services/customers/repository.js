@@ -17,7 +17,6 @@ export async function listCompanyCustomersById(companyId, limit = 50) {
 }
 
 export async function createCustomer(customer) {
-  console.log("Repository - creating customer:", customer);
   // Create new address record
   const result = await sql`
     insert into customers (type, name, business_id, email, phone, company_id, internal_info, created_at)
