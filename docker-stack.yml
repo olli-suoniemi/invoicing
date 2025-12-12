@@ -3,8 +3,6 @@ version: "3.9"
 services:
   crm-ui:
     image: ghcr.io/olli-suoniemi/wigcrm/ui:latest
-    environment:
-      ENV: production 
     depends_on:
       - crm-api
     labels:
@@ -22,7 +20,6 @@ services:
       # Attach HSTS middleware to this router
       - "traefik.http.routers.crm-ui.middlewares=hsts"
     networks:
-      - internal
       - proxy
     deploy:
       update_config:
@@ -55,14 +52,6 @@ services:
       - CRM_FIREBASE_SERVICE_JSON
       - CRM_ADMIN_IDS
       - CRM_FORWARD_EMAIL_API_KEY
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.crm-api.rule=Host(`crm.olli.codes`) && PathPrefix(`/api`)"
-      - "traefik.http.middlewares.crm-api-stripprefix.stripprefix.prefixes=/api"
-      - "traefik.http.routers.crm-api.middlewares=crm-api-stripprefix"
-      - "traefik.http.routers.crm-api.entrypoints=websecure"
-      - "traefik.http.routers.crm-api.tls.certresolver=myresolver"
-      - "traefik.http.services.crm-api.loadbalancer.server.port=7777"
     networks:
       - internal
       - proxy
