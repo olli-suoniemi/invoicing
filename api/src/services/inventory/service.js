@@ -14,8 +14,8 @@ export async function addInventoryItem(user, company, itemData) {
     name: itemData.name,
     ean_code: itemData.ean_code,
     description: itemData.description,
-    unit_price_vat_excl: itemData.unit_price_vat_excl,
-    unit_price_vat_incl: itemData.unit_price_vat_incl,
+    unit_price_vat_excl: itemData.unit_price,
+    unit_price_vat_incl: itemData.unit_price * (1 + itemData.tax_rate / 100),
     tax_rate: itemData.tax_rate,
     company_id: company.org_id,
   };
