@@ -19,6 +19,10 @@ export async function createUserDuringLogin(authUser, body) {
     throw new ForbiddenError("Not allowed to create users");
   }
 
+  if (!authUser?.uid) {
+    throw new Error("Missing Firebase UID in authUser");
+  }
+
   // Look up by Firebase UID (best key to avoid duplicates)
   const existing = await repo.getUserByAuthUid(authUser.uid);
   if (existing) {
@@ -30,14 +34,21 @@ export async function createUserDuringLogin(authUser, body) {
     return existing;
   }
 
+  const email =
+    body?.email ??
+    authUser.email ??    // fallback to Firebase email if present
+    "";
+
   // Build the new user record
   const newUser = {
     firebase_uid: authUser.uid,
     role: authUser.admin ? 'admin' : 'user',
-    email: body.email || "",
+    email: email,
     created_at: new Date(),
     updated_at: new Date(),
     last_login: new Date(),
+    first_name: body?.first_name || '',
+    last_name: body?.last_name || '',
   };
 
   return repo.createUser(newUser);

@@ -12,12 +12,36 @@ export async function getUserByAuthUid(firebase_uid) {
 }
 
 export async function createUser(user) {
-  const first_name = user.first_name || '';
-  const last_name = user.last_name || '';
+  const firebase_uid = user.firebase_uid ?? null;
+  const role        = user.role ?? "user";
+  const email       = user.email ?? "";
+  const created_at  = user.created_at ?? new Date();
+  const updated_at  = user.updated_at ?? created_at;
+  const last_login  = user.last_login ?? null;
+  const first_name  = user.first_name || "";
+  const last_name   = user.last_name || "";
 
   const result = await sql`
-    insert into users (firebase_uid, role, email, created_at, updated_at, last_login, first_name, last_name)
-    values (${user.firebase_uid}, ${user.role}, ${user.email}, ${user.created_at}, ${user.updated_at}, ${user.last_login}, ${first_name}, ${last_name})
+    insert into users (
+      firebase_uid,
+      role,
+      email,
+      created_at,
+      updated_at,
+      last_login,
+      first_name,
+      last_name
+    )
+    values (
+      ${firebase_uid},
+      ${role},
+      ${email},
+      ${created_at},
+      ${updated_at},
+      ${last_login},
+      ${first_name},
+      ${last_name}
+    )
     returning *
   `;
   return result[0];
