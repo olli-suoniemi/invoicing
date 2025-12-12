@@ -28,6 +28,11 @@ function LoginPageContent() {
     e.preventDefault();
     setErr("");
 
+    if (!auth) {
+      setErr("Auth not initialized – check Firebase config.");
+      return;
+    }
+
     try {
       // 1) Firebase login
       const cred = await signInWithEmailAndPassword(auth, email, password);
