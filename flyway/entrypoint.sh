@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Read secrets from files
-FLYWAY_URL=$(cat "${FLYWAY_URL_FILE}")
+CRM_FLYWAY_URL=$(cat "${CRM_FLYWAY_URL_FILE}")
 FLYWAY_USER=$(cat "${FLYWAY_USER_FILE}")
 FLYWAY_PASSWORD=$(cat "${FLYWAY_PASSWORD_FILE}")
 
@@ -11,7 +11,7 @@ FLYWAY_PASSWORD=$(cat "${FLYWAY_PASSWORD_FILE}")
   -connectRetries=60 \
   -baselineOnMigrate=true \
   migrate \
-  -url="${FLYWAY_URL}" \
+  -url="${CRM_FLYWAY_URL}" \
   -user="${FLYWAY_USER}" \
   -password="${FLYWAY_PASSWORD}"
  
