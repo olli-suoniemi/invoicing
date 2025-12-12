@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { toast, ToastContainer } from 'react-toastify';
 
 export default function DashboardPage() {
 
@@ -10,8 +9,6 @@ export default function DashboardPage() {
     <div className="flex justify-center py-10">
       <div className="w-full max-w-6xl p-8 pb-20 bg-base-100 shadow-lg rounded-md">
         <h1 className="text-4xl font-bold mb-6 text-center">Dashboard</h1>
-
-        <ToastContainer newestOnTop closeOnClick={true} />
         
         <div className="grid grid-cols-3 gap-15 text-center mt-10">
           <Link
