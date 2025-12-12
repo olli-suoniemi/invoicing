@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 import { MdEmail } from 'react-icons/md';
 import { FaMapMarkerAlt, FaInfo } from 'react-icons/fa';
@@ -246,7 +246,6 @@ export default function CustomerDetailsPage() {
             <p className="text-gray-500">
               We couldn&rsquo;t find a customer with id <code>{id}</code>.
             </p>
-            <ToastContainer />
           </div>
         </div>
       </div>
@@ -622,8 +621,6 @@ export default function CustomerDetailsPage() {
                 : '—'}
             </div>
           </div>
-
-          <ToastContainer />
         </div>
       </div>
     </div>

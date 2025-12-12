@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { MdEmail } from "react-icons/md";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { FaHouse, FaPhone, FaUser, FaCity, FaMapLocationDot, FaMap } from "react-icons/fa6";
 import { TbHexagonNumber7Filled } from "react-icons/tb";
 import { BsSignpostFill } from "react-icons/bs";
+import { useRouter } from 'next/navigation';
 
 export default function CustomerNewPage() {
+  const router = useRouter();
   const [customerType, setCustomerType] = useState('person');
   const [sameAsInvoice, setSameAsInvoice] = useState(true);
 
@@ -226,6 +228,7 @@ export default function CustomerNewPage() {
 
       resetForm();
       toast.success('New customer created!');
+      router.push('/customers');
     } catch (err) {
       console.error(err);
       toast.error(`Error creating customer: ${err.message || err}`);
@@ -270,8 +273,6 @@ export default function CustomerNewPage() {
 
   return (
     <div className="flex justify-center items-start min-h-screen py-5">
-
-      <ToastContainer />
       
       <div className="w-full max-w-4xl flex items-center gap-4">
         <div className="flex w-full flex-col gap-4">
@@ -280,6 +281,13 @@ export default function CustomerNewPage() {
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Add new customer</h1>
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => router.back()}
+              >
+                &larr; Back
+              </button>
               <button
                 type="button"
                 className="btn btn-ghost"
