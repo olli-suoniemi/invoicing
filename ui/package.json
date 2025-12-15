@@ -15,7 +15,7 @@
     "firebase": "^12.4.0",
     "firebase-admin": "^13.5.0",
     "jsbarcode": "^3.12.1",
-    "next": "15.5.7",
+    "next": "15.5.9",
     "react": "19.2.1",
     "react-datepicker": "^8.10.0",
     "react-dom": "19.2.1",
