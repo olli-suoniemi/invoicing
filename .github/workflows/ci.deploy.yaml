@@ -89,7 +89,7 @@ jobs:
         with:
           context: ./api
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           tags: |
             ghcr.io/olli-suoniemi/wigcrm/api:latest
             ghcr.io/olli-suoniemi/wigcrm/api:${{ github.sha }}
@@ -126,7 +126,7 @@ jobs:
         with:
           context: ./flyway
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           tags: |
             ghcr.io/olli-suoniemi/wigcrm/flyway:latest
             ghcr.io/olli-suoniemi/wigcrm/flyway:${{ github.sha }}
@@ -163,7 +163,7 @@ jobs:
         with:
           context: ./ui
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           tags: |
             ghcr.io/olli-suoniemi/wigcrm/ui:latest
             ghcr.io/olli-suoniemi/wigcrm/ui:${{ github.sha }}
