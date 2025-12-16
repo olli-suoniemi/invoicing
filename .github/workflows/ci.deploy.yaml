@@ -1,0 +1,238 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check-for-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      API_CHANGED: ${{ steps.check-changed-files.outputs.API_CHANGED }}
+      FLYWAY_CHANGED: ${{ steps.check-changed-files.outputs.FLYWAY_CHANGED }}
+      UI_CHANGED: ${{ steps.check-changed-files.outputs.UI_CHANGED }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Check for changed files
+        id: check-changed-files
+        run: |
+          # Fetch the latest commit details
+          git fetch --prune --unshallow
+          
+          # Get the changed files between the last commit and the current one
+          CHANGED_FILES=$(git diff --name-only ${{ github.sha }} ${{ github.event.before }})
+          echo "CHANGED_FILES=$CHANGED_FILES"
+          
+          # Set flag based on whether specific directories changed
+          API_CHANGED=false
+          FLYWAY_CHANGED=false
+          UI_CHANGED=false
+
+          # Check if api changed
+          if echo "$CHANGED_FILES" | grep -q 'api/'; then
+            API_CHANGED=true
+          fi
+
+          # Check if flyway changed
+          if echo "$CHANGED_FILES" | grep -q 'flyway/'; then
+            FLYWAY_CHANGED=true
+          fi
+
+          # Check if ui changed
+          if echo "$CHANGED_FILES" | grep -q 'ui/'; then
+            UI_CHANGED=true
+          fi
+
+          # Set the environment variables to be used in the next steps
+          echo "API_CHANGED=$API_CHANGED" >> $GITHUB_ENV
+          echo "FLYWAY_CHANGED=$FLYWAY_CHANGED" >> $GITHUB_ENV
+          echo "UI_CHANGED=$UI_CHANGED" >> $GITHUB_ENV
+
+          # Store API_CHANGED as output (correct usage)
+          echo "API_CHANGED=$API_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "FLYWAY_CHANGED=$FLYWAY_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "UI_CHANGED=$UI_CHANGED" >> "$GITHUB_OUTPUT"
+
+  api:
+    runs-on: ubuntu-latest
+    needs: check-for-changes
+    if: ${{ needs.check-for-changes.outputs.API_CHANGED == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Update GitHub Secret
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh secret set GIT_COMMIT_HASH_API --body "${{ github.sha }}"
+          
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_PAT }}
+
+      - name: Build and push API Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./api
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/olli-suoniemi/wigcrm/api:latest
+            ghcr.io/olli-suoniemi/wigcrm/api:${{ github.sha }}
+          file: ./api/Dockerfile
+
+  flyway:
+    runs-on: ubuntu-latest
+    needs: check-for-changes
+    if: ${{ needs.check-for-changes.outputs.FLYWAY_CHANGED == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+        
+      - name: Update GitHub Secret
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh secret set GIT_COMMIT_HASH_FLYWAY --body "${{ github.sha }}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_PAT }}
+
+      - name: Build and push flyway Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./flyway
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/olli-suoniemi/wigcrm/flyway:latest
+            ghcr.io/olli-suoniemi/wigcrm/flyway:${{ github.sha }}
+          file: ./flyway/Dockerfile
+
+  ui:
+    runs-on: ubuntu-latest
+    needs: check-for-changes
+    if: ${{ needs.check-for-changes.outputs.UI_CHANGED == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+        
+      - name: Update GitHub Secret
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh secret set GIT_COMMIT_HASH_UI --body "${{ github.sha }}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_PAT }}
+
+      - name: Build and push UI Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ui
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/olli-suoniemi/wigcrm/ui:latest
+            ghcr.io/olli-suoniemi/wigcrm/ui:${{ github.sha }}
+          file: ./ui/Dockerfile
+          build-args: |
+            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+            NEXT_PUBLIC_USE_EMULATOR=${{ secrets.NEXT_PUBLIC_USE_EMULATOR }}
+
+  debug-job-results:
+    runs-on: ubuntu-latest
+    needs:
+      - api
+      - flyway
+      - ui
+      - check-for-changes
+    if: ${{ always() }}
+    steps:
+      - name: Debug Job Results
+        run: |
+          echo "API Result: ${{ needs.api.result }}"
+          echo "Flyway Result: ${{ needs.flyway.result }}"
+          echo "UI Result: ${{ needs.ui.result }}"
+
+          echo "API Changed: ${{ needs.check-for-changes.outputs.API_CHANGED }}"
+          echo "Flyway Changed: ${{ needs.check-for-changes.outputs.FLYWAY_CHANGED }}"
+          echo "UI Changed: ${{ needs.check-for-changes.outputs.UI_CHANGED }}"
+
+          echo "Is API Changed: ${{ needs.check-for-changes.outputs.API_CHANGED == 'true' }}"
+          echo "Is Flyway Changed: ${{ needs.check-for-changes.outputs.FLYWAY_CHANGED == 'true' }}"
+          echo "Is UI Changed: ${{ needs.check-for-changes.outputs.UI_CHANGED == 'true' }}"
+
+  deploy-full-stack:
+    runs-on: ubuntu-latest
+    needs:
+      - api    
+      - flyway 
+      - ui
+      - check-for-changes
+    if: >-
+      ${{
+        always() ||
+        needs.check-for-changes.outputs.API_CHANGED == 'true' ||
+        needs.check-for-changes.outputs.FLYWAY_CHANGED == 'true' ||
+        needs.check-for-changes.outputs.UI_CHANGED == 'true'
+      }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Generate env file
+        run: |
+          echo "GIT_COMMIT_HASH_API=${{ secrets.GIT_COMMIT_HASH_API }}" > ./envfile
+          echo "GIT_COMMIT_HASH_UI=${{ secrets.GIT_COMMIT_HASH_UI }}" >> ./envfile
+          echo "GIT_COMMIT_HASH_FLYWAY=${{ secrets.GIT_COMMIT_HASH_FLYWAY }}" >> ./envfile
+
+      - name: Deploy Full Stack
+        uses: cssnr/stack-deploy-action@v1
+        with:
+          name: crm
+          file: docker-stack.yml
+          host: crm.olli.codes
+          user: deploy
+          ssh_key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          env_file: ./envfile
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+
