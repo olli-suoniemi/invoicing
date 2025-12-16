@@ -8,12 +8,12 @@ Web-based invoice generation and customer relationship management
 |:--------------------------------:|:--------------------------------------------------------------------------------------------------------------------:|:--------------------------------:|
 | Frontend                         | The frontend communicates with the backend via a REST API.                                                           | NextJS                           |
 | Backend                          | Implements business logic for authentication, client management, invoice creation, PDF generation and email sending. | DenoJS                           |
-| Database                         | A relational database for persistent storage of users, customers, invoices, and logs.                                  | PostgreSQL                       |
+| Database                         | A relational database for persistent storage of users, customers, invoices, and logs.                                | PostgreSQL                       |
 | Migrations                       | Database migrations                                                                                                  | Flyway                           |
 | Containerization & orchestration | Packages services, ensures portability and scaling.                                                                  | Docker & Docker Swarm            |
 | In-memory cache                  | Speeds up queries, stores sessions and temporary data.                                                               | Redis                            |
 | Authentication                   | Secure login and role-based access control.                                                                          | Firebase Authentication          |
-| Email delivery                   | Sends invoices and notifications to customers.                                                                         | Forward Email (SMTP/API service) |
+| Email delivery                   | Sends invoices and notifications to customers.                                                                       | Forward Email (SMTP/API service) |
 | Reverse proxy & routing          | Handles HTTPS termination, routing, and load balancing between services.                                             | Traefik                          |
 | Content delivery & protection    | Hides VPS IP, adds DDoS protection, and caches static assets globally.                                               | Cloudflare                       |
 | Hosting                          | Runs the application stack in production.                                                                            | Virtual Private Server           |
@@ -133,7 +133,7 @@ sudo service apache2 stop
 docker compose up
 ```
 
-Create test user in `http://127.0.0.1:4000/auth`
+Create test user in `http://127.0.0.1:4000/auth` or run script `signUp.sh`
 
 Login in `ui.localhost`
 
@@ -157,7 +157,9 @@ psql -h localhost -U devuser -d localdev
 ```
 
 
-### Deployment
+### Manual deployment
+
+Create PAT token in GitHub with read and write permissions.
 
 On local machine. Authenticate to GHCR:
 
@@ -291,7 +293,7 @@ docker stack deploy -c docker-stack.yml crm
 ```
 
 
-## Testing production env in local
+## Testing docker swarm mode in local mode.
 
 Init:
 
@@ -333,6 +335,7 @@ echo -n "jdbc:postgresql://database:5432/crm" | docker secret create CRM_FLYWAY_
 ```
 
 Networks:
+
 ```bash
 docker network create --driver overlay proxy
 docker network create --driver overlay internal
@@ -341,3 +344,46 @@ docker network create --driver overlay internal
 ```bash
 docker stack deploy -c docker-stack.yml crm-test
 ```
+
+**Remember to disable swarm mode after testing this.**
+
+## Automatic deployment
+
+The CI/CD uses a separate user in deployment.
+
+```bash
+sudo adduser deploy
+sudo usermod -aG docker deploy
+```
+
+The user needs a ssh key. DEPLOY_SSH_PRIVATE_KEY keypair is created with: 
+
+`ssh-keygen -t ed25519 -C "github-actions-deploy" -f ./deploy_key -N ""`
+
+The deploy_key (private key) is stored to the GitHub secret. The public key is stored in the server in ~/.ssh/authorized_keys.
+
+Installing public deploy public to the server:
+
+```bash
+ssh deploy@crm.olli.codes "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
+cat ./deploy_key.pub | ssh deploy@crm.olli.codes "cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+```
+
+
+The following secrets must be set in GitHub. The CI/CD can't read the secrets from the local file .env.production, instead the envs are generated during the process.
+
+- GH_PAT
+  - This is GitHub's Personal Access Token that is used for logging in to the GitHub Container Registry in the CI/CD pipeline. The token must have the following rights:
+    - repo
+    - workflow
+    - write:packages
+- NEXT_PUBLIC_FIREBASE_API_KEY
+  - This is Firebase client side config variable.
+- NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+  - This is Firebase client side config variable.
+- NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  - This is Firebase client side config variable.
+- NEXT_PUBLIC_USE_EMULATOR
+  - Boolean whether to use Firebase emulator or not. In production this is 0.
+- DEPLOY_SSH_PRIVATE_KEY
+  - This is the private key of the server's user that is used in the deployment. The corresponding public key is saved to the server in the ~/.ssh/authorized_keys
