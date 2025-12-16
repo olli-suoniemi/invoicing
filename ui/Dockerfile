@@ -3,7 +3,8 @@ FROM node:22-bookworm-slim AS builder
 
 # Production build env
 ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1
+    NEXT_TELEMETRY_DISABLED=1 \
+    ENV=production
 
 WORKDIR /app
 
@@ -24,7 +25,8 @@ FROM node:22-bookworm-slim AS runner
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
-    HOST=0.0.0.0
+    HOST=0.0.0.0 \
+    ENV=production
 
 WORKDIR /app
 
