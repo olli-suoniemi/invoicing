@@ -1,21 +1,15 @@
 # Stage 1: Build the application
 FROM node:22-bookworm-slim AS builder
 
-# Production build env
-ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1 \
+ENV NEXT_TELEMETRY_DISABLED=1 \
     ENV=production
 
 WORKDIR /app
 
-# 1) Install dependencies
 COPY package.json yarn.lock ./
-RUN corepack enable && yarn --version && yarn install --immutable
+RUN corepack enable && yarn --version && yarn install
 
-# 2) Copy the rest of the source (including next.config.mjs, .env.production, etc.)
 COPY . .
-
-# 3) Build Next.js app (with output: 'standalone' in next.config.mjs)
 RUN yarn build && yarn cache clean
 
 
