@@ -174,3 +174,36 @@ export async function removeUserFromCompany(userId) {
 
   return users[0] ?? null;
 }
+
+export async function getEmailSettings() {
+  const rows = await sql`select * from email_settings limit 1`;
+  return rows[0] ?? [];
+}
+
+export async function updateEmailSettings(emailSettings) {
+  // check for existing
+  const existing = await getEmailSettings();
+  if (existing.length === 0) {
+    const result = await sql`
+      insert into email_settings (
+        api_key
+      )
+      values (
+        ${emailSettings.api_key}
+      )
+      returning *
+    `;
+    return result[0];
+  } else {
+    const result = await sql`
+      update email_settings
+      set
+        api_key = ${emailSettings.api_key},
+        updated_at = ${new Date()}
+      where id = ${existing.id}
+      returning *
+    `;
+    return result[0];
+  }
+}
+

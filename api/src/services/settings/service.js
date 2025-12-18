@@ -224,3 +224,20 @@ export async function removeUserFromCompany(requestor, userId) {
   const updatedUser = await repo.removeUserFromCompany(user.id);
   return updatedUser;
 }
+
+export async function getEmailSettings(user) {
+  const emailSettings = await repo.getEmailSettings();
+  if (!emailSettings) throw new NotFoundError('Email settings not found');
+  if (!canReadCompany(user)) throw new ForbiddenError('Not allowed');
+  return emailSettings;
+}
+
+export async function updateEmailSettings(user, body) {
+  const emailSettings = await repo.getEmailSettings();
+  if (!emailSettings) throw new NotFoundError('Email settings not found');
+  if (!canEditCompany(user)) throw new ForbiddenError('Not allowed');
+
+  const updated = await repo.updateEmailSettings(body);
+  console.log("Updated email settings:", updated);
+  return updated;
+} 
