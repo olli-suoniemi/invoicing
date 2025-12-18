@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useParams, useRouter } from 'next/navigation';
 import { MdEmail } from "react-icons/md";
-import { FaMapMarkerAlt, FaFolder } from "react-icons/fa";
+import { FaMapMarkerAlt } from "react-icons/fa";
 import { FaHouse, FaPhone, FaCity, FaMapLocationDot, FaMap } from "react-icons/fa6";
 import { CiBank } from "react-icons/ci";
 import { TbHexagonNumber7Filled } from "react-icons/tb";
