@@ -235,7 +235,6 @@ The CRM_FIREBASE_SERVICE_JSON is created out of a file. The file is deleted afte
 
 ```bash
 echo -n "" | docker secret create CRM_ADMIN_IDS -
-echo -n "" | docker secret create CRM_FORWARD_EMAIL_API_KEY -
 docker secret create CRM_FIREBASE_SERVICE_JSON ~/crm/secrets/firebase-service-account.json
 echo -n "password" | docker secret create FLYWAY_PASSWORD -
 echo -n "jdbc:postgresql://database:5432/crm" | docker secret create CRM_FLYWAY_URL -
@@ -265,7 +264,6 @@ Remove one secret:
 
 ```bash
 docker secret remove CRM_ADMIN_IDS
-docker secret remove CRM_FORWARD_EMAIL_API_KEY
 docker secret remove CRM_FIREBASE_SERVICE_JSON
 docker secret remove FLYWAY_PASSWORD
 docker secret remove CRM_FLYWAY_URL
@@ -327,7 +325,6 @@ echo -n "user" | docker secret create CRM_POSTGRES_USER -
 
 docker secret create CRM_FIREBASE_SERVICE_JSON ./.secrets/firebase-service-account.json
 docker secret create CRM_ADMIN_IDS ./.secrets/ADMIN_IDS.txt
-docker secret create CRM_FORWARD_EMAIL_API_KEY ./.secrets/FORWARD_EMAIL_API_KEY.txt
 
 echo -n "user"     | docker secret create FLYWAY_USER -
 echo -n "password" | docker secret create FLYWAY_PASSWORD -
