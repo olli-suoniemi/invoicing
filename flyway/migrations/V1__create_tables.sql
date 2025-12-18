@@ -274,6 +274,13 @@ CREATE TABLE invoices (
   updated_at      timestamptz NOT NULL DEFAULT now()
 );  
 
+-- Emails
+CREATE TABLE email_settings (
+  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  api_key       text NOT NULL,
+  updated_at    timestamptz NOT NULL DEFAULT now()
+);
+
 ALTER TABLE invoices
   ADD CONSTRAINT invoices_reference_format
     CHECK (reference IS NULL OR reference ~ '^[0-9]{4,20}$');
