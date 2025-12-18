@@ -5,9 +5,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { RiMoneyEuroBoxFill } from "react-icons/ri";
-import { FaList, FaBook, FaQuestion } from "react-icons/fa";
-import { FaCalendarDays, FaUser } from "react-icons/fa6";
-import { FaCalendarDay } from "react-icons/fa";
+import { FaList, FaBook, FaCalendarDay } from "react-icons/fa";
+import { FaCalendarDays, FaUser, FaUserGear } from "react-icons/fa6";
 import Link from 'next/link';
 import LoadingSpinner from '@/components/loadingSpinner';
 
@@ -429,7 +428,7 @@ export default function InvoiceEditPage() {
             {/* Custom reference? (read-only) */}
             <div className="flex items-center gap-4 h-full">
               <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <FaQuestion size={16} />
+                <FaUserGear size={16} />
                 <span>Custom reference?</span>
               </div>
               <div className="flex-1">
