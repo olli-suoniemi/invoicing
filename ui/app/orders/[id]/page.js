@@ -164,7 +164,7 @@ export default function OrderDetailsPage() {
               </button>
               <button
                 type="button"
-                className="btn btn-ghost"
+                className="btn btn-primary ml-4"
                 onClick={handleInvoiceCreate}
                 disabled={loading}
               >
