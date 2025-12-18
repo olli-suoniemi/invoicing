@@ -133,6 +133,32 @@ v1.put('/company', async (c) => {
   }
 });
 
+// update email settings
+v1.put('/email', async (c) => {
+  const authUser = c.get('user');
+  const body = await c.req.json().catch(() => ({}));
+  try {
+    const updated = await settingsService.updateEmailSettings(authUser, body);
+    return c.json(updated);
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
+// get email settings
+v1.get('/email', async (c) => {
+  const authUser = c.get('user');
+  try {
+    console.log("Getting email settings for user:", authUser.internalId);
+    const email = await settingsService.getEmailSettings(authUser);
+    return c.json({ email });
+  } catch (e) {
+    const status = e.status ?? 500;
+    return c.json({ error: e.message ?? 'Internal error' }, status);
+  }
+});
+
 // add user to company
 v1.post('/company/users', async (c) => {
   const authUser = c.get('user');
