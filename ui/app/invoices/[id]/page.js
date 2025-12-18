@@ -5,11 +5,12 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { RiMoneyEuroBoxFill } from "react-icons/ri";
-import { FaList, FaBook, FaQuestion } from "react-icons/fa";
-import { FaCalendarDays, FaUser } from "react-icons/fa6";
+import { FaList, FaBook, FaCalendarDay } from "react-icons/fa";
+import { FaCalendarDays, FaUser, FaUserGear } from "react-icons/fa6";
 import LoadingSpinner from '@/components/loadingSpinner';
-import { FaCalendarDay } from "react-icons/fa";
 import Link from 'next/link';
+import SendInvoiceModal from '@/components/SendInvoiceModal';
+
 
 export default function InvoiceDetailsPage() {
     const { id } = useParams();
@@ -17,6 +18,22 @@ export default function InvoiceDetailsPage() {
 
     const [invoice, setInvoice] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [sendOpen, setSendOpen] = useState(false);
+
+    const defaultTo = invoice?.customer?.email ?? '';
+    const defaultSubject = invoice ? 
+        `Invoice #${invoice.invoice_number} from ${invoice.customer?.name ?? ''}`.trim() : 
+        '';
+    const defaultText = invoice
+    ? [
+        `Hi ${invoice.customer?.name ?? ''},`,
+        '',
+        `Please find your invoice #${invoice.invoice_number} attached.`,
+        '',
+        'Best regards,',
+        'Demo Company',
+        ].join('\n')
+    : '';
 
     useEffect(() => {
         if (!id) return;
@@ -29,6 +46,7 @@ export default function InvoiceDetailsPage() {
                 }
                 const data = await res.json();
                 setInvoice(data.invoice ?? null);
+                console.log('Fetched invoice data:', data);
             } catch (err) {
                 console.error(err);
                 toast.error(`Error: ${err.message}`);
@@ -172,6 +190,21 @@ export default function InvoiceDetailsPage() {
 
     return (
         <div className="flex justify-center items-start min-h-screen py-5 px-5">
+            <SendInvoiceModal
+                open={sendOpen}
+                onClose={() => setSendOpen(false)}
+                initialTo={defaultTo}
+                initialSubject={defaultSubject}
+                initialText={defaultText}
+                onSubmit={async ({ to, subject, text }) => {
+                    const res = await fetch(`/api/invoices/${id}/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to, subject, text }),
+                    });
+                    if (!res.ok) throw new Error(await res.text());
+                }}
+            />
 
             <div className="w-full max-w-7xl flex items-center gap-4">
                 <div className="flex w-full flex-col gap-4">
@@ -202,24 +235,27 @@ export default function InvoiceDetailsPage() {
                             </button>
                             <button
                                 type="button"
-                                className="btn btn-ghost"
-                                onClick={() => window.open(`/api/invoices/${id}/print`, '_blank')}
-                            >
-                                Print Invoice
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-ghost"
+                                className="btn btn-info ml-4"
                                 onClick={handleMarkingAsSent}
                             >
                                 Mark as sent
                             </button>
                             <button
                                 type="button"
-                                className="btn btn-ghost"
+                                className="btn btn-accent"
                                 onClick={handleMarkingAsPaid}
                             >
                                 Mark as paid
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-primary ml-4"
+                                onClick={() => window.open(`/api/invoices/${id}/print`, '_blank')}
+                            >
+                                Print Invoice
+                            </button>
+                            <button type="button" className="btn btn-secondary" onClick={() => setSendOpen(true)}>
+                                Send Invoice
                             </button>
                         </div>
                     </div>
@@ -327,7 +363,7 @@ export default function InvoiceDetailsPage() {
 
                         <div className="flex items-center gap-4 h-full">
                             <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <FaQuestion size={16} />
+                                <FaUserGear size={16} />
                                 <span>Custom reference?</span>
                             </div>
                             <div className="flex-1">
