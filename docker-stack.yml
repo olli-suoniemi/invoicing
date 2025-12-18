@@ -51,7 +51,6 @@ services:
       - CRM_PGPORT
       - CRM_FIREBASE_SERVICE_JSON
       - CRM_ADMIN_IDS
-      - CRM_FORWARD_EMAIL_API_KEY
     networks:
       - internal
       - proxy
@@ -148,8 +147,6 @@ secrets:
   CRM_ADMIN_IDS:
     external: true
   CRM_FIREBASE_SERVICE_JSON:
-    external: true
-  CRM_FORWARD_EMAIL_API_KEY:
     external: true
 
   
