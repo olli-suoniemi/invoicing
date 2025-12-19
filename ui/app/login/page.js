@@ -60,7 +60,6 @@ function LoginPageContent() {
         "path=/",
         `max-age=${maxAgeSeconds}`,
         "samesite=lax",
-        // in prod over https you *should* add "secure"
         window.location.protocol === "https:" ? "secure" : "",
       ]
         .filter(Boolean)
