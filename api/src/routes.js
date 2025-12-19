@@ -12,6 +12,16 @@ import * as inventoryService from "./services/inventory/service.js";
 import * as ordersService from "./services/orders/service.js";
 import * as invoiceService from "./services/invoices/service.js";
 
+import { cacheMethodCalls } from "./util/cacheUtil.js";
+
+// set cached methods calls and set the cache to flush when one of the methods in the list is called
+const cachedCompaniesService = cacheMethodCalls(companiesService, []);
+const cachedCustomersService = cacheMethodCalls(customersService, ["createCustomer", "updateCustomer"]);
+const cachedSettingsService = cacheMethodCalls(settingsService, ["createUserDuringLogin", "createUser", "updateUser", "updateCompany", "addUserToCompany", "removeUserFromCompany", "updateEmailSettings"]);
+const cachedInventoryService = cacheMethodCalls(inventoryService, ["addInventoryItem", "updateInventoryItemById"]);
+const cachedOrdersService = cacheMethodCalls(ordersService, ["createOrder", "updateOrderById", "setOrderCompleted"]);
+const cachedInvoiceService = cacheMethodCalls(invoiceService, ["createInvoiceForOrder", "updateInvoiceById"]);
+
 export const routes = new Hono();
 
 routes.get("/health", (c) => c.json({ ok: true }));
@@ -35,7 +45,7 @@ v1.post("/users/login", async (c) => {
   const body = await c.req.json().catch(() => ({}));
 
   try {
-    const user = await settingsService.createUserDuringLogin(authUser, body);
+    const user = await cachedSettingsService.createUserDuringLogin(authUser, body);
     return c.json(user);
   } catch (e) {
     const status = e.status ?? 500;
@@ -60,7 +70,7 @@ v1.get("/me", (c) => {
 v1.get("/users", async (c) => {
   const user = c.get("user");
   try {
-    const users = await settingsService.listUsers(user);
+    const users = await cachedSettingsService.listUsers(user);
     return c.json({ users });
   } catch (e) {
     const status = e.status ?? 500;
@@ -73,7 +83,7 @@ v1.post("/users", async (c) => {
   const authUser = c.get("user");
   const body = await c.req.json().catch(() => ({}));
   try {
-    const user = await settingsService.createUser(authUser, body);
+    const user = await cachedSettingsService.createUser(authUser, body);
     return c.json({ user });
   } catch (e) {
     const status = e.status ?? 500;
@@ -86,7 +96,7 @@ v1.get('/users/:id', async (c) => {
   const authUser = c.get('user');
   const id = c.req.param('id');
   try {
-    const user = await settingsService.getUser(authUser, id);
+    const user = await cachedSettingsService.getUser(authUser, id);
     return c.json(user);
   } catch (e) {
     const status = e.status ?? 500;
@@ -100,7 +110,7 @@ v1.put('/users/:id', async (c) => {
   const id = c.req.param('id');
   const patch = await c.req.json().catch(() => ({}));
   try {
-    const updated = await settingsService.updateUser(authUser, id, patch);
+    const updated = await cachedSettingsService.updateUser(authUser, id, patch);
     return c.json(updated);
   } catch (e) {
     const status = e.status ?? 500;
@@ -112,7 +122,7 @@ v1.put('/users/:id', async (c) => {
 v1.get("/company", async (c) => {
   const user = c.get("user");
   try {
-    const company = await settingsService.getCompany(user);
+    const company = await cachedSettingsService.getCompany(user);
     return c.json({ company });
   } catch (e) {
     const status = e.status ?? 500;
@@ -125,7 +135,7 @@ v1.put('/company', async (c) => {
   const authUser = c.get('user');
   const body = await c.req.json().catch(() => ({}));
   try {
-    const updated = await settingsService.updateCompany(authUser, body);
+    const updated = await cachedSettingsService.updateCompany(authUser, body);
     return c.json(updated);
   } catch (e) {
     const status = e.status ?? 500;
@@ -138,7 +148,7 @@ v1.put('/email', async (c) => {
   const authUser = c.get('user');
   const body = await c.req.json().catch(() => ({}));
   try {
-    const updated = await settingsService.updateEmailSettings(authUser, body);
+    const updated = await cachedSettingsService.updateEmailSettings(authUser, body);
     return c.json(updated);
   } catch (e) {
     const status = e.status ?? 500;
@@ -151,7 +161,7 @@ v1.get('/email', async (c) => {
   const authUser = c.get('user');
   try {
     console.log("Getting email settings for user:", authUser.internalId);
-    const email = await settingsService.getEmailSettings(authUser);
+    const email = await cachedSettingsService.getEmailSettings(authUser);
     return c.json({ email });
   } catch (e) {
     const status = e.status ?? 500;
@@ -164,7 +174,7 @@ v1.post('/company/users', async (c) => {
   const authUser = c.get('user');
   const body = await c.req.json().catch(() => ({}));
   try {
-    const user = await settingsService.addUserToCompany(authUser, body);
+    const user = await cachedSettingsService.addUserToCompany(authUser, body);
     return c.json({ user });
   } catch (e) {
     const status = e.status ?? 500;
@@ -178,7 +188,7 @@ v1.delete('/company/users', async (c) => {
   const body = await c.req.json().catch(() => ({}));
   const userId = body.userId;
   try {
-    const user = await settingsService.removeUserFromCompany(authUser, userId);
+    const user = await cachedSettingsService.removeUserFromCompany(authUser, userId);
     return c.json({ user });
   } catch (e) {
     const status = e.status ?? 500;
@@ -191,14 +201,14 @@ v1.get('/customers', async (c) => {
   const authUser = c.get('user');
   try {
     // get main company of the auth user
-    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+    const company = await cachedCompaniesService.getMainCompanyOfUser(authUser.internalId);
 
     if (!company) {
       // no throw, just respond
       return c.json({ error: 'User has no associated company' }, 403);
     }
 
-    const customers = await customersService.listCompanyCustomersById(company.org_id);
+    const customers = await cachedCustomersService.listCompanyCustomersById(company.org_id);
 
     return c.json({ customers });
   } catch (e) {
@@ -213,14 +223,14 @@ v1.get('/customers/:id', async (c) => {
   const id = c.req.param('id');
   try {
     // get main company of the auth user
-    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+    const company = await cachedCompaniesService.getMainCompanyOfUser(authUser.internalId);
 
     if (!company) {
       // no throw, just respond
       return c.json({ error: 'User has no associated company' }, 403);
     }
     
-    const customer = await customersService.getCustomerById(authUser, company, id);
+    const customer = await cachedCustomersService.getCustomerById(authUser, company, id);
 
     return c.json({ customer });
   } catch (e) {
@@ -235,14 +245,14 @@ v1.post('/customers', async (c) => {
   const body = await c.req.json().catch(() => ({}));
   try {
     // get main company of the auth user
-    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+    const company = await cachedCompaniesService.getMainCompanyOfUser(authUser.internalId);
 
     if (!company) {
       // no throw, just respond
       return c.json({ error: 'User has no associated company' }, 403);
     }
 
-    const customer = await customersService.createCustomer(company, body);
+    const customer = await cachedCustomersService.createCustomer(company, body);
 
     return c.json({ customer });
   } catch (e) {
@@ -257,7 +267,7 @@ v1.put('/customers/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json().catch(() => ({}));
   try {
-    const updated = await customersService.updateCustomer(id, body);
+    const updated = await cachedCustomersService.updateCustomer(id, body);
 
     return c.json( updated );
   } catch (e) {
@@ -271,14 +281,14 @@ v1.get('/inventory', async (c) => {
   const authUser = c.get('user');
   try {
     // get main company of the auth user
-    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+    const company = await cachedCompaniesService.getMainCompanyOfUser(authUser.internalId);
 
     if (!company) {
       // no throw, just respond
       return c.json({ error: 'User has no associated company' }, 403);
     }
 
-    const inventory = await inventoryService.listCompanyInventoryById(company.org_id);
+    const inventory = await cachedInventoryService.listCompanyInventoryById(company.org_id);
 
     return c.json({ inventory });
   } catch (e) {
@@ -293,7 +303,7 @@ v1.get('/inventory/:id', async (c) => {
   const id = c.req.param('id');
   try {
     
-    const item = await inventoryService.getInventoryItemById(authUser, id);
+    const item = await cachedInventoryService.getInventoryItemById(authUser, id);
 
     return c.json({ inventory: item });
   } catch (e) {
@@ -308,14 +318,14 @@ v1.post('/inventory', async (c) => {
   const body = await c.req.json().catch(() => ({}));
   try {
     // get main company of the auth user
-    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+    const company = await cachedCompaniesService.getMainCompanyOfUser(authUser.internalId);
 
     if (!company) {
       // no throw, just respond
       return c.json({ error: 'User has no associated company' }, 403);
     }
 
-    const item = await inventoryService.addInventoryItem(authUser, company, body);
+    const item = await cachedInventoryService.addInventoryItem(authUser, company, body);
 
     return c.json({ inventory: item });
   } catch (e) {
@@ -330,7 +340,7 @@ v1.put('/inventory/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json().catch(() => ({}));
   try {
-    const updated = await inventoryService.updateInventoryItemById(authUser, id, body);
+    const updated = await cachedInventoryService.updateInventoryItemById(authUser, id, body);
 
     return c.json( updated );
   } catch (e) {
@@ -344,14 +354,14 @@ v1.get('/orders', async (c) => {
   const authUser = c.get('user');
   try {
     // get main company of the auth user
-    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+    const company = await cachedCompaniesService.getMainCompanyOfUser(authUser.internalId);
 
     if (!company) {
       // no throw, just respond
       return c.json({ error: 'User has no associated company' }, 403);
     }
 
-    const orders = await ordersService.listCompanyOrders(authUser, company.org_id);
+    const orders = await cachedOrdersService.listCompanyOrders(authUser, company.org_id);
 
     return c.json({ orders });
   } catch (e) {
@@ -365,7 +375,7 @@ v1.get('/orders/:id', async (c) => {
   const authUser = c.get('user');
   const id = c.req.param('id');
   try {
-    const order = await ordersService.getOrderById(authUser, id);
+    const order = await cachedOrdersService.getOrderById(authUser, id);
 
     return c.json({ order });
   } catch (e) {
@@ -379,14 +389,14 @@ v1.post('/orders', async (c) => {
   const authUser = c.get('user');
   const body = await c.req.json().catch(() => ({}));
   try {
-    const company = await companiesService.getMainCompanyOfUser(authUser.internalId);
+    const company = await cachedCompaniesService.getMainCompanyOfUser(authUser.internalId);
 
     if (!company) {
       // no throw, just respond
       return c.json({ error: 'User has no associated company' }, 403);
     }
 
-    const order = await ordersService.createOrder(authUser, body, company);
+    const order = await cachedOrdersService.createOrder(authUser, body, company);
 
     return c.json({ order });
   } catch (e) {
@@ -401,7 +411,7 @@ v1.put('/orders/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json().catch(() => ({}));
   try {
-    const updated = await ordersService.updateOrderById(authUser, id, body);
+    const updated = await cachedOrdersService.updateOrderById(authUser, id, body);
 
     return c.json( updated );
   } catch (e) {
@@ -415,7 +425,7 @@ v1.post('/orders/:id/complete', async (c) => {
   const authUser = c.get('user');
   const id = c.req.param('id');
   try {
-    const updated = await ordersService.setOrderCompleted(authUser, id);
+    const updated = await cachedOrdersService.setOrderCompleted(authUser, id);
 
     return c.json( updated );
   } catch (e) {
@@ -429,19 +439,19 @@ v1.post('/invoices', async (c) => {
   const authUser = c.get('user');
   const body = await c.req.json().catch(() => ({}));
   try {
-    const order = await ordersService.getOrderById(authUser, body.orderId);
+    const order = await cachedOrdersService.getOrderById(authUser, body.orderId);
 
     if (!order) {
       throw new Error('Order not found');
     }
 
-    const invoice = await invoiceService.createInvoiceForOrder(authUser, order);
+    const invoice = await cachedInvoiceService.createInvoiceForOrder(authUser, order);
 
     if (!invoice) {
       throw new Error('Invoice creation failed');
     } 
 
-    await ordersService.setOrderCompleted(authUser, order.id);
+    await cachedOrdersService.setOrderCompleted(authUser, order.id);
 
     return c.json({ invoice });
   } catch (e) {
@@ -455,15 +465,15 @@ v1.get('/invoices/:id', async (c) => {
   const authUser = c.get('user');
   const id = c.req.param('id');
   try {
-    const invoice = await invoiceService.getInvoiceById(authUser, id);
+    const invoice = await cachedInvoiceService.getInvoiceById(authUser, id);
 
-    const customer = await customersService.getCustomerById(
+    const customer = await cachedCustomersService.getCustomerById(
       authUser, 
       { org_id: invoice.company_id }, 
       invoice.customer_id
     );
 
-    const order = await ordersService.getOrderById(authUser, invoice.order_id);
+    const order = await cachedOrdersService.getOrderById(authUser, invoice.order_id);
 
     invoice.order = order;
 
@@ -480,7 +490,7 @@ v1.get('/invoices/:id', async (c) => {
 v1.get('/invoices', async (c) => {
   const authUser = c.get('user');
   try {
-    const invoices = await invoiceService.listCompanyInvoices(authUser);
+    const invoices = await cachedInvoiceService.listCompanyInvoices(authUser);
 
     return c.json({ invoices });
   } catch (e) {
@@ -495,17 +505,17 @@ v1.put('/invoices/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json().catch(() => ({}));
   try {
-    await invoiceService.updateInvoiceById(authUser, id, body);
+    await cachedInvoiceService.updateInvoiceById(authUser, id, body);
 
-    const invoice = await invoiceService.getInvoiceById(authUser, id);
+    const invoice = await cachedInvoiceService.getInvoiceById(authUser, id);
 
-    const customer = await customersService.getCustomerById(
+    const customer = await cachedCustomersService.getCustomerById(
       authUser, 
       { org_id: invoice.company_id }, 
       invoice.customer_id
     );
 
-    const order = await ordersService.getOrderById(authUser, invoice.order_id);
+    const order = await cachedOrdersService.getOrderById(authUser, invoice.order_id);
 
     invoice.order = order;
 
