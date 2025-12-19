@@ -253,36 +253,60 @@ export default function CustomerDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen py-5">
-      <div className="w-full max-w-3xl mx-auto px-6">
-        {/* Header: back | title | actions */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 mb-6">
-          <button className="btn btn-ghost" onClick={() => router.back()}>
-            &larr; Back
-          </button>
-          <h1 className="text-2xl font-bold text-center">Edit customer</h1>
-          <div className="flex gap-2 justify-self-end">
-            <button
-              className="btn btn-ghost"
-              onClick={onReset}
-              disabled={!hasChanges || saving}
-            >
-              Reset
-            </button>
-            <button
-              className={`btn btn-primary ${
-                !hasChanges ? 'btn-disabled opacity-50' : ''
-              }`}
-              onClick={onSave}
-              disabled={!hasChanges || saving}
-            >
-              {saving ? 'Saving…' : 'Save'}
-            </button>
+    <div className="min-h-screen py-4 sm:py-5">
+      <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
+        {/* Header */}
+        <div className="mb-4 md:mb-6">
+          <div className="sticky top-0 z-10 -mx-6 px-6 py-3 bg-base-100/90 backdrop-blur border-b border-base-200">
+            <div className="flex flex-col gap-2 md:grid md:grid-cols-[auto_1fr_auto] md:items-center">
+              <div className="flex items-center justify-between md:justify-start gap-2">
+                <button className="btn btn-ghost btn-md" onClick={() => router.back()}>
+                  &larr; Back
+                </button>
+
+                {/* Mobile actions */}
+                <div className="flex gap-2 md:hidden">
+                  <button
+                    className="btn btn-ghost btn-md"
+                    onClick={onReset}
+                    disabled={!hasChanges || saving}
+                  >
+                    Reset
+                  </button>
+                  <button
+                    className={`btn btn-primary btn-md ${!hasChanges ? 'btn-disabled opacity-50' : ''}`}
+                    onClick={onSave}
+                    disabled={!hasChanges || saving}
+                  >
+                    {saving ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              </div>
+
+              <h1 className="text-lg md:text-2xl font-bold md:text-center leading-tight ml-2">
+                Edit customer
+              </h1>
+
+              {/* Desktop actions */}
+              <div className="hidden md:flex gap-2 justify-self-end">
+                <button className="btn btn-ghost" onClick={onReset} disabled={!hasChanges || saving}>
+                  Reset
+                </button>
+                <button
+                  className={`btn btn-primary ${!hasChanges ? 'btn-disabled opacity-50' : ''}`}
+                  onClick={onSave}
+                  disabled={!hasChanges || saving}
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
+
         {/* Card */}
-        <div className="rounded-xl border border-base-300 p-4">
+        <div className="rounded-xl border border-base-300 p-4 sm:p-6">
           {/* Title + badge */}
           <div className="mb-6">
             <h2 className="text-xl font-semibold">
@@ -297,16 +321,16 @@ export default function CustomerDetailsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Name / Company name */}
             <label className="form-control md:col-span-2">
-              <div className="join px-1 pb-2">
+              <div className="label py-1">
                 <span className="label-text">
                   {isCompany ? 'Company name' : 'Full name'}
                 </span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   {isCompany ? <FaHouse size={18} /> : <FaUser size={18} />}
                 </span>
               </div>
               <input
-                className="input input-bordered"
+                className="input input-bordered w-full h-12 md:h-10"
                 value={form.name}
                 onChange={onChange('name')}
                 placeholder={isCompany ? 'Company name' : 'Full name'}
@@ -317,14 +341,14 @@ export default function CustomerDetailsPage() {
             {isCompany && (
               <>
                 <label className="form-control">
-                  <div className="join px-1 pb-2">
+                  <div className="label py-1">
                     <span className="label-text">Business ID</span>
-                    <span className="join-item px-3 text-gray-500 flex items-center">
+                    <span className="label-text-alt text-base-content/60 flex items-center">
                       <TbHexagonNumber7Filled size={18} />
                     </span>
                   </div>
                   <input
-                    className="input input-bordered"
+                    className="input input-bordered w-full h-12 md:h-10"
                     value={form.business_id}
                     onChange={onChange('business_id')}
                     placeholder="Business ID"
@@ -333,14 +357,14 @@ export default function CustomerDetailsPage() {
 
                 {/* VAT ID */}
                 <label className="form-control">
-                  <div className="join px-1 pb-2">
+                  <div className="label py-1">
                     <span className="label-text">VAT ID</span>
-                    <span className="join-item px-3 text-gray-500 flex items-center">
+                    <span className="label-text-alt text-base-content/60 flex items-center">
                       <TbHexagonNumber7Filled size={18} />
                     </span>
                   </div>
                   <input
-                    className="input input-bordered"
+                    className="input input-bordered w-full h-12 md:h-10"
                     value={form.vat_id}
                     onChange={onChange('vat_id')}
                     placeholder="VAT ID"
@@ -351,14 +375,14 @@ export default function CustomerDetailsPage() {
 
             {/* Email */}
             <label className="form-control">
-              <div className="join px-1 pb-2">
+              <div className="label py-1">
                 <span className="label-text">Email</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <MdEmail size={18} />
                 </span>
               </div>
               <input
-                className="input input-bordered"
+                className="input input-bordered w-full h-12 md:h-10"
                 type="email"
                 value={form.email}
                 onChange={onChange('email')}
@@ -368,14 +392,14 @@ export default function CustomerDetailsPage() {
 
             {/* Phone */}
             <label className="form-control">
-              <div className="join px-1 pb-2">
+              <div className="label py-1">
                 <span className="label-text">Phone</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <FaPhone size={18} />
                 </span>
               </div>
               <input
-                className="input input-bordered"
+                className="input input-bordered w-full h-12 md:h-10"
                 type="tel"
                 value={form.phone}
                 onChange={onChange('phone')}
@@ -385,14 +409,14 @@ export default function CustomerDetailsPage() {
 
             {/* Internal info*/}
             <label className="form-control md:col-span-2">
-              <div className="join px-1 pb-2">
+              <div className="label py-1">
                 <span className="label-text">Internal info</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <FaInfo size={18} />
                 </span>
               </div>
               <textarea
-                className="textarea textarea-bordered w-full h-24"
+                className="textarea textarea-bordered w-full min-h-28 md:min-h-24"
                 value={form.internal_info}
                 onChange={onChange('internal_info')}
                 placeholder="Internal info"
@@ -402,223 +426,224 @@ export default function CustomerDetailsPage() {
 
             {/* Invoice address header */}
             <div className="md:col-span-2 mt-2">
-              <span className="text-gray-500">Invoice address</span>
-              <hr className="mt-2 mb-1 border-gray-300" />
+              <details className="collapse collapse-arrow bg-base-200/40 md:bg-transparent rounded-xl">
+                <summary className="collapse-title text-base font-semibold">
+                  Invoice address
+                </summary>
+                <div className="collapse-content">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* Invoice address fields */}
+                <label className="form-control md:col-span-2">
+                  <div className="label py-1">
+                    <span className="label-text">Street address</span>
+                    <span className="label-text-alt text-base-content/60 flex items-center">
+                      <FaMapMarkerAlt size={18} />
+                    </span>
+                  </div>
+                  <input
+                    className="input input-bordered w-full h-12 md:h-10"
+                    value={form.invoicing_address}
+                    onChange={onChange('invoicing_address')}
+                    placeholder="Street address"
+                  />
+                </label>
+
+                <label className="form-control">
+                  <div className="label py-1">
+                    <span className="label-text">City</span>
+                    <span className="label-text-alt text-base-content/60 flex items-center">
+                      <FaCity size={18} />
+                    </span>
+                  </div>
+                  <input
+                    className="input input-bordered w-full h-12 md:h-10"
+                    value={form.invoicing_city}
+                    onChange={onChange('invoicing_city')}
+                    placeholder="City"
+                  />
+                </label>
+
+                <label className="form-control">
+                  <div className="label py-1">
+                    <span className="label-text">Postal code</span>
+                    <span className="label-text-alt text-base-content/60 flex items-center">
+                      <BsSignpostFill size={18} />
+                    </span>
+                  </div>
+                  <input
+                    className="input input-bordered w-full h-12 md:h-10"
+                    value={form.invoicing_postal_code}
+                    onChange={onChange('invoicing_postal_code')}
+                    placeholder="Postal code"
+                  />
+                </label>
+
+                <label className="form-control">
+                  <div className="label py-1">
+                    <span className="label-text">State</span>
+                    <span className="label-text-alt text-base-content/60 flex items-center">
+                      <FaMapLocationDot size={18} />
+                    </span>
+                  </div>
+                  <input
+                    className="input input-bordered w-full h-12 md:h-10"
+                    value={form.invoicing_state}
+                    onChange={onChange('invoicing_state')}
+                    placeholder="State"
+                  />
+                </label>
+
+                <label className="form-control">
+                  <div className="label py-1">
+                    <span className="label-text">Country</span>
+                    <span className="label-text-alt text-base-content/60 flex items-center">
+                      <FaMap size={18} />
+                    </span>
+                  </div>
+                  <input
+                    className="input input-bordered w-full h-12 md:h-10"
+                    value={form.invoicing_country}
+                    onChange={onChange('invoicing_country')}
+                    placeholder="Country"
+                  />
+                </label>
+
+
+                {/* External invoicing info*/}
+                <label className="form-control md:col-span-2">
+                  <div className="label py-1">
+                    <span className="label-text">External invoicing info</span>
+                    <span className="label-text-alt text-base-content/60 flex items-center">
+                      <FaInfo size={18} />
+                    </span>
+                  </div>
+                  <textarea
+                    className="textarea textarea-bordered w-full min-h-28 md:min-h-24"
+                    value={form.invoicing_extra_info}
+                    onChange={onChange('invoicing_extra_info')}
+                    placeholder="External invoicing info"
+                  />
+                </label>
+                  </div>
+                </div>
+              </details>
             </div>
-
-            {/* Invoice address fields */}
-            <label className="form-control md:col-span-2">
-              <div className="join px-1 pb-2">
-                <span className="label-text">Street address</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaMapMarkerAlt size={18} />
-                </span>
-              </div>
-              <input
-                className="input input-bordered"
-                value={form.invoicing_address}
-                onChange={onChange('invoicing_address')}
-                placeholder="Street address"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className="join px-1 pb-2">
-                <span className="label-text">City</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaCity size={18} />
-                </span>
-              </div>
-              <input
-                className="input input-bordered"
-                value={form.invoicing_city}
-                onChange={onChange('invoicing_city')}
-                placeholder="City"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className="join px-1 pb-2">
-                <span className="label-text">Postal code</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <BsSignpostFill size={18} />
-                </span>
-              </div>
-              <input
-                className="input input-bordered"
-                value={form.invoicing_postal_code}
-                onChange={onChange('invoicing_postal_code')}
-                placeholder="Postal code"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className="join px-1 pb-2">
-                <span className="label-text">State</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaMapLocationDot size={18} />
-                </span>
-              </div>
-              <input
-                className="input input-bordered"
-                value={form.invoicing_state}
-                onChange={onChange('invoicing_state')}
-                placeholder="State"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className="join px-1 pb-2">
-                <span className="label-text">Country</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaMap size={18} />
-                </span>
-              </div>
-              <input
-                className="input input-bordered"
-                value={form.invoicing_country}
-                onChange={onChange('invoicing_country')}
-                placeholder="Country"
-              />
-            </label>
-
-
-            {/* External invoicing info*/}
-            <label className="form-control md:col-span-2">
-              <div className="join px-1 pb-2">
-                <span className="label-text">External invoicing info</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaInfo size={18} />
-                </span>
-              </div>
-              <textarea
-                className="textarea textarea-bordered w-full h-24"
-                value={form.invoicing_extra_info}
-                onChange={onChange('invoicing_extra_info')}
-                placeholder="External invoicing info"
-              />
-            </label>
 
             {/* Delivery address header */}
-            <div className="md:col-span-2 mt-4">
-              <span className="text-gray-500">Delivery address</span>
-              <hr className="mt-2 mb-1 border-gray-300" />
+            <div className="md:col-span-2 mt-2">
+              <details className="collapse collapse-arrow bg-base-200/40 md:bg-transparent rounded-xl">
+                <summary className="collapse-title text-base font-semibold">
+                  Delivery address
+                </summary>
+                <div className="collapse-content">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    {/* Delivery address fields */}
+                    <label className="form-control md:col-span-2">
+                      <div className="label py-1">
+                        <span className="label-text">Street address</span>
+                        <span className="label-text-alt text-base-content/60 flex items-center">
+                          <FaMapMarkerAlt size={18} />
+                        </span>
+                      </div>
+                      <input
+                        className="input input-bordered w-full h-12 md:h-10"
+                        value={form.delivery_address}
+                        onChange={onChange('delivery_address')}
+                        placeholder="Street address"
+                      />
+                    </label>
+
+                    <label className="form-control">
+                      <div className="label py-1">
+                        <span className="label-text">City</span>
+                        <span className="label-text-alt text-base-content/60 flex items-center">
+                          <FaCity size={18} />
+                        </span>
+                      </div>
+                      <input
+                        className="input input-bordered w-full h-12 md:h-10"
+                        value={form.delivery_city}
+                        onChange={onChange('delivery_city')}
+                        placeholder="City"
+                      />
+                    </label>
+
+                    <label className="form-control">
+                      <div className="label py-1">
+                        <span className="label-text">Postal code</span>
+                        <span className="label-text-alt text-base-content/60 flex items-center">
+                          <BsSignpostFill size={18} />
+                        </span>
+                      </div>
+                      <input
+                        className="input input-bordered w-full h-12 md:h-10"
+                        value={form.delivery_postal_code}
+                        onChange={onChange('delivery_postal_code')}
+                        placeholder="Postal code"
+                      />
+                    </label>
+
+                    <label className="form-control">
+                      <div className="label py-1">
+                        <span className="label-text">State</span>
+                        <span className="label-text-alt text-base-content/60 flex items-center">
+                          <FaMapLocationDot size={18} />
+                        </span>
+                      </div>
+                      <input
+                        className="input input-bordered w-full h-12 md:h-10"
+                        value={form.delivery_state}
+                        onChange={onChange('delivery_state')}
+                        placeholder="State"
+                      />
+                    </label>
+
+                    <label className="form-control">
+                      <div className="label py-1">
+                        <span className="label-text">Country</span>
+                        <span className="label-text-alt text-base-content/60 flex items-center">
+                          <FaMap size={18} />
+                        </span>
+                      </div>
+                      <input
+                        className="input input-bordered w-full h-12 md:h-10"
+                        value={form.delivery_country}
+                        onChange={onChange('delivery_country')}
+                        placeholder="Country"
+                      />
+                    </label>
+
+                    
+                    {/* External delivery info*/}
+                    <label className="form-control md:col-span-2">
+                      <div className="label py-1">
+                        <span className="label-text">External delivery info</span>
+                        <span className="label-text-alt text-base-content/60 flex items-center">
+                          <FaInfo size={18} />
+                        </span>
+                      </div>
+                      <textarea
+                        className="textarea textarea-bordered w-full min-h-28 md:min-h-24"
+                        value={form.delivery_extra_info}
+                        onChange={onChange('delivery_extra_info')}
+                        placeholder="External delivery info"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </details>
             </div>
-
-            {/* Delivery address fields */}
-            <label className="form-control md:col-span-2">
-              <div className="join px-1 pb-2">
-                <span className="label-text">Street address</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaMapMarkerAlt size={18} />
-                </span>
-              </div>
-              <input
-                className="input input-bordered"
-                value={form.delivery_address}
-                onChange={onChange('delivery_address')}
-                placeholder="Street address"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className="join px-1 pb-2">
-                <span className="label-text">City</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaCity size={18} />
-                </span>
-              </div>
-              <input
-                className="input input-bordered"
-                value={form.delivery_city}
-                onChange={onChange('delivery_city')}
-                placeholder="City"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className="join px-1 pb-2">
-                <span className="label-text">Postal code</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <BsSignpostFill size={18} />
-                </span>
-              </div>
-              <input
-                className="input input-bordered"
-                value={form.delivery_postal_code}
-                onChange={onChange('delivery_postal_code')}
-                placeholder="Postal code"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className="join px-1 pb-2">
-                <span className="label-text">State</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaMapLocationDot size={18} />
-                </span>
-              </div>
-              <input
-                className="input input-bordered"
-                value={form.delivery_state}
-                onChange={onChange('delivery_state')}
-                placeholder="State"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className="join px-1 pb-2">
-                <span className="label-text">Country</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaMap size={18} />
-                </span>
-              </div>
-              <input
-                className="input input-bordered"
-                value={form.delivery_country}
-                onChange={onChange('delivery_country')}
-                placeholder="Country"
-              />
-            </label>
-
-            
-            {/* External delivery info*/}
-            <label className="form-control md:col-span-2">
-              <div className="join px-1 pb-2">
-                <span className="label-text">External delivery info</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaInfo size={18} />
-                </span>
-              </div>
-              <textarea
-                className="textarea textarea-bordered w-full h-24"
-                value={form.delivery_extra_info}
-                onChange={onChange('delivery_extra_info')}
-                placeholder="External delivery info"
-              />
-            </label>
-
           </div>
 
-          {/* Meta info */}
-          <div className="mt-6 text-sm opacity-70">
-            <div>
-              <b>Customer ID:</b> {initial.id}
-            </div>
-            <div>
-              <b>Company ID:</b> {initial.company_id}
-            </div>
-            <div>
-              <b>Created at:</b>{' '}
-              {initial.created_at
-                ? new Date(initial.created_at).toLocaleString('fi-FI')
-                : '—'}
-            </div>
-            <div>
-              <b>Updated at:</b>{' '}
-              {initial.updated_at
-                ? new Date(initial.updated_at).toLocaleString('fi-FI')
-                : '—'}
+          <div className="mt-6">
+            <div className="divider my-2 text-md opacity-60">Meta</div>
+            <div className="text-sm sm:text-md opacity-70 space-y-1">
+              <div><b>Customer ID:</b> {initial.id}</div>
+              <div><b>Company ID:</b> {initial.company_id}</div>
+              <div><b>Created:</b> {initial.created_at ? new Date(initial.created_at).toLocaleString('fi-FI') : '—'}</div>
+              <div><b>Updated:</b> {initial.updated_at ? new Date(initial.updated_at).toLocaleString('fi-FI') : '—'}</div>
             </div>
           </div>
         </div>
