@@ -1,4 +1,4 @@
-// middleware.js
+// ui/middleware.js
 import { NextResponse } from "next/server";
 
 const PUBLIC = ["/login", "/signup", "/_next", "/favicon.ico", "/robots.txt", "/api/public"];
