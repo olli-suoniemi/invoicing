@@ -11,11 +11,9 @@ Web-based invoice generation and customer relationship management
 | Database                         | A relational database for persistent storage of users, customers, invoices, and logs.                                | PostgreSQL                       |
 | Migrations                       | Database migrations                                                                                                  | Flyway                           |
 | Containerization & orchestration | Packages services, ensures portability and scaling.                                                                  | Docker & Docker Swarm            |
-| In-memory cache                  | Speeds up queries, stores sessions and temporary data.                                                               | Redis                            |
 | Authentication                   | Secure login and role-based access control.                                                                          | Firebase Authentication          |
 | Email delivery                   | Sends invoices and notifications to customers.                                                                       | Forward Email (SMTP/API service) |
 | Reverse proxy & routing          | Handles HTTPS termination, routing, and load balancing between services.                                             | Traefik                          |
-| Content delivery & protection    | Hides VPS IP, adds DDoS protection, and caches static assets globally.                                               | Cloudflare                       |
 | Hosting                          | Runs the application stack in production.                                                                            | Virtual Private Server           |
 | CI/CD                            | CI/CD pipeline for testing, building, and automated deployment.                                                      | GitHub Actions                   |
 
@@ -228,6 +226,13 @@ docker ps \
 docker ps \
   --filter "name=crm_" \
   --format 'table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Ports}}'
+```
+
+To connect to database in production:
+
+```bash
+docker exec -it crm_database.1.uocv8h4pphf1ecoilrsl6ui78 bash
+psql -h database -U user -d crm
 ```
 
 CRM-API production version container uses Docker secrets.
