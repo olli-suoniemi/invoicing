@@ -379,13 +379,19 @@ The following secrets must be set in GitHub. The CI/CD can't read the secrets fr
     - repo
     - workflow
     - write:packages
+      
 - NEXT_PUBLIC_FIREBASE_API_KEY
   - This is Firebase client side config variable.
+    
 - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
   - This is Firebase client side config variable.
+    
 - NEXT_PUBLIC_FIREBASE_PROJECT_ID
   - This is Firebase client side config variable.
+    
 - NEXT_PUBLIC_USE_EMULATOR
   - Boolean whether to use Firebase emulator or not. In production this is 0.
+    
 - DEPLOY_SSH_PRIVATE_KEY
   - This is the private key of the server's user that is used in the deployment. The corresponding public key is saved to the server in the ~/.ssh/authorized_keys
+    
