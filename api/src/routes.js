@@ -21,9 +21,9 @@ const v1 = new Hono();
 // 1) Every /v1 route requires Firebase auth
 v1.use("*", requireFirebaseAuth);
 
-// --------- Authenticated via Firebase (no local user yet) ---------
+// --------- Authenticated via Firebase ---------
 
-// minimal "who am I (Firebase)" endpoint if you want it
+// minimal "who am I (Firebase)"
 v1.get("/me", (c) => {
   const authUser = c.get("authUser");
   return c.json({ user: authUser });
