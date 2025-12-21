@@ -10,16 +10,24 @@ import { FaLock } from "react-icons/fa";
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <span className="loading loading-spinner loading-lg" />
+        </div>
+      }
+    >
       <LoginPageContent />
     </Suspense>
   );
 }
 
 function LoginPageContent() {
-  const [email, setEmail] = useState("test@gmail.com");
-  const [password, setPassword] = useState("test@gmail.com");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
   const router = useRouter();
   const sp = useSearchParams();
   const redirect = sp.get("redirect") || "/";
@@ -33,19 +41,23 @@ function LoginPageContent() {
       return;
     }
 
+    if (!email.trim() || !password) {
+      setErr("Please enter your email and password.");
+      return;
+    }
+
     try {
+      setSubmitting(true);
+
       // 1) Firebase login
-      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
       const idToken = await cred.user.getIdToken(true);
 
       // 2) Call backend via Next API to upsert user
       const upsert = await fetch("/api/auth/login/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idToken,
-          email,
-        }),
+        body: JSON.stringify({ idToken, email: email.trim() }),
       });
 
       if (!upsert.ok) {
@@ -68,43 +80,74 @@ function LoginPageContent() {
       // 4) Redirect
       router.push(redirect);
     } catch (e) {
-      setErr(e.message || "Login failed");
+      setErr(e?.message || "Login failed");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 border border-gray-300 rounded-md shadow-md">
-      <h1 className="text-xl font-semibold">Sign in</h1>
-      <form onSubmit={onSubmit} className="flex flex-col gap-4 mt-4">
-        <div className="join w-full">
-          <span className="join-item px-3 text-gray-500 flex items-center">
-            <MdEmail size={18} />
-          </span>
-          <input
-            type="email"
-            className="input input-bordered join-item w-full"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+    <div className="min-h-screen py-8 flex items-center">
+      <div className="w-full max-w-sm mx-auto px-4">
+        <div className="rounded-xl border border-base-300 bg-base-100 p-5 sm:p-6 shadow-sm">
+          <div className="mb-6">
+            <h1 className="text-xl font-bold">Sign in</h1>
+            <p className="text-sm opacity-70 mt-1">
+              Enter your email and password to access your account.
+            </p>
+          </div>
+
+          <form onSubmit={onSubmit} className="flex flex-col gap-4">
+            <label className="form-control">
+              <div className="label py-1">
+                <span className="label-text">Email</span>
+                <span className="label-text-alt text-base-content/60 flex items-center">
+                  <MdEmail size={18} />
+                </span>
+              </div>
+              <input
+                type="email"
+                className="input input-bordered w-full h-12 md:h-11"
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+              />
+            </label>
+
+            <label className="form-control">
+              <div className="label py-1">
+                <span className="label-text">Password</span>
+                <span className="label-text-alt text-base-content/60 flex items-center">
+                  <FaLock size={16} />
+                </span>
+              </div>
+              <input
+                type="password"
+                className="input input-bordered w-full h-12 md:h-11"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </label>
+
+            <button
+              type="submit"
+              className={`btn btn-primary w-full ${submitting ? "btn-disabled opacity-70" : ""}`}
+              disabled={submitting}
+            >
+              {submitting ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+
+          {err && (
+            <div className="alert alert-error mt-4">
+              <span>{err}</span>
+            </div>
+          )}
         </div>
-        <div className="join w-full">
-          <span className="join-item px-3 text-gray-500 flex items-center">
-            <FaLock size={18} />
-          </span>
-          <input
-            type="password"
-            className="input input-bordered join-item w-full"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <button type="submit" className="btn">
-          Sign in
-        </button>
-      </form>
-      {err && <p className="text-red-500 mt-4">{err}</p>}
+      </div>
     </div>
   );
 }
