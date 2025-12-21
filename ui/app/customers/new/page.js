@@ -335,14 +335,14 @@ export default function CustomerNewPage() {
           <div className="tabs tabs-boxed w-fit">
             <button
               type="button"
-              className={`tab ${customerType === 'person' ? 'tab-active' : ''}`}
+              className={`tab ${customerType === 'person' ? 'tab-active bg-base-300' : ''}`}
               onClick={() => setCustomerType('person')}
             >
               Person
             </button>
             <button
               type="button"
-              className={`tab ${customerType === 'company' ? 'tab-active' : ''}`}
+              className={`tab ${customerType === 'company' ? 'tab-active bg-base-300' : ''}`}
               onClick={() => setCustomerType('company')}
             >
               Company
@@ -505,7 +505,7 @@ export default function CustomerNewPage() {
                   </label>
 
                   {!sameAsInvoice && (
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-3 mt-3">
                       {/* Street */}
                       <div className="join w-full">
                         <span className="join-item px-3 text-gray-500 flex items-center">
