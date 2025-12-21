@@ -45,6 +45,24 @@ export default function CustomersPage() {
 
   if (loading) return <LoadingSpinner />;
 
+  if (!customers) {
+    return (
+      <div className="min-h-screen py-4 sm:py-5">
+        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">customers not found</h1>
+            <button className="btn btn-ghost" onClick={() => router.back()}>
+              Back
+            </button>
+          </div>
+          <p className="text-gray-500">
+            We couldn&rsquo;t find any customers.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen py-5 px-4 sm:px-6">
       <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 sm:gap-10">
