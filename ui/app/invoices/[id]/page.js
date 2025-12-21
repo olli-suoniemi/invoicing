@@ -206,309 +206,416 @@ export default function InvoiceDetailsPage() {
                 }}
             />
 
-            <div className="w-full max-w-7xl flex items-center gap-4">
+            <div className="w-full max-w-7xl">
                 <div className="flex w-full flex-col gap-4">
                     {/* Title + buttons */}
-                    <div className="flex items-center justify-between">
+                    {/* DESKTOP */}
+                    <div className="hidden md:flex items-center justify-between">
                         <div className="flex flex-col">
                             <h1 className="text-3xl font-bold">
-                                {displayTitle || 'invoice details'}
+                                {displayTitle || 'Invoice details'}
                             </h1>
                             <span className="badge badge-neutral mt-1 w-fit">
                                 {invoice.status ?? 'draft'}
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                className="btn btn-ghost"
-                                onClick={() => router.back()}
-                            >
+                            <div className='flex flex-row gap-2'>
+                                <button
+                                    type="button"
+                                    className="btn btn-ghost"
+                                    onClick={() => router.back()}
+                                >
+                                    &larr; Back
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-ghost"
+                                    onClick={() => router.push(`/invoices/${id}/edit`)}
+                                    >
+                                    Edit
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-info ml-4"
+                                    onClick={handleMarkingAsSent}
+                                >
+                                    Mark as sent
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-accent"
+                                    onClick={handleMarkingAsPaid}
+                                >
+                                    Mark as paid
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-primary ml-4"
+                                    onClick={() => window.open(`/api/invoices/${id}/print`, '_blank')}
+                                >
+                                    Print Invoice
+                                </button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setSendOpen(true)}>
+                                    Send Invoice
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* MOBILE */}
+                    <div className="md:hidden flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                            <button className="btn btn-ghost btn-md" onClick={() => router.back()}>
                                 &larr; Back
                             </button>
-                            <button
-                                type="button"
-                                className="btn btn-ghost"
-                                onClick={() => router.push(`/invoices/${id}/edit`)}
-                            >
-                                Edit
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-info ml-4"
-                                onClick={handleMarkingAsSent}
-                            >
-                                Mark as sent
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-accent"
-                                onClick={handleMarkingAsPaid}
-                            >
-                                Mark as paid
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-primary ml-4"
-                                onClick={() => window.open(`/api/invoices/${id}/print`, '_blank')}
-                            >
-                                Print Invoice
-                            </button>
-                            <button type="button" className="btn btn-secondary" onClick={() => setSendOpen(true)}>
-                                Send Invoice
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Invoice details */}
-                    <div className="mt-8 w-7/12">
-                        <span className="text-gray-500">Invoice details</span>
-                        <hr className="mt-2 mb-4 border-gray-300" />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-x-10 gap-y-2 w-7/12">
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <FaUser size={16} />
-                                <span>Customer</span>
-                            </div>
-                            <div className="flex-1 text-sm">
-                                <Link
-                                    href={`/customers/${invoice.customer_id}`}
-                                    className="underline break-words"
-                                >
-                                    {invoice.customer?.name ?? '—'}
-                                </Link>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <FaCalendarDay size={16} />
-                                <span>Delivery date</span>
-                            </div>
-                            <div className="flex-1">
-                                <div className="h-10 flex items-center text-sm justify-self-end">
-                                    {deliveryDateDisplay}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <FaList size={16} />
-                                <span>Order</span>
-                            </div>
-                            <div className="flex-1 text-sm">
-                                {invoice.order ? (
-                                    <Link
-                                        href={`/orders/${invoice.order_id}`}
-                                        className="underline break-words"
-                                    >
-                                        {`Order #${invoice.order.order_number || invoice.order.id}`}
-                                    </Link>
-                                ) : (
-                                    '—'
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <FaCalendarDays size={16} />
-                                <span>Days until due</span>
-                            </div>
-                            <div className="flex-1">
-                                <div className="h-10 flex items-center text-sm justify-self-end">
-                                    {daysUntilDueDisplay}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <RiMoneyEuroBoxFill size={16} />
-                                <span>Total (excl. VAT)</span>
-                            </div>
-                            <div className="flex-1">
-                                <div className="h-10 flex items-center text-sm">
-                                    {totalAmountVatExclDisplay} €
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <FaCalendarDay size={16} />
-                                <span>Due date</span>
-                            </div>
-                            <div className="flex-1">
-                                <div className="h-10 flex items-center text-sm justify-self-end">
-                                    {dueDateDisplay}
-                                </div>
-                            </div>
-                        </div>
                         
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <RiMoneyEuroBoxFill size={16} />
-                                <span>VAT amount</span>
-                            </div>
-                            <div className="flex-1">
-                                <div className="h-10 flex items-center text-sm">
-                                    {vatAmountDisplay} €
-                                </div>
+                            <div className="dropdown dropdown-end">
+                                <button type="button" className="btn btn-ghost btn-md">
+                                    Actions
+                                </button>
+
+                                <ul className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-56">
+                                    <li>
+                                        <button type="button" onClick={() => router.push(`/invoices/${id}/edit`)}>
+                                            Edit invoice
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" onClick={handleMarkingAsSent}>
+                                            Mark as sent
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" onClick={handleMarkingAsPaid}>
+                                            Mark as paid
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" onClick={() => window.open(`/api/invoices/${id}/print`, '_blank')}>
+                                            Print invoice
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" onClick={() => setSendOpen(true)}>
+                                            Send invoice
+                                        </button>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <FaUserGear size={16} />
-                                <span>Custom reference?</span>
-                            </div>
-                            <div className="flex-1">
-                                <div className="h-10 flex items-center text-sm justify-self-end">
-                                    {usesCustomReference ? 'Yes' : 'No'}
-                                </div>
-                            </div>
+                        <div className="flex flex-col">
+                            <h1 className="text-xl font-bold">{displayTitle || 'Invoice details'}</h1>
+                            <span className="badge badge-neutral mt-1 w-fit">{invoice.status ?? 'draft'}</span>
+                        </div>
+                    </div>
+
+                    {/* DETAILS */}
+                    <div className="rounded-xl border md:border-none border-base-300 px-4">
+                        <div className="mt-4 md:w-7/12">
+                            <span className="text-gray-500">Invoice details</span>
+                            <hr className="mt-2 mb-4 border-gray-300" />
                         </div>
 
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <RiMoneyEuroBoxFill size={16} />
-                                <span>Total (incl. VAT)</span>
-                            </div>
-                            <div className="flex-1">
-                                <div className="h-10 flex items-center text-sm">
-                                    {totalAmountVatInclDisplay} €
+                        <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-x-10 md:gap-2 gap-5 w-7/12">
+                            {/* Left: general info */}
+                            <div className="flex flex-col md:gap-3 gap-5">
+                                {/* Order */}
+                                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                                        <FaList size={16} />
+                                        <span>Order</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="md:h-10 flex items-center text-sm">
+                                            {invoice.order_id ? (
+                                                <Link href={`/orders/${invoice.order_id}`} className="underline">
+                                                    # {invoice.order.order_number || invoice.order_id}
+                                                </Link>
+                                            ) : (
+                                                '—'
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Customer */}
+                                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                                        <FaUser size={16} />
+                                        <span>Customer</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <Link href={`/customers/${invoice.customer_id}`} className="underline md:h-10 flex items-center text-sm">
+                                            {invoice.customer.name ?? '—'}
+                                        </Link>
+                                    </div>
+                                </div>
+                                
+                                {/* Issue date */}
+                                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                                        <FaCalendarDay size={16} />
+                                        <span>Issue date</span>
+                                    </div>
+                                    <div className="flex-1 text-sm">
+                                        <div className="md:h-10 flex items-center">
+                                            {issueDateDisplay}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Delivery date */}
+                                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                                        <FaCalendarDay size={16} />
+                                        <span>Delivery date</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="md:h-10 flex items-center text-sm">
+                                            {deliveryDateDisplay}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Days until due */}
+                                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                                        <FaCalendarDay size={16} />
+                                        <span>Days until due</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="md:h-10 flex items-center text-sm">
+                                            {daysUntilDueDisplay}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Due date */}
+                                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                                        <FaCalendarDay size={16} />
+                                        <span>Due date</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="md:h-10 flex items-center text-sm">
+                                            {dueDateDisplay}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <FaBook size={16} />
-                                <span>Reference</span>
-                            </div>
-                            <div className="flex-1">
-                                <div className="h-10 flex items-center text-sm justify-self-end">
-                                    {referenceDisplay}
+                            {/* Right: totals (always together) */}
+                            <div className="flex flex-col md:gap-3 gap-5">
+                                {/* Custom reference? */}
+                                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                                        <FaUserGear size={16} />
+                                        <span>Custom reference?</span>
+                                    </div>
+                                    <div className="flex-1 text-sm">
+                                        <div className="md:h-10 flex items-center md:justify-end">
+                                            {usesCustomReference ? 'Yes' : 'No'}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div className="flex items-center gap-4 h-full">
-                            <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                                <FaCalendarDay size={16} />
-                                <span>Issue date</span>
-                            </div>
-                            <div className="flex-1">
-                                <div className="h-10 flex items-center text-sm">
-                                    {issueDateDisplay}
+                                {/* Reference */}
+                                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                                        <FaBook size={16} />
+                                        <span>Reference</span>
+                                    </div>
+                                    <div className="flex-1 text-sm">
+                                        <div className="md:h-10 flex items-center md:justify-end">
+                                            {referenceDisplay}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Total excl. VAT */}
+                                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                                        <RiMoneyEuroBoxFill size={16} />
+                                        <span>Total (excl. VAT)</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="md:h-10 flex items-center text-sm md:justify-end">
+                                        {totalAmountVatExclDisplay} €
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* VAT amount */}
+                                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                                        <RiMoneyEuroBoxFill size={16} />
+                                        <span>VAT amount</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="md:h-10 flex items-center text-sm md:justify-end">
+                                        {vatAmountDisplay} €
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Total incl. VAT */}
+                                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 mb-2">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                                        <RiMoneyEuroBoxFill size={16} />
+                                        <span>Total (incl. VAT)</span>
+                                    </div>
+                                    <div className="flex-1 text-sm font-semibold">
+                                        <div className="md:h-10 flex items-center md:justify-end">
+                                            {totalAmountVatInclDisplay} €
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Items section */}
-                    <div className="mt-4">
-                        <span className="text-gray-500">Items of the order</span>
-                        <hr className="mt-2 mb-1 border-gray-300" />
-                    </div>
+                    <div className="rounded-xl border md:border-none border-base-300 px-4">
+                        <div className="mt-4">
+                            <span className="text-gray-500">Items of the order</span>
+                            <hr className="mt-2 mb-1 border-gray-300" />
+                        </div>
 
-                    {invoice.order.items.length === 0 ? (
+                        {invoice.order.items.length === 0 ? (
                         <p className="text-gray-500">No items in this invoice.</p>
-                    ) : (
-                        <div className="overflow-x-auto">
+                        ) : (
+                        <>
+                            {/* MOBILE */}
+                            <div className="md:hidden flex flex-col gap-3 py-2">
+                            {invoice.order.items.map((item) => (
+                                <div key={item.id}>
+                                <div className="font-semibold mb-2">
+                                    <Link href={`/inventory/${item.product_id}`} className="underline">
+                                    {item.product_name ?? item.product_id ?? '-'}
+                                    </Link>
+                                </div>
+
+                                <div className="text-sm text-gray-500 mb-2">
+                                    EAN: {item.ean_code ?? '-'}
+                                </div>
+                                <div className="text-sm text-gray-500 mb-2">
+                                    Qty: {item.quantity ?? 0}
+                                </div>
+                                <div className="text-sm text-gray-500 mb-2">
+                                    Unit price (excl. VAT): {Number(item.unit_price_vat_excl ?? 0).toFixed(2)} €
+                                </div>
+                                <div className="text-sm text-gray-500 mb-2">
+                                    VAT rate: {item.tax_rate ?? '0'} %
+                                </div>
+                                <div className="text-sm text-gray-500 mb-2">
+                                    VAT amount per unit:{' '}
+                                    {Number((item.unit_price_vat_incl ?? 0) - (item.unit_price_vat_excl ?? 0)).toFixed(2)} €
+                                </div>
+                                <div className="text-sm text-gray-500 mb-2">
+                                    Unit price (incl. VAT): {Number(item.unit_price_vat_incl ?? 0).toFixed(2)} €
+                                </div>
+                                <div className="text-sm text-gray-500 mb-2">
+                                    Total (excl. VAT): {Number(item.total_price_vat_excl ?? 0).toFixed(2)} €
+                                </div>
+                                <div className="text-sm font-medium">
+                                    Total (incl. VAT): {Number(item.total_price_vat_incl ?? 0).toFixed(2)} €
+                                </div>
+                                </div>
+                            ))}
+                            </div>
+
+                            {/* DESKTOP: table */}
+                            <div className="hidden md:block overflow-x-auto">
                             <table className="table table-zebra w-full">
                                 <thead>
-                                    <tr>
-                                        <th>Product</th>
-                                        <th className="text-right">EAN</th>
-                                        <th className="text-right">Qty</th>
-                                        <th className="text-right">Unit (excl. VAT) €</th>
-                                        <th className="text-right">VAT %</th>
-                                        <th className="text-right">VAT €</th>
-                                        <th className="text-right">Unit (incl. VAT) €</th>
-                                        <th className="text-right">Total (excl. VAT) €</th>
-                                        <th className="text-right">Total (incl. VAT) €</th>
-                                    </tr>
+                                <tr>
+                                    <th>Product</th>
+                                    <th className="text-right">EAN</th>
+                                    <th className="text-right">Qty</th>
+                                    <th className="text-right">Unit (excl. VAT) €</th>
+                                    <th className="text-right">VAT %</th>
+                                    <th className="text-right">VAT €</th>
+                                    <th className="text-right">Unit (incl. VAT) €</th>
+                                    <th className="text-right">Total (excl. VAT) €</th>
+                                    <th className="text-right">Total (incl. VAT) €</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    {invoice.order.items.map((item) => {
-                                        const quantity = item.quantity ?? 0;
-                                        const unit_price_vat_excl =
-                                            item.unit_price_vat_excl === null || item.unit_price_vat_excl === undefined
-                                                ? 0
-                                                : Number(item.unit_price_vat_excl);
-                                        const unit_price_vat_incl =
-                                            item.unit_price_vat_incl === null || item.unit_price_vat_incl === undefined
-                                                ? 0
-                                                : Number(item.unit_price_vat_incl);
-                                        const totalPriceVatExcl =
-                                            item.total_price_vat_excl === null ||
-                                                item.total_price_vat_excl === undefined
-                                                ? quantity * unit_price_vat_excl
-                                                : Number(item.total_price_vat_excl);
-                                        const totalPriceVatIncl =
-                                            item.total_price_vat_incl === null ||
-                                                item.total_price_vat_incl === undefined
-                                                ? quantity * unit_price_vat_incl
-                                                : Number(item.total_price_vat_incl);
-                                        return (
-                                            <tr key={item.id}>
-                                                <td>
-                                                    <Link href={`/inventory/${item.product_id}`} className="underline">
-                                                        {item.product_name ?? item.product_id ?? '-'}
-                                                    </Link>
-                                                </td>
-                                                <td className="text-right">{item.ean_code ?? '-'}</td>
-                                                <td className="text-right">{quantity}</td>
-                                                <td className="text-right">
-                                                    {unit_price_vat_excl.toFixed(2)}
-                                                </td>
-                                                <td className="text-right">{item.tax_rate ?? '-'}</td>
-                                                <td className="text-right">
-                                                    {(unit_price_vat_incl - unit_price_vat_excl).toFixed(2)}
-                                                </td>
-                                                <td className="text-right">
-                                                    {unit_price_vat_incl.toFixed(2)}
-                                                </td>
-                                                <td className="text-right">
-                                                    {totalPriceVatExcl.toFixed(2)}
-                                                </td>
-                                                <td className="text-right">
-                                                    {totalPriceVatIncl.toFixed(2)}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
+                                {invoice.order.items.map((item) => {
+                                    const quantity = item.quantity ?? 0;
+                                    const unit_price_vat_excl =
+                                    item.unit_price_vat_excl == null ? 0 : Number(item.unit_price_vat_excl);
+                                    const unit_price_vat_incl =
+                                    item.unit_price_vat_incl == null ? 0 : Number(item.unit_price_vat_incl);
+
+                                    const totalPriceVatExcl =
+                                    item.total_price_vat_excl == null
+                                        ? quantity * unit_price_vat_excl
+                                        : Number(item.total_price_vat_excl);
+
+                                    const totalPriceVatIncl =
+                                    item.total_price_vat_incl == null
+                                        ? quantity * unit_price_vat_incl
+                                        : Number(item.total_price_vat_incl);
+
+                                    return (
+                                    <tr key={item.id}>
+                                        <td>
+                                        <Link href={`/inventory/${item.product_id}`} className="underline">
+                                            {item.product_name ?? item.product_id ?? '-'}
+                                        </Link>
+                                        </td>
+                                        <td className="text-right">{item.ean_code ?? '-'}</td>
+                                        <td className="text-right">{quantity}</td>
+                                        <td className="text-right">{unit_price_vat_excl.toFixed(2)}</td>
+                                        <td className="text-right">{item.tax_rate ?? '-'}</td>
+                                        <td className="text-right">
+                                        {(unit_price_vat_incl - unit_price_vat_excl).toFixed(2)}
+                                        </td>
+                                        <td className="text-right">{unit_price_vat_incl.toFixed(2)}</td>
+                                        <td className="text-right">{totalPriceVatExcl.toFixed(2)}</td>
+                                        <td className="text-right">{totalPriceVatIncl.toFixed(2)}</td>
+                                    </tr>
+                                    );
+                                })}
                                 </tbody>
                             </table>
+                            </div>
+                        </>
+                        )}
+                    </div>
+
+                    {/* Notes on invoice */}
+                    <div className="rounded-xl border md:border-none border-base-300 px-4">
+                        <div className='mt-4'>
+                            <span className="text-gray-500">Notes on invoice</span>
+                            <hr className="mt-2 mb-2 border-gray-300" />
                         </div>
-                    )}
-
-                    {/* Notes */}
-                    <div className="mt-10">
-                        <span className="text-gray-500">Notes</span>
-                        <hr className="mt-2 border-gray-300" />
+                        <p className="text-sm mb-2">{invoice.extra_info || '—'}</p>
                     </div>
-                    <div className="whitespace-pre-line">
-                        {invoice.extra_info}
+                    
+                    {/* Notes on order */}
+                    <div className="rounded-xl border md:border-none border-base-300 px-4">
+                        <div className='mt-4'>
+                            <span className="text-gray-500">Notes on order</span>
+                            <hr className="mt-2 mb-2 border-gray-300" />
+                        </div>
+                        <p className="text-sm mb-2">{invoice.order.extra_info || '—'}</p>
                     </div>
-
 
                     {/* Meta info */}
-                    <div className="mt-10">
-                        <span className="text-gray-500">Meta data</span>
-                        <hr className="mt-2 border-gray-300" />
-                    </div>
-                    <div className="text-sm text-gray-500">
-                        <p>
+                    <div className="rounded-xl border md:border-none border-base-300 px-4">
+                        <div className='mt-4'>
+                            <span className="text-gray-500">Meta information</span>
+                            <hr className="mt-2 mb-2 border-gray-300" />
+                        </div>
+                        <p className="text-sm">
                             Created:{' '}
                             {new Date(invoice.created_at).toLocaleString('fi-FI')}
                         </p>
-                        <p>
+                        <p className="text-sm mb-2">
                             Updated:{' '}
                             {new Date(invoice.updated_at).toLocaleString('fi-FI')}
                         </p>
