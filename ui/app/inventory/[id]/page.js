@@ -224,8 +224,6 @@ export default function InventoryDetailsPage() {
     }));
   };
 
-
-
   if (loading) return <LoadingSpinner />;
 
   if (!initial || !form) {
@@ -251,58 +249,77 @@ export default function InventoryDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen py-5">
-      <div className="w-full max-w-3xl mx-auto px-6">
-        {/* Header: back | title | actions */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 mb-6">
-          <button className="btn btn-ghost" onClick={() => router.back()}>
-            &larr; Back
-          </button>
-          <h1 className="text-2xl font-bold text-center">Edit product</h1>
-          <div className="flex gap-2 justify-self-end">
-            <button
-              className="btn btn-ghost"
-              onClick={onReset}
-              disabled={!hasChanges || saving}
-            >
-              Reset
-            </button>
-            <button
-              className={`btn btn-primary ${
-                !hasChanges ? 'btn-disabled opacity-50' : ''
-              }`}
-              onClick={onSave}
-              disabled={!hasChanges || saving}
-            >
-              {saving ? 'Saving…' : 'Save'}
-            </button>
+    <div className="min-h-screen py-4 sm:py-5">
+      <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
+        {/* Header (copied structure from CustomerDetailsPage) */}
+        <div className="mb-4 md:mb-6">
+          <div className="sticky top-0 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-base-100/90 backdrop-blur border-b border-base-200">
+            <div className="flex flex-col gap-2 md:grid md:grid-cols-[auto_1fr_auto] md:items-center">
+              <div className="flex items-center justify-between md:justify-start gap-2">
+                <button className="btn btn-ghost btn-md" onClick={() => router.back()}>
+                  &larr; Back
+                </button>
+
+                {/* Mobile actions */}
+                <div className="flex gap-2 md:hidden">
+                  <button
+                    className="btn btn-ghost btn-md"
+                    onClick={onReset}
+                    disabled={!hasChanges || saving}
+                  >
+                    Reset
+                  </button>
+                  <button
+                    className={`btn btn-primary btn-md ${
+                      !hasChanges ? 'btn-disabled opacity-50' : ''
+                    }`}
+                    onClick={onSave}
+                    disabled={!hasChanges || saving}
+                  >
+                    {saving ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Desktop actions */}
+              <div className="hidden md:flex gap-2 justify-self-end">
+                <button className="btn btn-ghost" onClick={onReset} disabled={!hasChanges || saving}>
+                  Reset
+                </button>
+                <button
+                  className={`btn btn-primary ${
+                    !hasChanges ? 'btn-disabled opacity-50' : ''
+                  }`}
+                  onClick={onSave}
+                  disabled={!hasChanges || saving}
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Card */}
-        <div className="rounded-xl border border-base-300 p-4">
+        {/* Card (same as CustomerDetailsPage) */}
+        <div className="rounded-xl border border-base-300 p-4 sm:p-6">
           {/* Title + badge */}
           <div className="mb-6">
-            <h2 className="text-xl font-semibold">
-              {form.name || 'Product details'}
-            </h2>
-            <span className="badge badge-neutral mt-1 w-fit">
-              Inventory item
-            </span>
+            <h2 className="text-xl font-semibold">{form.name || 'Product details'}</h2>
+            <span className="badge badge-neutral mt-1 w-fit">Inventory item</span>
           </div>
 
-          {/* Editable fields (same style as user page) */}
+          {/* Editable fields (match CustomerDetailsPage label styling) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Name */}
+            {/* Product name */}
             <label className="form-control md:col-span-2">
-              <div className="join px-1 pb-2">
+              <div className="label py-1">
                 <span className="label-text">Product name</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <FaBox size={18} />
                 </span>
               </div>
               <input
-                className="input input-bordered"
+                className="input input-bordered w-full h-12 md:h-10"
                 value={form.name}
                 onChange={onChange('name')}
                 placeholder="Product name"
@@ -311,14 +328,14 @@ export default function InventoryDetailsPage() {
 
             {/* EAN code */}
             <label className="form-control">
-              <div className="join px-1 pb-2">
+              <div className="label py-1">
                 <span className="label-text">EAN code</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <FaBarcode size={18} />
                 </span>
               </div>
               <input
-                className="input input-bordered"
+                className="input input-bordered w-full h-12 md:h-10"
                 value={form.ean_code}
                 onChange={onChange('ean_code')}
                 placeholder="EAN code"
@@ -327,65 +344,65 @@ export default function InventoryDetailsPage() {
 
             {/* Tax excluded unit price */}
             <label className="form-control">
-              <div className="join px-1 pb-2">
-                <span className="label-text">Tax excluded unit price</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+              <div className="label py-1">
+                <span className="label-text">Unit price (VAT excl.)</span>
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <FaTag size={18} />
                 </span>
               </div>
               <input
-                className="input input-bordered"
+                className="input input-bordered w-full h-12 md:h-10"
                 value={form.unit_price_vat_excl}
                 type="number"
                 step="0.01"
-                onChange={onUnitPriceExclChange}  // <-- use custom handler
-                placeholder="Tax excluded unit price"
+                onChange={onUnitPriceExclChange}
+                placeholder="0.00"
               />
             </label>
 
             {/* Tax rate */}
             <label className="form-control">
-              <div className="join px-1 pb-2">
+              <div className="label py-1">
                 <span className="label-text">Tax rate</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <FaPercent size={18} />
                 </span>
               </div>
               <input
-                className="input input-bordered"
+                className="input input-bordered w-full h-12 md:h-10"
                 value={form.tax_rate}
-                onChange={onTaxRateChange}        // <-- use custom handler
+                onChange={onTaxRateChange}
                 placeholder="Tax rate (%)"
               />
             </label>
 
-            {/* Tax included unit price. NOT EDITABLE */}
+            {/* Tax included unit price (read-only) */}
             <label className="form-control">
-              <div className="join px-1 pb-2">
-                <span className="label-text">Tax included unit price</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+              <div className="label py-1">
+                <span className="label-text">Unit price (VAT incl.)</span>
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <FaTag size={18} />
                 </span>
               </div>
               <input
-                className="input input-bordered"
+                className="input input-bordered w-full h-12 md:h-10"
                 value={form.unit_price_vat_incl}
                 type="number"
-                placeholder="Tax included unit price"
+                placeholder="0.00"
                 disabled
               />
             </label>
 
-            {/* Description (full width) */}
+            {/* Description */}
             <label className="form-control md:col-span-2">
-              <div className="join px-1 pb-2">
+              <div className="label py-1">
                 <span className="label-text">Description</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <FaFileLines size={18} />
                 </span>
               </div>
               <textarea
-                className="textarea textarea-bordered w-full h-24"
+                className="textarea textarea-bordered w-full min-h-28 md:min-h-24"
                 value={form.description}
                 onChange={onChange('description')}
                 placeholder="Description"
@@ -393,25 +410,24 @@ export default function InventoryDetailsPage() {
             </label>
           </div>
 
-          {/* Meta info (like user page footer) */}
-          <div className="mt-6 text-sm opacity-70">
-            <div>
-              <b>Product ID:</b> {initial.id}
-            </div>
-            <div>
-              <b>Company ID:</b> {initial.company_id}
-            </div>
-            <div>
-              <b>Created at:</b>{' '}
-              {initial.created_at
-                ? new Date(initial.created_at).toLocaleString('fi-FI')
-                : '—'}
-            </div>
-            <div>
-              <b>Updated at:</b>{' '}
-              {initial.updated_at
-                ? new Date(initial.updated_at).toLocaleString('fi-FI')
-                : '—'}
+          {/* Meta (same divider style as CustomerDetailsPage) */}
+          <div className="mt-6">
+            <div className="divider my-2 text-md opacity-60">Meta</div>
+            <div className="text-sm sm:text-md opacity-70 space-y-1">
+              <div>
+                <b>Product ID:</b> {initial.id}
+              </div>
+              <div>
+                <b>Company ID:</b> {initial.company_id}
+              </div>
+              <div>
+                <b>Created:</b>{' '}
+                {initial.created_at ? new Date(initial.created_at).toLocaleString('fi-FI') : '—'}
+              </div>
+              <div>
+                <b>Updated:</b>{' '}
+                {initial.updated_at ? new Date(initial.updated_at).toLocaleString('fi-FI') : '—'}
+              </div>
             </div>
           </div>
         </div>
