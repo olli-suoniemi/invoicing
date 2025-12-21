@@ -283,10 +283,6 @@ export default function CustomerDetailsPage() {
                 </div>
               </div>
 
-              <h1 className="text-lg md:text-2xl font-bold md:text-center leading-tight ml-2">
-                Edit customer
-              </h1>
-
               {/* Desktop actions */}
               <div className="hidden md:flex gap-2 justify-self-end">
                 <button className="btn btn-ghost" onClick={onReset} disabled={!hasChanges || saving}>
