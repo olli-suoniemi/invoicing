@@ -17,11 +17,13 @@ import {
   FaMinus,
 } from 'react-icons/fa6';
 import { FaCalendarDay } from "react-icons/fa";
+import { RiMoneyEuroBoxFill } from "react-icons/ri";
 
 import CustomerSelect from '@/app/components/customerSelect';
 import ProductSelect from '@/app/components/productSelect';
+import LoadingSpinner from '@/app/components/loadingSpinner';
 
-export default function OrderDetailsPage() {
+export default function OrderEditPage() {
   const { id } = useParams();
   const router = useRouter();
 
@@ -470,17 +472,9 @@ export default function OrderDetailsPage() {
 
   if (loading || !order || !initialOrder) {
     return (
-      <div className="flex justify-center items-start min-h-screen py-5">
-        <div className="w-full max-w-4xl flex items-center justify-center">
-          <span className="loading loading-spinner loading-lg" />
-        </div>
-      </div>
+      <LoadingSpinner />
     );
   }
-
-  const orderDateDisplay = initialOrder.order_date
-    ? new Date(initialOrder.order_date).toLocaleString('fi-FI')
-    : '—';
 
   const createdAtDisplay = initialOrder.created_at
     ? new Date(initialOrder.created_at).toLocaleString('fi-FI')
@@ -494,322 +488,512 @@ export default function OrderDetailsPage() {
   const totalAmountVatInclDisplay = totalAmountVatIncl.toFixed(2);
   const totalVatAmountDisplay = totalVatAmount.toFixed(2);
 
-  return (
-    <div className="flex justify-center items-start min-h-screen py-5">
-
-      <div className="w-full px-10 flex items-center gap-4">
-        <div className="flex w-full flex-col">
+return (
+    <div className="flex justify-center items-start min-h-screen py-5 px-5">
+      <div className="w-full md:max-w-9/12">
+        <div className="flex w-full flex-col gap-4">
           {/* Title + buttons */}
-          <div className="flex items-center gap-10">
-            <h1 className="text-3xl font-bold">
-              Edit order #{initialOrder.order_number}
-            </h1>
-            <div className="flex items-center gap-2">
-              <span className="badge badge-neutral">
-                {order.status ?? 'draft'}
-              </span>
-              {!allowedToEdit && (
-                <span className="text-xs text-gray-500">
-                  Only orders in <b>draft</b> or <b>cancelled</b> should be edited.
-                </span>
-              )}
+          {/* DESKTOP */}
+          <div className="hidden md:flex items-center justify-between">
+            <div className="flex flex-col">
+              <h1 className="text-3xl font-bold">
+                  Edit order #{initialOrder.order_number}
+              </h1>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="badge badge-neutral">{order.status ?? 'draft'}</span>
+                {!allowedToEdit && (
+                  <span className="text-xs text-gray-500">
+                    Only orders in <b>draft</b> or <b>cancelled</b> should be edited.
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2 ml-auto">
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => router.back()}
-              >
+            <div className="flex items-center gap-2">
+              <div className='flex flex-row gap-2'>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => router.back()}
+                >
+                  &larr; Back
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-md"
+                  onClick={resetForm}
+                  disabled={!hasChanges || saving}
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={!hasChanges || saving}
+                  className={`btn btn-primary btn-md ${!hasChanges ? 'btn-disabled opacity-50' : ''}`}
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* MOBILE*/}
+          <div className='md:hidden flex flex-col'>
+            <div className="flex items-center justify-between mb-4">
+              <button className="btn btn-ghost btn-md" onClick={() => router.back()}>
                 &larr; Back
               </button>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={resetForm}
-                disabled={!hasChanges || saving}
-              >
-                Reset
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={!hasChanges || saving}
-                className={`btn btn-primary ${
-                  !hasChanges
-                    ? 'btn-disabled opacity-50 cursor-not-allowed'
-                    : ''
-                }`}
-                aria-disabled={!hasChanges || saving}
-              >
-                {saving ? 'Saving…' : 'Save'}
-              </button>
+              <div>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-md"
+                  onClick={resetForm}
+                  disabled={!hasChanges || saving}
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={!hasChanges || saving}
+                  className={`btn btn-primary btn-md ${!hasChanges ? 'btn-disabled opacity-50' : ''}`}
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold">
+                  Edit order #{initialOrder.order_number}
+              </h1>
+              <div className="flex items-center gap-2">
+                <span className="badge badge-neutral">{order.status ?? 'draft'}</span>
+                {!allowedToEdit && (
+                  <span className="text-xs text-gray-500">
+                    Only orders in <b>draft</b> or <b>cancelled</b> should be edited.
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Order details */}
-          <div className="mt-10 mb-2 w-7/12">
-            <span className="text-gray-500">Order details</span>
-            <hr className="mt-2 mb-4 border-gray-300" />
-          </div>
+          {/* CUSTOMER / STATUS / PRICES */}
+          <div className="rounded-xl border md:border-none border-base-300 px-4">
+            <div className="mt-4 md:w-7/12">
+              <span className="text-gray-500">Order details</span>
+              <hr className="mt-2 mb-4 border-gray-300" />
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-10 gap-y-5 w-7/12">
+            {/* MOBILE */}
+            <div className="md:hidden space-y-4">
+              <div className="flex flex-col gap-2">
+                <div className="label py-1 items-center">
+                  <span className="label-text">Customer</span>
+                  <span className="label-text-alt text-base-content/60 flex items-center">
+                    <FaUser size={18} />
+                  </span>
+                </div>
 
-            {/* ROW 1 LEFT: Customer */}
-            <div className="flex items-center gap-4 h-full">
-              <label className="w-32 flex items-center gap-2 text-sm text-gray-500">
-                <FaUser size={18} />
-                <span className="label-text">Customer</span>
-              </label>
-              <div className="flex-1">
                 <CustomerSelect
                   customerOptions={customerOptions}
                   selectedOption={selectedCustomer}
                   handleCustomerChangeInSelect={handleCustomerChangeInSelect}
-                  instanceId="order-edit-customer" 
+                  instanceId="order-edit-customer"
                 />
               </div>
-            </div>
 
-            {/* ROW 1 RIGHT: Total excl. VAT */}
-            <div className="flex items-center gap-4 h-full">
-              <label className="w-40 flex items-center text-sm text-gray-500">
-                Total (excl. VAT)
-              </label>
-              <div className="flex-1 text-right font-medium">
-                {totalAmountVatExclDisplay} €
+              {/* Order date */}
+              <div className="flex flex-col gap-2">
+                <div className="label py-1 items-center">
+                  <span className="label-text">Order date</span>
+                  <span className="label-text-alt text-base-content/60 flex items-center">
+                    <FaCalendarDay size={18} />
+                  </span>
+                </div>
+
+                <DatePicker
+                  selected={order.order_date ? new Date(order.order_date) : null}
+                  onChange={(date) => {
+                    const formatted = date ? format(date, 'yyyy-MM-dd') : '';
+                    setOrder((s) => ({ ...s, order_date: formatted }));
+                  }}
+                  dateFormat="dd.MM.yyyy"
+                  locale={fi}
+                  wrapperClassName="w-full"
+                  className="input input-bordered w-full h-12 text-sm"
+                />
+              </div>
+
+              {/* Status */}
+              <div className="flex flex-col gap-2">
+                <div className="label py-1 items-center">
+                  <span className="label-text">Status</span>
+                  <span className="label-text-alt text-base-content/60 flex items-center">
+                    <RiProgress8Line size={18} />
+                  </span>
+                </div>
+
+                <select
+                  className="select select-bordered w-full h-12 text-sm"
+                  value={order.status}
+                  onChange={(e) => setOrder((s) => ({ ...s, status: e.target.value }))}
+                >
+                  <option value="draft">Draft</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              {/* Totals (kept together like OrderDetailsPage) */}
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-gray-500">Total (excl. VAT)</div>
+                  <div className="font-medium">{totalAmountVatExclDisplay} €</div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-gray-500">VAT</div>
+                  <div className="font-medium">{totalVatAmountDisplay} €</div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="text-gray-500">Total (incl. VAT)</div>
+                  <div className="font-semibold">{totalAmountVatInclDisplay} €</div>
+                </div>
               </div>
             </div>
 
-            {/* ROW 2 LEFT: Status */}
-            <div className="flex items-center gap-4 h-full">
-              <label className="w-32 flex items-center gap-2 text-sm text-gray-500">
-                <RiProgress8Line size={18} />
-                <span className="label-text">Status</span>
-              </label>
-              <select
-                className="select select-bordered w-full h-11 text-sm flex-1"
-                value={order.status}
-                onChange={(e) =>
-                  setOrder((s) => ({ ...s, status: e.target.value }))
-                }
-              >
-                <option value="draft">Draft</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-
-            {/* ROW 2 RIGHT: VAT amount */}
-            <div className="flex items-center gap-4 h-full">
-              <label className="w-40 flex items-center text-sm text-gray-500">
-                VAT
-              </label>
-              <div className="flex-1 text-right font-medium">
-                {totalVatAmountDisplay} €
+            {/* DESKTOP */}
+            <div className="hidden md:grid grid-cols-[3fr_2fr] gap-x-10 gap-y-2 w-7/12">
+              {/* Customer */}
+              <div className="flex flex-col gap-2">
+                <div className="label py-1 items-center">
+                  <span className="label-text">Customer</span>
+                  <span className="label-text-alt text-base-content/60 flex items-center">
+                    <FaUser size={18} />
+                  </span>
+                </div>
+                <CustomerSelect
+                  customerOptions={customerOptions}
+                  selectedOption={selectedCustomer}
+                  handleCustomerChangeInSelect={handleCustomerChangeInSelect}
+                  instanceId="order-edit-customer"
+                />
               </div>
-            </div>
 
-            {/* ROW 3 LEFT: Order date */}
-            <div className="flex items-center gap-4 h-full">
-              <label className="w-32 flex items-center gap-2 text-sm text-gray-500">
-                <FaCalendarDay size={18} />
-                <span className="label-text">Order date</span>
-              </label>
+              {/* Total excl */}
+              <div className="flex flex-col gap-2">
+                <div className="label py-1 items-center justify-end">
+                  <span className="label-text">Total (excl. VAT)</span>
+                  <span className="label-text-alt text-base-content/60">
+                    <RiMoneyEuroBoxFill size={18} />
+                  </span>
+                </div>
+                <div className="font-medium text-right">{totalAmountVatExclDisplay} €</div>
+              </div>
 
-              <DatePicker
-                selected={order.order_date ? new Date(order.order_date) : null}
-                onChange={(date) => {
-                  const formatted = date ? format(date, 'yyyy-MM-dd') : '';
-                  setOrder((s) => ({ ...s, order_date: formatted }));
-                }}
-                dateFormat="dd.MM.yyyy"
-                locale={fi}
-                wrapperClassName="flex-1"
-                className="input input-bordered w-full h-11 text-sm"
-              />
-            </div>
+              {/* Status */}
+              <div className="flex flex-col gap-2">
+                <div className="label py-1 items-center">
+                  <span className="label-text">Status</span>
+                  <span className="label-text-alt text-base-content/60 flex items-center">
+                    <RiProgress8Line size={18} />
+                  </span>
+                </div>
+                <select
+                  className="select select-bordered w-full h-12 md:h-11 text-sm"
+                  value={order.status}
+                  onChange={(e) => setOrder((s) => ({ ...s, status: e.target.value }))}
+                >
+                  <option value="draft">Draft</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
 
-            {/* ROW 3 RIGHT: Total incl. VAT */}
-            <div className="flex items-center gap-4 h-full">
-              <label className="w-40 flex items-center text-sm text-gray-500">
-                Total (incl. VAT)
-              </label>
-              <div className="flex-1 text-right font-semibold">
-                {totalAmountVatInclDisplay} €
+              {/* VAT */}
+              <div className="flex flex-col gap-2">
+                <div className="label py-1 items-center justify-end">
+                  <span className="label-text">VAT</span>
+                  <span className="label-text-alt text-base-content/60">
+                    <RiMoneyEuroBoxFill size={18} />
+                  </span>
+                </div>
+                <div className="font-medium text-right">{totalVatAmountDisplay} €</div>
+              </div>
+
+              {/* Order date */}
+              <div className="flex flex-col gap-2">
+                <div className="label py-1 items-center">
+                  <span className="label-text">Order date</span>
+                  <span className="label-text-alt text-base-content/60 flex items-center">
+                    <FaCalendarDay size={18} />
+                  </span>
+                </div>
+
+                <DatePicker
+                  selected={order.order_date ? new Date(order.order_date) : null}
+                  onChange={(date) => {
+                    const formatted = date ? format(date, 'yyyy-MM-dd') : '';
+                    setOrder((s) => ({ ...s, order_date: formatted }));
+                  }}
+                  dateFormat="dd.MM.yyyy"
+                  locale={fi}
+                  wrapperClassName="w-full"
+                  className="input input-bordered w-full h-12 md:h-11 text-sm"
+                />
+              </div>
+
+              {/* Total incl */}
+              <div className="flex flex-col gap-2">
+                <div className="label py-1 items-center justify-end">
+                  <span className="label-text">Total (incl. VAT)</span>
+                  <span className="label-text-alt text-base-content/60">
+                    <RiMoneyEuroBoxFill size={18} />
+                  </span>
+                </div>
+                <div className="font-medium text-right">{totalAmountVatInclDisplay} €</div>
               </div>
             </div>
           </div>
 
+          {/* ORDER ITEMS */}
+          <div className="rounded-xl border md:border-none border-base-300 px-4">
+            <div className="mt-4">
+              <div className="text-gray-500">Order items</div>
+              <div className="divider my-2 opacity-60" />
+            </div>
 
-          {/* Items header */}
-          <div className="mt-10 mb-2">
-            <span className="text-gray-500">Order lines</span>
-            <hr className="mt-2 mb-1 border-gray-300" />
-          </div>
+            {/* MOBILE */}
+            <div className="md:hidden space-y-3">
+              {order.items.map((item, index) => {
+                const qty = toNumber(item.quantity);
+                const priceExclVAT = toNumber(item.unit_price_vat_excl);
+                const taxRate = toNumber(item.tax_rate);
+                const priceInclVAT = priceExclVAT * (1 + taxRate / 100);
+                const lineTotalIncl = qty * priceInclVAT;
+                const lineTotalExcl = qty * priceExclVAT;
 
-          {/* Items table */}
-          <div className="w-4/5 overflow-x-auto">
-            <table className="table w-full">
-              <thead>
-                <tr>
-                  <th className="w-2/5">Product</th>
-                  <th className="w-1/10 text-right">EAN</th>
-                  <th className="w-1/10 text-right">Qty</th>
-                  <th className="w-1/5 text-right">Unit (excl. VAT) €</th>
-                  <th className="w-1/10 text-right">VAT %</th>
-                  <th className="w-1/10 text-right">VAT €</th>
-                  <th className="w-1/5 text-right">Unit (incl. VAT) €</th>
-                  <th className="w-1/5 text-right">Total (excl. VAT) €</th>
-                  <th className="w-1/5 text-right">Total (incl. VAT) €</th>
-                  <th className="w-10"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {order.items.map((item, index) => {
-                  const qty = toNumber(item.quantity);
-                  const priceExclVAT = toNumber(item.unit_price_vat_excl);
-                  const taxRate = toNumber(item.tax_rate);
-                  const priceInclVAT = priceExclVAT * (1 + taxRate / 100);
-                  const lineTotal = qty * priceInclVAT;
+                const selectedProductOption =
+                  productOptions.find((opt) => opt.value === item.product_id) || null;
 
-                  const selectedProductOption =
-                    productOptions.find(
-                      (opt) => opt.value === item.product_id,
-                    ) || null;
+                return (
+                  <div key={index} className="rounded-xl border md:border-none border-base-300 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="font-semibold">
+                        Line {index + 1}
+                        <div className="text-xs opacity-70">
+                          {selectedProductOption?.ean_code ? `EAN: ${selectedProductOption.ean_code}` : 'EAN: —'}
+                        </div>
+                      </div>
 
-                  return (
-                    <tr key={index} className="align-top">
-                      {/* Product select */}
-                      <td>
-                        <ProductSelect
-                          options={productOptions}
-                          value={selectedProductOption}
-                          onChange={(opt) =>
-                            handleProductChangeInRow(index, opt)
-                          }
-                          onEdit={(opt) => {
-                            router.push(`/inventory/${opt.value}`);
-                          }}
-                          placeholder="Search a product..."
-                          instanceId={`order-edit-product-${index}`}
-                        />
-                      </td>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => removeItem(index)}
+                        disabled={order.items.length === 1}
+                        title="Remove line"
+                      >
+                        <FaMinus />
+                      </button>
+                    </div>
 
-                      {/* EAN */}
-                      <td className="text-right">
-                        {
-                          selectedProductOption
-                            ? selectedProductOption.ean_code || '—'
-                            : '—'
-                        }
-                      </td>
+                    <div className="mt-3">
+                      <div className="text-sm opacity-70 mb-1">Product</div>
+                      <ProductSelect
+                        options={productOptions}
+                        value={selectedProductOption}
+                        onChange={(opt) => handleProductChangeInRow(index, opt)}
+                        onEdit={(opt) => router.push(`/inventory/${opt.value}`)}
+                        placeholder="Search a product..."
+                        instanceId={`order-edit-product-mobile-${index}`}
+                      />
+                    </div>
 
-                      {/* Quantity */}
-                      <td className="text-right">
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <label className="form-control">
+                        <div className="label py-1">
+                          <span className="label-text text-sm">Qty</span>
+                        </div>
                         <input
                           type="number"
                           min="1"
                           step="1"
-                          className="input input-md input-bordered w-full text-right"
+                          className="input input-bordered w-full h-12 text-right px-4"
                           value={item.quantity}
-                          onChange={(e) =>
-                            updateItem(index, 'quantity', e.target.value)
-                          }
+                          onChange={(e) => updateItem(index, 'quantity', e.target.value)}
                         />
-                      </td>
+                      </label>
 
-                      {/* Unit price (VAT excluded) */}
-                      <td className="text-right">
+                      <label className="form-control">
+                        <div className="label py-1">
+                          <span className="label-text text-sm">Unit (excl. VAT) €</span>
+                        </div>
                         <input
                           type="number"
                           min="0"
                           step="0.01"
-                          className="input input-md input-bordered w-full text-right"
+                          className="input input-bordered w-full h-12 text-right px-4"
                           value={item.unit_price_vat_excl}
-                          onChange={(e) =>
-                            updateItem(index, 'unit_price_vat_excl', e.target.value)
-                          }
+                          onChange={(e) => updateItem(index, 'unit_price_vat_excl', e.target.value)}
                         />
-                      </td>
+                      </label>
+                    </div>
 
-                      {/* VAT rate – read-only from product/tax_rate */}
-                      <td className="text-right">
-                        {`${taxRate.toFixed(2)} %`}
-                      </td>
+                    <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex justify-between gap-3">
+                        <span className="opacity-70">VAT %</span>
+                        <span className="whitespace-nowrap tabular-nums">{`${taxRate.toFixed(2)}%`}</span>
+                      </div>
 
-                      {/* VAT amount – read-only */}
-                      <td className="text-right">
-                        {(priceExclVAT * (taxRate / 100)).toFixed(2)}
-                      </td>
-                      
-                      {/* Unit price (VAT included) – read-only */}
-                      <td className="text-right">
-                        {priceInclVAT.toFixed(2)}
-                      </td>
-                      
-                      {/* Total (excl. VAT) – read-only */}
-                      <td className="text-right">
-                        {(qty * priceExclVAT).toFixed(2)}
-                      </td>
-                      
-                      {/* Line total */}
-                      <td className="text-right align-middle">
-                        {lineTotal.toFixed(2)}
-                      </td>
+                      <div className="flex justify-between gap-3">
+                        <span className="opacity-70">Unit (incl.)</span>
+                        <span className="whitespace-nowrap tabular-nums">{`${priceInclVAT.toFixed(2)} €`}</span>
+                      </div>
 
-                      {/* Remove line */}
-                      <td className="text-center align-middle">
-                        <button
-                          type="button"
-                          className="btn btn-ghost btn-xs"
-                          onClick={() => removeItem(index)}
-                          disabled={order.items.length === 1}
-                        >
-                          <FaMinus />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                      <div className="flex justify-between gap-3">
+                        <span className="opacity-70">Total (excl.)</span>
+                        <span className="whitespace-nowrap tabular-nums">{`${lineTotalExcl.toFixed(2)} €`}</span>
+                      </div>
 
-                {/* Add-row line */}
-                <tr>
-                  <td colSpan={7}>
-                    <button
-                      type="button"
-                      className="btn btn-outline btn-sm mt-2"
-                      onClick={addItem}
-                    >
-                      <FaPlus className="mr-1" /> Add a product
-                    </button>
-                  </td>
-                </tr>
-              </tbody>  
-            </table>
+                      <div className="flex justify-between gap-3 font-semibold">
+                        <span className="opacity-70">Total (incl.)</span>
+                        <span className="whitespace-nowrap tabular-nums">{`${lineTotalIncl.toFixed(2)} €`}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <button type="button" className="btn btn-outline btn-md w-full mb-2" onClick={addItem}>
+                <FaPlus className="mr-2" /> Add a product
+              </button>
+            </div>
+
+            {/* DESKTOP */}
+            <div className="hidden md:block w-full overflow-x-auto">
+              <table className="table w-full table-fixed">
+                <thead>
+                  <tr>
+                    <th className="whitespace-nowrap w-80">Product</th>
+                    <th className="text-right whitespace-nowrap w-40">EAN</th>
+                    <th className="text-right whitespace-nowrap w-30">Qty</th>
+                    <th className="text-right whitespace-nowrap w-30">Unit (excl. VAT) €</th>
+                    <th className="text-right whitespace-nowrap w-25">VAT %</th>
+                    <th className="text-right whitespace-nowrap w-20">VAT €</th>
+                    <th className="text-right whitespace-nowrap w-35">Unit (incl. VAT) €</th>
+                    <th className="text-right whitespace-nowrap w-35">Total (excl. VAT) €</th>
+                    <th className="text-right whitespace-nowrap w-35">Total (incl. VAT) €</th>
+                    <th className="w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {order.items.map((item, index) => {
+                    const qty = toNumber(item.quantity);
+                    const priceExclVAT = toNumber(item.unit_price_vat_excl);
+                    const taxRate = toNumber(item.tax_rate);
+                    const priceInclVAT = priceExclVAT * (1 + taxRate / 100);
+                    const lineTotal = qty * priceInclVAT;
+
+                    const selectedProductOption =
+                      productOptions.find((opt) => opt.value === item.product_id) || null;
+
+                    return (
+                      <tr key={index} className="align-top">
+                        <td>
+                          <ProductSelect
+                            options={productOptions}
+                            value={selectedProductOption}
+                            onChange={(opt) => handleProductChangeInRow(index, opt)}
+                            onEdit={(opt) => router.push(`/inventory/${opt.value}`)}
+                            placeholder="Search a product..."
+                            instanceId={`order-edit-product-${index}`}
+                          />
+                        </td>
+
+                        <td className="text-right">
+                          {selectedProductOption ? selectedProductOption.ean_code || '—' : '—'}
+                        </td>
+
+                        <td className="text-right">
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            className="input input-md input-bordered w-full text-right"
+                            value={item.quantity}
+                            onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                          />
+                        </td>
+
+                        <td className="text-right">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            className="input input-md input-bordered w-full text-right"
+                            value={item.unit_price_vat_excl}
+                            onChange={(e) => updateItem(index, 'unit_price_vat_excl', e.target.value)}
+                          />
+                        </td>
+
+                        <td className="text-right">{`${taxRate.toFixed(2)} %`}</td>
+                        <td className="text-right">{(priceExclVAT * (taxRate / 100)).toFixed(2)}</td>
+                        <td className="text-right">{priceInclVAT.toFixed(2)}</td>
+                        <td className="text-right">{(qty * priceExclVAT).toFixed(2)}</td>
+                        <td className="text-right align-middle">{lineTotal.toFixed(2)}</td>
+
+                        <td className="text-center align-middle">
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-xs"
+                            onClick={() => removeItem(index)}
+                            disabled={order.items.length === 1}
+                          >
+                            <FaMinus />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+
+                  <tr>
+                    <td colSpan={7}>
+                      <button type="button" className="btn btn-outline btn-sm mt-2" onClick={addItem}>
+                        <FaPlus className="mr-1" /> Add a product
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* Text area for extra info */}
-          <div className="mt-10 mb-4">
-            <span className="text-gray-500">Notes</span>
-            <hr className="mt-2 mb-1 border-gray-300" />
+          {/* NOTES */}
+          <div className="rounded-xl border md:border-none border-base-300 px-4">
+            {/* Notes */}
+            <div className="mt-4 md:w-7/12">
+              <span className="text-gray-500">Notes</span>
+              <hr className="mt-2 mb-4 border-gray-300" />
+            </div>
+            <div>
+              <textarea
+                className="textarea textarea-bordered w-full min-h-28 md:min-h-24 mb-4"
+                value={order.extra_info}
+                onChange={(e) => setOrder((s) => ({ ...s, extra_info: e.target.value }))}
+              />
+            </div>
           </div>
-          <textarea
-            className="textarea textarea-bordered w-2xl h-24"
-            value={order.extra_info}
-            onChange={(e) =>
-              setOrder((s) => ({ ...s, extra_info: e.target.value }))
-            }
-          ></textarea>
-
-          {/* Meta info */}
-          <div className="mt-10 mb-4">
-            <span className="text-gray-500">Meta data</span>
-            <hr className="mt-2 mb-1 border-gray-300" />
-          </div>
-
-          <div className="text-sm text-gray-500">
-            <p>Created: {createdAtDisplay}</p>
-            <p>Updated: {updatedAtDisplay}</p>
+          {/* META */}
+          <div className="rounded-xl border md:border-none border-base-300 px-4">
+            <div className="mt-4 md:w-7/12">
+              <span className="text-gray-500">Metadata</span>
+              <hr className="mt-2 mb-4 border-gray-300" />
+            </div>
+            <div className="text-sm text-gray-600 space-y-1 pb-4">
+              <div>Created at: {createdAtDisplay}</div>
+              <div>Last updated: {updatedAtDisplay}</div>
+            </div>
           </div>
         </div>
       </div>
