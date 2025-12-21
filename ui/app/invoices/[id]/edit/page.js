@@ -1,6 +1,11 @@
 // app/invoices/[id]/edit/page.jsx
 'use client';
 
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { format } from 'date-fns';
+import { fi } from 'date-fns/locale';
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
@@ -255,359 +260,622 @@ export default function InvoiceEditPage() {
 
   return (
     <div className="flex justify-center items-start min-h-screen py-5 px-5">
-
-      <div className="w-full max-w-7xl flex items-center gap-4">
+      <div className="w-full max-w-7xl">
         <div className="flex w-full flex-col gap-4">
           {/* Title + buttons */}
-          <div className="flex items-center justify-between">
+          {/* DESKTOP */}
+          <div className="hidden md:flex items-center justify-between">
             <div className="flex flex-col">
               <h1 className="text-3xl font-bold">
-                Edit invoice #{initialInvoice.invoice_number}
+                  Edit invoice #{initialInvoice.invoice_number}
               </h1>
-              <span className="badge badge-neutral mt-1 w-fit">
-                {initialInvoice.status ?? 'draft'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => router.back()}
-              >
-                &larr; Back
-              </button>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={resetForm}
-                disabled={!hasChanges || saving}
-              >
-                Reset
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={!hasChanges || saving}
-                className={`btn btn-primary ${
-                  !hasChanges
-                    ? 'btn-disabled opacity-50 cursor-not-allowed'
-                    : ''
-                }`}
-                aria-disabled={!hasChanges || saving}
-              >
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-            </div>
-          </div>
-
-          {/* Invoice details */}
-          <div className="mt-8 w-7/12">
-            <span className="text-gray-500">Invoice details</span>
-            <hr className="mt-2 mb-4 border-gray-300" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-x-10 gap-y-2 w-7/12">
-            {/* Customer */}
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <FaUser size={16} />
-                <span>Customer</span>
-              </div>
-              <div className="flex-1 text-sm">
-                <Link
-                  href={`/customers/${initialInvoice.customer_id}`}
-                  className="underline break-words"
-                >
-                  {initialInvoice.customer?.name ?? '—'}
-                </Link>
-              </div>
-            </div>
-
-            {/* Delivery date (editable) */}
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <FaCalendarDay size={16} />
-                <span>Delivery date</span>
-              </div>
-              <div className="flex-1">
-                <input
-                  type="date"
-                  className="input input-bordered w-full h-10 text-sm"
-                  value={deliveryDateDisplay}
-                  onChange={(e) =>
-                    handleChangeField('delivery_date', e.target.value || '')
-                  }
-                />
-              </div>
-            </div>
-
-
-            {/* Order link */}
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <FaList size={16} />
-                <span>Order</span>
-              </div>
-              <div className="flex-1 text-sm">
-                {initialInvoice.order ? (
-                  <Link
-                    href={`/orders/${initialInvoice.order_id}`}
-                    className="underline break-words"
-                  >
-                    {`Order #${initialInvoice.order.order_number || initialInvoice.order.id}`}
-                  </Link>
-                ) : (
-                  '—'
+              <div className="flex items-center gap-2 mt-1">
+                <span className="badge badge-neutral">{invoice.status ?? 'draft'}</span>
+                {invoice.status !== 'draft' && invoice.status !== 'cancelled' && (
+                  <span className="text-xs text-gray-500">
+                    Only invoices in <b>draft</b> or <b>cancelled</b> should be edited.
+                  </span>
                 )}
               </div>
             </div>
-
-
-            {/* Days until due (editable) */}
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <FaCalendarDays size={16} />
-                <span>Days until due</span>
-              </div>
-              <div className="flex-1">
-                <input
-                  type="number"
-                  min={0}
-                  className="input input-bordered w-full h-10 text-sm"
-                  value={daysUntilDueDisplay}
-                  onChange={(e) =>
-                    handleChangeField(
-                      'days_until_due',
-                      e.target.value === '' ? '' : e.target.value
-                    )
-                  }
-                />
+            <div className="flex items-center gap-2">
+              <div className='flex flex-row gap-2'>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => router.back()}
+                >
+                  &larr; Back
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-md"
+                  onClick={resetForm}
+                  disabled={!hasChanges || saving}
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={!hasChanges || saving}
+                  className={`btn btn-primary btn-md ${!hasChanges ? 'btn-disabled opacity-50' : ''}`}
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
               </div>
             </div>
+          </div>
 
-            {/* Total excl. VAT (read-only) */}
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <RiMoneyEuroBoxFill size={16} />
-                <span>Total (excl. VAT)</span>
+          {/* MOBILE*/}
+          <div className='md:hidden flex flex-col'>
+            <div className="flex items-center justify-between mb-4">
+              <button className="btn btn-ghost btn-md" onClick={() => router.back()}>
+                &larr; Back
+              </button>
+              <div>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-md"
+                  onClick={resetForm}
+                  disabled={!hasChanges || saving}
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={!hasChanges || saving}
+                  className={`btn btn-primary btn-md ${!hasChanges ? 'btn-disabled opacity-50' : ''}`}
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
               </div>
-              <div className="flex-1">
-                <div className="h-10 flex items-center text-sm">
-                  {totalAmountVatExclDisplay} €
+            </div>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold">
+                  Edit #{initialInvoice.invoice_number}
+              </h1>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="badge badge-neutral">{invoice.status ?? 'draft'}</span>
+                {invoice.status !== 'draft' && invoice.status !== 'cancelled' && (
+                  <span className="text-xs text-gray-500">
+                    Only invoices in <b>draft</b> or <b>cancelled</b> should be edited.
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* DETAILS */}
+          <div className="rounded-xl border md:border-none border-base-300 px-4">
+            <div className="mt-4 md:w-7/12">
+              <span className="text-gray-500">Invoice details</span>
+              <hr className="mt-2 mb-4 border-gray-300" />
+            </div>
+
+            {/* MOBILE */}
+            <div className="md:hidden space-y-4">
+              <div className="flex flex-col gap-5">
+                {/* Order */}
+                <div className="flex flex-col gap-1 ">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <FaList size={16} />
+                        <span>Order</span>
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex items-center text-sm">
+                            {invoice.order_id ? (
+                                <Link href={`/orders/${invoice.order_id}`} className="underline">
+                                    # {invoice.order.order_number || invoice.order_id}
+                                </Link>
+                            ) : (
+                                '—'
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Customer */}
+                <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <FaUser size={16} />
+                        <span>Customer</span>
+                    </div>
+                    <div className="flex-1">
+                        <Link href={`/customers/${invoice.customer_id}`} className="underline flex items-center text-sm">
+                            {invoice.customer.name ?? '—'}
+                        </Link>
+                    </div>
+                </div>
+                
+                {/* Issue date */}
+                <div className="flex flex-col gap-2">
+                  <div className="label py-1 items-center">
+                    <span className="label-text-alt text-sm text-base-content/60 flex items-center">
+                      <FaCalendarDay size={18} />
+                    </span>
+                    <span className="label-text text-sm">Issue date</span>
+                  </div>
+
+                  <DatePicker
+                    selected={invoice.issue_date ? new Date(invoice.issue_date) : null}
+                    onChange={(date) => {
+                      const formatted = date ? format(date, 'yyyy-MM-dd') : '';
+                      setInvoice((s) => ({ ...s, issue_date: formatted }));
+                    }}
+                    dateFormat="dd.MM.yyyy"
+                    locale={fi}
+                    wrapperClassName="w-full"
+                    className="input input-bordered w-full h-12 text-sm"
+                  />
+                </div>
+                
+                {/* Delivery date */}
+                <div className="flex flex-col gap-2">
+                  <div className="label py-1 items-center">
+                    <span className="label-text-alt text-sm text-base-content/60 flex items-center">
+                      <FaCalendarDay size={18} />
+                    </span>
+                    <span className="label-text text-sm">Delivery date</span>
+                  </div>
+
+                  <DatePicker
+                    selected={invoice.delivery_date ? new Date(invoice.delivery_date) : null}
+                    onChange={(date) => {
+                      const formatted = date ? format(date, 'yyyy-MM-dd') : '';
+                      setInvoice((s) => ({ ...s, delivery_date: formatted }));
+                    }}
+                    dateFormat="dd.MM.yyyy"
+                    locale={fi}
+                    wrapperClassName="w-full"
+                    className="input input-bordered w-full h-12 text-sm"
+                  />
+                </div>
+
+                {/* Days until due */}
+                <div className="flex flex-col gap-1 ">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <FaCalendarDay size={16} />
+                        <span>Days until due</span>
+                    </div>
+                    <div className="flex-1">
+                        <input
+                            type="number"
+                            min={0}
+                            className="input input-bordered w-full h-10 text-sm"
+                            value={daysUntilDueDisplay}
+                            onChange={(e) =>
+                              handleChangeField('days_until_due', e.target.value === '' ? '' : e.target.value)
+                            }
+                        />
+                    </div>
+                </div>
+
+                {/* Due date */}
+                <div className="flex flex-col gap-1 ">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <FaCalendarDay size={16} />
+                        <span>Due date</span>
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex items-center text-sm">
+                            {dueDateDisplay}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Custom reference? */}
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                        <FaUserGear size={16} />
+                        <span>Custom reference?</span>
+                    </div>
+                    <div className="flex-1 text-sm">
+                        <div className="md:h-10 flex items-center md:justify-end">
+                            {usesCustomReference ? 'Yes' : 'No'}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Reference */}
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                        <FaBook size={16} />
+                        <span>Reference</span>
+                    </div>
+                    <div className="flex-1 text-sm">
+                        <div className="md:h-10 flex items-center md:justify-end">
+                            {referenceValue || '—'}
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Total excl. VAT */}
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                        <RiMoneyEuroBoxFill size={16} />
+                        <span>Total (excl. VAT)</span>
+                    </div>
+                    <div className="flex-1">
+                        <div className="md:h-10 flex items-center text-sm md:justify-end">
+                        {totalAmountVatExclDisplay} €
+                        </div>
+                    </div>
+                </div>
+
+                {/* VAT amount */}
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                        <RiMoneyEuroBoxFill size={16} />
+                        <span>VAT amount</span>
+                    </div>
+                    <div className="flex-1">
+                        <div className="md:h-10 flex items-center text-sm md:justify-end">
+                        {vatAmountDisplay} €
+                        </div>
+                    </div>
+                </div>
+
+                {/* Total incl. VAT */}
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 mb-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                        <RiMoneyEuroBoxFill size={16} />
+                        <span>Total (incl. VAT)</span>
+                    </div>
+                    <div className="flex-1 text-sm font-semibold">
+                        <div className="md:h-10 flex items-center md:justify-end">
+                            {totalAmountVatInclDisplay} €
+                        </div>
+                    </div>
                 </div>
               </div>
             </div>
 
-            {/* Due date (computed, read-only text) */}
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <FaCalendarDay size={16} />
-                <span>Due date</span>
-              </div>
-              <div className="flex-1">
-                <div className="h-10 flex items-center text-sm justify-self-end">
-                  {dueDateDisplay || '—'}
+            {/* DESKTOP */}
+            <div className="hidden md:grid grid-cols-[3fr_2fr] gap-x-10 gap-2 w-7/12">
+              {/* Customer */}
+              <div className="flex items-center gap-4 h-full">
+                <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                  <FaUser size={16} />
+                  <span>Customer</span>
+                </div>
+                <div className="flex-1 text-sm">
+                  <Link
+                    href={`/customers/${initialInvoice.customer_id}`}
+                    className="underline break-words"
+                  >
+                    {initialInvoice.customer?.name ?? '—'}
+                  </Link>
                 </div>
               </div>
-            </div>
 
-
-            {/* VAT amount (read-only) */}
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <RiMoneyEuroBoxFill size={16} />
-                <span>VAT amount</span>
+              {/* Delivery date (editable) */}
+              <div className="flex items-center gap-4 h-full">
+                <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                  <FaCalendarDay size={16} />
+                  <span>Delivery date</span>
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="date"
+                    className="input input-bordered w-full h-10 text-sm"
+                    value={deliveryDateDisplay}
+                    onChange={(e) =>
+                      handleChangeField('delivery_date', e.target.value || '')
+                    }
+                  />
+                </div>
               </div>
+
+
+              {/* Order link */}
+              <div className="flex items-center gap-4 h-full">
+                <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                  <FaList size={16} />
+                  <span>Order</span>
+                </div>
+                <div className="flex-1 text-sm">
+                  {initialInvoice.order ? (
+                    <Link
+                      href={`/orders/${initialInvoice.order_id}`}
+                      className="underline break-words"
+                    >
+                      {`Order #${initialInvoice.order.order_number || initialInvoice.order.id}`}
+                    </Link>
+                  ) : (
+                    '—'
+                  )}
+                </div>
+              </div>
+
+
+              {/* Days until due (editable) */}
+              <div className="flex items-center gap-4 h-full">
+                <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                  <FaCalendarDays size={16} />
+                  <span>Days until due</span>
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    min={0}
+                    className="input input-bordered w-full h-10 text-sm"
+                    value={daysUntilDueDisplay}
+                    onChange={(e) =>
+                      handleChangeField(
+                        'days_until_due',
+                        e.target.value === '' ? '' : e.target.value
+                      )
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Total excl. VAT (read-only) */}
+              <div className="flex items-center gap-4 h-full">
+                <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                  <RiMoneyEuroBoxFill size={16} />
+                  <span>Total (excl. VAT)</span>
+                </div>
                 <div className="flex-1">
                   <div className="h-10 flex items-center text-sm">
-                    {vatAmountDisplay} €
+                    {totalAmountVatExclDisplay} €
                   </div>
                 </div>
-            </div>
-
-            {/* Custom reference? (read-only) */}
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <FaUserGear size={16} />
-                <span>Custom reference?</span>
               </div>
-              <div className="flex-1">
-                <div className="h-10 flex items-center text-sm justify-self-end">
-                  {usesCustomReference ? 'Yes' : 'No'}
+
+              {/* Due date (computed, read-only text) */}
+              <div className="flex items-center gap-4 h-full">
+                <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                  <FaCalendarDay size={16} />
+                  <span>Due date</span>
+                </div>
+                <div className="flex-1">
+                  <div className="h-10 flex items-center text-sm justify-self-end">
+                    {dueDateDisplay || '—'}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Total incl. VAT (read-only) */}
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <RiMoneyEuroBoxFill size={16} />
-                <span>Total (incl. VAT)</span>
+
+              {/* VAT amount (read-only) */}
+              <div className="flex items-center gap-4 h-full">
+                <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                  <RiMoneyEuroBoxFill size={16} />
+                  <span>VAT amount</span>
+                </div>
+                  <div className="flex-1">
+                    <div className="h-10 flex items-center text-sm">
+                      {vatAmountDisplay} €
+                    </div>
+                  </div>
               </div>
-              <div className="flex-1">
-                <div className="h-10 flex items-center text-sm">
-                  {totalAmountVatInclDisplay} €
+
+              {/* Custom reference? (read-only) */}
+              <div className="flex items-center gap-4 h-full">
+                <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                  <FaUserGear size={16} />
+                  <span>Custom reference?</span>
+                </div>
+                <div className="flex-1">
+                  <div className="h-10 flex items-center text-sm justify-self-end">
+                    {usesCustomReference ? 'Yes' : 'No'}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Reference (editable if custom required) */}
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <FaBook size={16} />
-                <span>Reference</span>
+              {/* Total incl. VAT (read-only) */}
+              <div className="flex items-center gap-4 h-full">
+                <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                  <RiMoneyEuroBoxFill size={16} />
+                  <span>Total (incl. VAT)</span>
+                </div>
+                <div className="flex-1">
+                  <div className="h-10 flex items-center text-sm">
+                    {totalAmountVatInclDisplay} €
+                  </div>
+                </div>
               </div>
-              <div className="flex-1">
-                <input
-                  type="text"
-                  className="input input-bordered w-full h-10 text-sm"
-                  value={referenceValue}
-                  onChange={(e) =>
-                    handleChangeField('reference', e.target.value)
-                  }
-                  disabled={!usesCustomReference}
-                  placeholder={referencePlaceholder}
-                />
-              </div>
-            </div>
 
-            {/* Issue date (editable) */}
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <FaCalendarDay size={16} />
-                <span>Issue date</span>
+              {/* Reference (editable if custom required) */}
+              <div className="flex items-center gap-4 h-full">
+                <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                  <FaBook size={16} />
+                  <span>Reference</span>
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    className="input input-bordered w-full h-10 text-sm"
+                    value={referenceValue}
+                    onChange={(e) =>
+                      handleChangeField('reference', e.target.value)
+                    }
+                    disabled={!usesCustomReference}
+                    placeholder={referencePlaceholder}
+                  />
+                </div>
               </div>
-              <div className="flex-1">
-                <input
-                  type="date"
-                  className="input input-bordered w-full h-10 text-sm"
-                  value={issueDateDisplay}
-                  onChange={(e) =>
-                    handleChangeField('issue_date', e.target.value || '')
-                  }
-                />
+
+              {/* Issue date (editable) */}
+              <div className="flex items-center gap-4 h-full">
+                <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
+                  <FaCalendarDay size={16} />
+                  <span>Issue date</span>
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="date"
+                    className="input input-bordered w-full h-10 text-sm"
+                    value={issueDateDisplay}
+                    onChange={(e) =>
+                      handleChangeField('issue_date', e.target.value || '')
+                    }
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Items section (read-only, from order) */}
-          <div className="mt-4">
-            <span className="text-gray-500">Items of the order</span>
-            <hr className="mt-2 mb-1 border-gray-300" />
-          </div>
+          {/* Items section */}
+          <div className="rounded-xl border md:border-none border-base-300 px-4">
+              <div className="mt-4">
+                  <span className="text-gray-500">Items of the order</span>
+                  <hr className="mt-2 mb-1 border-gray-300" />
+              </div>
 
-          {items.length === 0 ? (
-            <p className="text-gray-500">No items in this invoice.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="table table-zebra w-full">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th className="text-right">EAN</th>
-                    <th className="text-right">Qty</th>
-                    <th className="text-right">Unit (excl. VAT) €</th>
-                    <th className="text-right">VAT %</th>
-                    <th className="text-right">VAT €</th>
-                    <th className="text-right">Unit (incl. VAT) €</th>
-                    <th className="text-right">Total (excl. VAT) €</th>
-                    <th className="text-right">Total (incl. VAT) €</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item) => {
-                    const quantity = item.quantity ?? 0;
-                    const unit_price_vat_excl =
-                      item.unit_price_vat_excl == null
-                        ? 0
-                        : Number(item.unit_price_vat_excl);
-                    const unit_price_vat_incl =
-                      item.unit_price_vat_incl == null
-                        ? 0
-                        : Number(item.unit_price_vat_incl);
-                    const totalPriceVatExcl =
-                      item.total_price_vat_excl == null
-                        ? quantity * unit_price_vat_excl
-                        : Number(item.total_price_vat_excl);
-                    const totalPriceVatIncl =
-                      item.total_price_vat_incl == null
-                        ? quantity * unit_price_vat_incl
-                        : Number(item.total_price_vat_incl);
-
-                    return (
-                      <tr key={item.id}>
-                        <td>
-                          <Link
-                            href={`/inventory/${item.product_id}`}
-                            className="underline"
-                          >
-                            {item.product_name ?? item.product_id ?? '-'}
+              {invoice.order.items.length === 0 ? (
+              <p className="text-gray-500">No items in this invoice.</p>
+              ) : (
+              <>
+                  {/* MOBILE */}
+                  <div className="md:hidden flex flex-col gap-3 py-2">
+                  {invoice.order.items.map((item) => (
+                      <div key={item.id}>
+                      <div className="font-semibold mb-2">
+                          <Link href={`/inventory/${item.product_id}`} className="underline">
+                          {item.product_name ?? item.product_id ?? '-'}
                           </Link>
-                        </td>
-                        <td className="text-right">{item.ean_code ?? '-'}</td>
-                        <td className="text-right">{quantity}</td>
-                        <td className="text-right">
-                          {unit_price_vat_excl.toFixed(2)}
-                        </td>
-                        <td className="text-right">{item.tax_rate ?? '-'}</td>
-                        <td className="text-right">
-                          {(unit_price_vat_incl - unit_price_vat_excl).toFixed(2)}
-                        </td>
-                        <td className="text-right">
-                          {unit_price_vat_incl.toFixed(2)}
-                        </td>
-                        <td className="text-right">
-                          {totalPriceVatExcl.toFixed(2)}
-                        </td>
-                        <td className="text-right">
-                          {totalPriceVatIncl.toFixed(2)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                      </div>
 
-          {/* Notes */}
-          <div className="mt-10">
-            <span className="text-gray-500">Notes</span>
-            <hr className="mt-2 border-gray-300" />
+                      <div className="text-sm text-gray-500 mb-2">
+                          EAN: {item.ean_code ?? '-'}
+                      </div>
+                      <div className="text-sm text-gray-500 mb-2">
+                          Qty: {item.quantity ?? 0}
+                      </div>
+                      <div className="text-sm text-gray-500 mb-2">
+                          Unit price (excl. VAT): {Number(item.unit_price_vat_excl ?? 0).toFixed(2)} €
+                      </div>
+                      <div className="text-sm text-gray-500 mb-2">
+                          VAT rate: {item.tax_rate ?? '0'} %
+                      </div>
+                      <div className="text-sm text-gray-500 mb-2">
+                          VAT amount per unit:{' '}
+                          {Number((item.unit_price_vat_incl ?? 0) - (item.unit_price_vat_excl ?? 0)).toFixed(2)} €
+                      </div>
+                      <div className="text-sm text-gray-500 mb-2">
+                          Unit price (incl. VAT): {Number(item.unit_price_vat_incl ?? 0).toFixed(2)} €
+                      </div>
+                      <div className="text-sm text-gray-500 mb-2">
+                          Total (excl. VAT): {Number(item.total_price_vat_excl ?? 0).toFixed(2)} €
+                      </div>
+                      <div className="text-sm font-medium">
+                          Total (incl. VAT): {Number(item.total_price_vat_incl ?? 0).toFixed(2)} €
+                      </div>
+                      </div>
+                  ))}
+                  </div>
+
+                  {/* DESKTOP: table */}
+                  <div className="hidden md:block overflow-x-auto">
+                  <table className="table table-zebra w-full">
+                      <thead>
+                      <tr>
+                          <th>Product</th>
+                          <th className="text-right">EAN</th>
+                          <th className="text-right">Qty</th>
+                          <th className="text-right">Unit (excl. VAT) €</th>
+                          <th className="text-right">VAT %</th>
+                          <th className="text-right">VAT €</th>
+                          <th className="text-right">Unit (incl. VAT) €</th>
+                          <th className="text-right">Total (excl. VAT) €</th>
+                          <th className="text-right">Total (incl. VAT) €</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      {invoice.order.items.map((item) => {
+                          const quantity = item.quantity ?? 0;
+                          const unit_price_vat_excl =
+                          item.unit_price_vat_excl == null ? 0 : Number(item.unit_price_vat_excl);
+                          const unit_price_vat_incl =
+                          item.unit_price_vat_incl == null ? 0 : Number(item.unit_price_vat_incl);
+
+                          const totalPriceVatExcl =
+                          item.total_price_vat_excl == null
+                              ? quantity * unit_price_vat_excl
+                              : Number(item.total_price_vat_excl);
+
+                          const totalPriceVatIncl =
+                          item.total_price_vat_incl == null
+                              ? quantity * unit_price_vat_incl
+                              : Number(item.total_price_vat_incl);
+
+                          return (
+                          <tr key={item.id}>
+                              <td>
+                              <Link href={`/inventory/${item.product_id}`} className="underline">
+                                  {item.product_name ?? item.product_id ?? '-'}
+                              </Link>
+                              </td>
+                              <td className="text-right">{item.ean_code ?? '-'}</td>
+                              <td className="text-right">{quantity}</td>
+                              <td className="text-right">{unit_price_vat_excl.toFixed(2)}</td>
+                              <td className="text-right">{item.tax_rate ?? '-'}</td>
+                              <td className="text-right">
+                              {(unit_price_vat_incl - unit_price_vat_excl).toFixed(2)}
+                              </td>
+                              <td className="text-right">{unit_price_vat_incl.toFixed(2)}</td>
+                              <td className="text-right">{totalPriceVatExcl.toFixed(2)}</td>
+                              <td className="text-right">{totalPriceVatIncl.toFixed(2)}</td>
+                          </tr>
+                          );
+                      })}
+                      </tbody>
+                  </table>
+                  </div>
+              </>
+              )}
           </div>
-          {/* Checkbox whether to show info on invoice */}
-          <div className="form-control">
-            <label className="cursor-pointer label">
-              <span className="label-text">Show note on invoice</span>
-              <input
-                type="checkbox"
-                className="checkbox"
-                checked={invoice.show_info_on_invoice ?? false}
-                onChange={(e) =>
-                  setInvoice((s) => ({
-                    ...s,
-                    show_info_on_invoice: e.target.checked,
-                  }))
-                }
-              />
-            </label>
+
+          {/* Notes on invoice */}
+          <div className="rounded-xl border md:border-none border-base-300 px-4">
+            <div className="mt-4">
+              <span className="text-gray-500">Notes on invoice</span>
+              <hr className="mt-2 border-gray-300" />
+            </div>
+            {/* Checkbox whether to show info on invoice */}
+            <div className="form-control">
+              <label className="cursor-pointer label">
+                <span className="label-text m-2">Show note on invoice</span>
+                <input
+                  type="checkbox"
+                  className="checkbox"
+                  checked={invoice.show_info_on_invoice ?? false}
+                  onChange={(e) =>
+                    setInvoice((s) => ({
+                      ...s,
+                      show_info_on_invoice: e.target.checked,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+            <textarea
+              className="textarea textarea-bordered md:w-2xl h-24"
+              value={invoice.extra_info ?? ''}
+              onChange={(e) =>
+                setInvoice((s) => ({ ...s, extra_info: e.target.value }))
+              }
+            >
+            </textarea>
           </div>
-          <textarea
-            className="textarea textarea-bordered w-2xl h-24"
-            value={invoice.extra_info ?? ''}
-            onChange={(e) =>
-              setInvoice((s) => ({ ...s, extra_info: e.target.value }))
-            }
-          ></textarea>
 
           {/* Meta info */}
-          <div className="mt-10">
-            <span className="text-gray-500">Meta data</span>
-            <hr className="mt-2 border-gray-300" />
-          </div>
-          <div className="text-sm text-gray-500">
-            <p>Created: {createdAtDisplay}</p>
-            <p>Updated: {updatedAtDisplay}</p>
+          <div className="rounded-xl border md:border-none border-base-300 px-4">
+            <div className='mt-4'>
+                <span className="text-gray-500">Meta information</span>
+                <hr className="mt-2 mb-2 border-gray-300" />
+            </div>
+            <p className="text-sm">
+                Created:{' '}
+                {createdAtDisplay}
+            </p>
+            <p className="text-sm mb-2">
+                Updated:{' '}
+                {updatedAtDisplay}
+            </p>
           </div>
         </div>
       </div>
