@@ -267,25 +267,62 @@ export default function CompanyPage() {
   if (!initial) return <div className="p-6">Company not found</div>;
 
   return (
-    <div className="min-h-screen py-5">
-      <div className="w-full max-w-3xl mx-auto px-6">
-        {/* Header: back | title | actions */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 mb-6">
-          <button className="btn btn-ghost" onClick={() => router.back()}>&larr; Back</button>
-          <h1 className="text-2xl font-bold text-center">Edit Company</h1>
-          <div className="flex gap-2 justify-self-end">
-            <button className="btn btn-ghost" onClick={onReset} disabled={!hasChanges || saving}>
-              Reset
-            </button>
-            <button className={`btn btn-primary ${!hasChanges ? 'btn-disabled opacity-50' : ''}`}
-                    onClick={onSave} disabled={!hasChanges || saving}>
-              {saving ? 'Saving…' : 'Save'}
-            </button>
+    <div className="min-h-screen py-4 sm:py-5">
+      <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
+        {/* Header */}
+        <div className="mb-4 md:mb-6">
+          <div className="sticky top-0 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-base-100/90 backdrop-blur border-b border-base-200">
+            <div className="flex flex-col gap-2 md:grid md:grid-cols-[auto_1fr_auto] md:items-center">
+              <div className="flex items-center justify-between md:justify-start gap-2">
+                <button className="btn btn-ghost btn-md" onClick={() => router.back()}>
+                  &larr; Back
+                </button>
+
+                {/* Mobile actions */}
+                <div className="flex gap-2 md:hidden">
+                  <button
+                    className="btn btn-ghost btn-md"
+                    onClick={onReset}
+                    disabled={!hasChanges || saving}
+                  >
+                    Reset
+                  </button>
+                  <button
+                    className={`btn btn-primary btn-md ${!hasChanges ? 'btn-disabled opacity-50' : ''}`}
+                    onClick={onSave}
+                    disabled={!hasChanges || saving}
+                  >
+                    {saving ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              </div>
+
+              <h1 className="text-lg md:text-2xl font-bold md:text-center">Edit Company</h1>
+
+              {/* Desktop actions */}
+              <div className="hidden md:flex gap-2 justify-self-end">
+                <button className="btn btn-ghost" onClick={onReset} disabled={!hasChanges || saving}>
+                  Reset
+                </button>
+                <button
+                  className={`btn btn-primary ${!hasChanges ? 'btn-disabled opacity-50' : ''}`}
+                  onClick={onSave}
+                  disabled={!hasChanges || saving}
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Card */}
-        <div className="rounded-xl border border-base-300 p-4">
+        <div className="rounded-xl border border-base-300 p-4 sm:p-6">
+          {/* Title + badge */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold">{form.companyName || 'Company details'}</h2>
+          </div>
+          
           <div>
             <span className="text-gray-500">Company details</span>
             <hr className="mt-2 mb-4 border-gray-300" />
@@ -293,13 +330,13 @@ export default function CompanyPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="form-control">
-              <div className='join px-1 pb-2'>
-                <span className="label-text">Company Name</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+              <div className="label py-1">
+                <span className="label-text">Company name</span>
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <FaHouse size={18} />
                 </span>
               </div>
-              <input className="input input-bordered"
+              <input className="input input-bordered w-full h-12 md:h-10"
                 value={form.companyName}
                 onChange={onChange('companyName')}
                 placeholder="Company name"
@@ -307,13 +344,13 @@ export default function CompanyPage() {
             </label>
             
             <label className="form-control">
-              <div className='join px-1 pb-2'>
+              <div className='label py-1'>
                 <span className="label-text">Business ID</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <TbHexagonNumber7Filled size={18} />
                 </span>
               </div>
-              <input className="input input-bordered"
+              <input className="input input-bordered w-full h-12 md:h-10"
                 value={form.businessId}
                 onChange={onChange('businessId')}
                 placeholder="Business ID"
@@ -321,13 +358,13 @@ export default function CompanyPage() {
             </label>
 
             <label className="form-control">
-              <div className='join px-1 pb-2'>
+              <div className='label py-1'>
                 <span className="label-text">Email</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <MdEmail size={18} />
                 </span>
               </div>
-              <input className="input input-bordered"
+              <input className="input input-bordered w-full h-12 md:h-10"
                 value={form.email}
                 onChange={onChange('email')}
                 placeholder="Email"
@@ -335,13 +372,13 @@ export default function CompanyPage() {
             </label>
 
             <label className="form-control">
-              <div className='join px-1 pb-2'>
+              <div className='label py-1'>
                 <span className="label-text">Phone</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <FaPhone size={18} />
                 </span>
               </div>
-              <input className="input input-bordered"
+              <input className="input input-bordered w-full h-12 md:h-10"
                 value={form.phone}
                 onChange={onChange('phone')}
                 placeholder="Phone"
@@ -349,13 +386,13 @@ export default function CompanyPage() {
             </label>
 
             <label className="form-control">
-              <div className='join px-1 pb-2'>
+              <div className='label py-1'>
                 <span className="label-text">Website</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <CgWebsite size={18} />
                 </span>
               </div>
-              <input className="input input-bordered"
+              <input className="input input-bordered w-full h-12 md:h-10"
                 value={form.website}
                 onChange={onChange('website')}
                 placeholder="Website"
@@ -363,13 +400,13 @@ export default function CompanyPage() {
             </label>
 
             <label className="form-control">
-              <div className='join px-1 pb-2'>
+              <div className='label py-1'>
                 <span className="label-text">Iban</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
+                <span className="label-text-alt text-base-content/60 flex items-center">
                   <CiBank size={18} />
                 </span>
               </div>
-              <input className="input input-bordered"
+              <input className="input input-bordered w-full h-12 md:h-10"
                 value={form.iban}
                 onChange={onChange('iban')}
                 placeholder="FI XX XXXX XXXX XXXX XX"
@@ -377,240 +414,257 @@ export default function CompanyPage() {
             </label>
           </div>
 
-          {/* Invoice address divider */}
-          <div className="mt-8">
-            <span className="text-gray-500">Invoice address</span>
-            <hr className="mt-2 mb-4 border-gray-300" />
-          </div>
+          {/* Invoice address */}
+          <div className="md:col-span-2 mt-2">
+            <details className="collapse collapse-arrow bg-base-200/40 md:bg-transparent rounded-xl">
+              <summary className="collapse-title text-base font-semibold">
+                Invoice address
+              </summary>
+              <div className="collapse-content">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Street */}
+                  <label className="form-control md:col-span-2">
+                    <div className="label py-1">
+                      <span className="label-text">Street</span>
+                      <span className="label-text-alt text-base-content/60 flex items-center">
+                        <FaMapMarkerAlt size={18} />
+                      </span>
+                    </div>
+                    <input
+                      className="input input-bordered w-full h-12 md:h-10"
+                      value={form.invoiceStreet}
+                      onChange={onChange('invoiceStreet')}
+                      placeholder="Street"
+                    />
+                  </label>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="form-control">
-              <div className='join px-1 pb-2'>
-                <span className="label-text">Street</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaMapMarkerAlt size={18} />
-                </span>
-              </div>
-              <input className="input input-bordered"
-                value={form.invoiceStreet}
-                onChange={onChange('invoiceStreet')}
-                placeholder="Street"
-              />
-            </label>
+                  {/* City */}
+                  <label className="form-control">
+                    <div className="label py-1">
+                      <span className="label-text">City</span>
+                      <span className="label-text-alt text-base-content/60 flex items-center">
+                        <FaCity size={18} />
+                      </span>
+                    </div>
+                    <input
+                      className="input input-bordered w-full h-12 md:h-10"
+                      value={form.invoiceCity}
+                      onChange={onChange('invoiceCity')}
+                      placeholder="City"
+                    />
+                  </label>
 
-            <label className="form-control">
-              <div className='join px-1 pb-2'>
-                <span className="label-text">City</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaCity size={18} />
-                </span>
-              </div>
-              <input className="input input-bordered"
-                value={form.invoiceCity}
-                onChange={onChange('invoiceCity')}
-                placeholder="City"
-              />
-            </label>
+                  {/* Postal code */}
+                  <label className="form-control">
+                    <div className="label py-1">
+                      <span className="label-text">Postal code</span>
+                      <span className="label-text-alt text-base-content/60 flex items-center">
+                        <BsSignpostFill size={18} />
+                      </span>
+                    </div>
+                    <input
+                      className="input input-bordered w-full h-12 md:h-10"
+                      value={form.invoicePostalCode}
+                      onChange={onChange('invoicePostalCode')}
+                      placeholder="Postal code"
+                    />
+                  </label>
 
-            <label className="form-control">
-              <div className='join px-1 pb-2'>
-                <span className="label-text">Postal Code</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <BsSignpostFill size={18} />
-                </span>
-              </div>
-              <input className="input input-bordered"
-                value={form.invoicePostalCode}
-                onChange={onChange('invoicePostalCode')}
-                placeholder="Postal Code"
-              />
-            </label>
+                  {/* State */}
+                  <label className="form-control">
+                    <div className="label py-1">
+                      <span className="label-text">State</span>
+                      <span className="label-text-alt text-base-content/60 flex items-center">
+                        <FaMapLocationDot size={18} />
+                      </span>
+                    </div>
+                    <input
+                      className="input input-bordered w-full h-12 md:h-10"
+                      value={form.invoiceState}
+                      onChange={onChange('invoiceState')}
+                      placeholder="State"
+                    />
+                  </label>
 
-            <label className="form-control">
-              <div className='join px-1 pb-2'>
-                <span className="label-text">State</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaMapLocationDot size={18} />
-                </span>
-              </div>
-              <input className="input input-bordered"
-                value={form.invoiceState}
-                onChange={onChange('invoiceState')}
-                placeholder="State"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className='join px-1 pb-2'>
-                <span className="label-text">Country</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaMap size={18} />
-                </span>
-              </div>
-              <input className="input input-bordered"
-                value={form.invoiceCountry}
-                onChange={onChange('invoiceCountry')}
-                placeholder="Country"
-              />
-            </label>
-          </div>
-
-          {/* Delivery address divider */}
-          <div className="mt-8">
-            <span className="text-gray-500">Delivery address</span>
-            <hr className="mt-2 mb-4 border-gray-300" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="form-control">
-              <div className='join px-1 pb-2'>
-                <span className="label-text">Street</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaMapMarkerAlt size={18} />
-                </span>
-              </div>
-              <input className="input input-bordered"
-                value={form.deliveryStreet}
-                onChange={onChange('deliveryStreet')}
-                placeholder="Street"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className='join px-1 pb-2'>
-                <span className="label-text">City</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaCity size={18} />
-                </span>
-              </div>
-              <input className="input input-bordered"
-                value={form.deliveryCity}
-                onChange={onChange('deliveryCity')}
-                placeholder="City"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className='join px-1 pb-2'>
-                <span className="label-text">Postal Code</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <BsSignpostFill size={18} />
-                </span>
-              </div>
-              <input className="input input-bordered"
-                value={form.deliveryPostalCode}
-                onChange={onChange('deliveryPostalCode')}
-                placeholder="Postal Code"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className='join px-1 pb-2'>
-                <span className="label-text">State</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaMapLocationDot size={18} />
-                </span>
-              </div>
-              <input className="input input-bordered"
-                value={form.deliveryState}
-                onChange={onChange('deliveryState')}
-                placeholder="State"
-              />
-            </label>
-
-            <label className="form-control">
-              <div className='join px-1 pb-2'>
-                <span className="label-text">Country</span>
-                <span className="join-item px-3 text-gray-500 flex items-center">
-                  <FaMap size={18} />
-                </span>
-              </div>
-              <input className="input input-bordered"
-                value={form.deliveryCountry}
-                onChange={onChange('deliveryCountry')}
-                placeholder="Country"
-              />
-            </label>
-          </div>
-
-          {/* Users divider */}
-          <div className="mt-8">
-            <span className="text-gray-500">Users</span>
-            <hr className="mt-2 mb-4 border-gray-300" />
-          </div>
-
-          <div className="mt-4 flex flex-col">
-            {Array.isArray(initial.users) && initial.users.length > 0 ? (
-              <ul className="list-disc list-inside mb-4">
-                {initial.users.map((user) => (
-                  <li key={user.id}>
-                    {user.first_name} {user.last_name} ({user.email})
-                    <button
-                      className="btn btn-xs btn-error ml-4"
-                      onClick={() => handleRemoveUser(user.id)}
-                    >
-                      Remove
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : !isAddingUser ? (
-              <p>No users found for this company.</p>
-            ) : null}
-
-            {isAddingUser && (
-              <>
-                <UserSelect
-                  userOptions={selectableUserOptions}
-                  handleUserChangeInSelect={handleUserChangeInSelect}
-                  selectedOption={selectedUser}
-                />
-
-                <div className="flex mt-4 justify-center gap-4">
-                  <button
-                    className="btn btn-sm btn-secondary mt-2 self-center"
-                    onClick={() => {
-                      setSelectedUser(null);   // clear the select
-                      setIsAddingUser(false);  // close the add UI
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="btn btn-sm btn-primary mt-2 self-center"
-                    onClick={handleAddUser}
-                  >
-                    Add user
-                  </button>
+                  {/* Country */}
+                  <label className="form-control">
+                    <div className="label py-1">
+                      <span className="label-text">Country</span>
+                      <span className="label-text-alt text-base-content/60 flex items-center">
+                        <FaMap size={18} />
+                      </span>
+                    </div>
+                    <input
+                      className="input input-bordered w-full h-12 md:h-10"
+                      value={form.invoiceCountry}
+                      onChange={onChange('invoiceCountry')}
+                      placeholder="Country"
+                    />
+                  </label>
                 </div>
-              </>
-            )}
+              </div>
+            </details>
+          </div>
 
-            {!isAddingUser && (
-              <button
-                className="btn btn-sm btn-primary w-40 self-center mt-5"
-                onClick={() => setIsAddingUser(true)}
-              >
-                Add users
-              </button>
-            )}
+          {/* Delivery address */}
+          <div className="md:col-span-2 mt-2">
+            <details className="collapse collapse-arrow bg-base-200/40 md:bg-transparent rounded-xl">
+              <summary className="collapse-title text-base font-semibold">
+                Delivery address
+              </summary>
+              <div className="collapse-content">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Street */}
+                  <label className="form-control md:col-span-2">
+                    <div className="label py-1">
+                      <span className="label-text">Street</span>
+                      <span className="label-text-alt text-base-content/60 flex items-center">
+                        <FaMapMarkerAlt size={18} />
+                      </span>
+                    </div>
+                    <input
+                      className="input input-bordered w-full h-12 md:h-10"
+                      value={form.deliveryStreet}
+                      onChange={onChange('deliveryStreet')}
+                      placeholder="Street"
+                    />
+                  </label>
+
+                  {/* City */}
+                  <label className="form-control">
+                    <div className="label py-1">
+                      <span className="label-text">City</span>
+                      <span className="label-text-alt text-base-content/60 flex items-center">
+                        <FaCity size={18} />
+                      </span>
+                    </div>
+                    <input
+                      className="input input-bordered w-full h-12 md:h-10"
+                      value={form.deliveryCity}
+                      onChange={onChange('deliveryCity')}
+                      placeholder="City"
+                    />
+                  </label>
+
+                  {/* Postal code */}
+                  <label className="form-control">
+                    <div className="label py-1">
+                      <span className="label-text">Postal code</span>
+                      <span className="label-text-alt text-base-content/60 flex items-center">
+                        <BsSignpostFill size={18} />
+                      </span>
+                    </div>
+                    <input
+                      className="input input-bordered w-full h-12 md:h-10"
+                      value={form.deliveryPostalCode}
+                      onChange={onChange('deliveryPostalCode')}
+                      placeholder="Postal code"
+                    />
+                  </label>
+
+                  {/* State */}
+                  <label className="form-control">
+                    <div className="label py-1">
+                      <span className="label-text">State</span>
+                      <span className="label-text-alt text-base-content/60 flex items-center">
+                        <FaMapLocationDot size={18} />
+                      </span>
+                    </div>
+                    <input
+                      className="input input-bordered w-full h-12 md:h-10"
+                      value={form.deliveryState}
+                      onChange={onChange('deliveryState')}
+                      placeholder="State"
+                    />
+                  </label>
+
+                  {/* Country */}
+                  <label className="form-control">
+                    <div className="label py-1">
+                      <span className="label-text">Country</span>
+                      <span className="label-text-alt text-base-content/60 flex items-center">
+                        <FaMap size={18} />
+                      </span>
+                    </div>
+                    <input
+                      className="input input-bordered w-full h-12 md:h-10"
+                      value={form.deliveryCountry}
+                      onChange={onChange('deliveryCountry')}
+                      placeholder="Country"
+                    />
+                  </label>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          {/* Users */}
+          <div className="md:col-span-2 mt-2">
+            <details className="collapse collapse-arrow bg-base-200/40 md:bg-transparent rounded-xl" open>
+              <summary className="collapse-title text-base font-semibold">Users</summary>
+              <div className="collapse-content">
+                <div className="space-y-2">
+                  {Array.isArray(initial.users) && initial.users.length > 0 ? (
+                    initial.users.map((user) => (
+                      <div key={user.id} className="flex items-center justify-between gap-3 border border-base-300 rounded-lg p-3">
+                        <div className="text-sm">
+                          <div className="font-medium">{user.first_name} {user.last_name}</div>
+                          <div className="opacity-70">{user.email}</div>
+                        </div>
+                        <button
+                          className="btn btn-xs btn-error"
+                          onClick={() => handleRemoveUser(user.id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm opacity-70">No users found for this company.</p>
+                  )}
+
+                  {isAddingUser ? (
+                    <>
+                      <div className="mt-3">
+                        <UserSelect
+                          userOptions={selectableUserOptions}
+                          handleUserChangeInSelect={handleUserChangeInSelect}
+                          selectedOption={selectedUser}
+                        />
+                      </div>
+
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          className="btn btn-ghost btn-sm flex-1"
+                          onClick={() => {
+                            setSelectedUser(null);
+                            setIsAddingUser(false);
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button className="btn btn-primary btn-sm flex-1" onClick={handleAddUser}>
+                          Add user
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <button className="btn btn-primary btn-sm w-full mt-3" onClick={() => setIsAddingUser(true)}>
+                      Add user
+                    </button>
+                  )}
+                </div>
+              </div>
+            </details>
           </div>
 
           {/* Metadata */}
-          <div className="mt-8">
-            <span className="text-gray-500">Metadata</span>
-            <hr className="mt-2 mb-4 border-gray-300" />
-          </div>
-
-          <div className="mt-2 text-sm opacity-70">
-            <div><b>Company ID:</b> {initial.id}</div>
-            <div><b>Created at:</b>{' '}
-              {new Date(initial.created_at).toLocaleString('fi-FI')}
-            </div>
-            <div><b>Updated at:</b>{' '}
-              {initial.updated_at
-                ? new Date(initial.updated_at).toLocaleString('fi-FI')
-                : '—'}
+          <div className="mt-6">
+            <div className="divider my-2 text-md opacity-60">Meta</div>
+            <div className="text-sm sm:text-md opacity-70 space-y-1">
+              <div><b>Company ID:</b> {initial.id}</div>
+              <div><b>Created:</b> {initial.created_at ? new Date(initial.created_at).toLocaleString('fi-FI') : '—'}</div>
+              <div><b>Updated:</b> {initial.updated_at ? new Date(initial.updated_at).toLocaleString('fi-FI') : '—'}</div>
             </div>
           </div>
         </div>
