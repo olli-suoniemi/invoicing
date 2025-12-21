@@ -134,214 +134,295 @@ export default function OrderDetailsPage() {
 
   return (
     <div className="flex justify-center items-start min-h-screen py-5 px-5">
-
-      <div className="w-full max-w-7xl flex items-center gap-4">
-        <div className="flex w-full flex-col gap-4">
+      <div className="w-full max-w-7xl">
+          <div className="flex w-full flex-col gap-4">
           {/* Title + buttons */}
-          <div className="flex items-center justify-between">
+          {/* DESKTOP */}
+          <div className="hidden md:flex items-center justify-between">
             <div className="flex flex-col">
               <h1 className="text-3xl font-bold">
-                {displayTitle || 'Order details'}
+                  {displayTitle || 'Order details'}
               </h1>
               <span className="badge badge-neutral mt-1 w-fit">
-                {order.status ?? 'dratft'}
+                  {order.status ?? 'draft'}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => router.back()}
-              >
+              <div className='flex flex-row gap-2'>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => router.back()}
+                >
+                  &larr; Back
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => router.push(`/orders/${id}/edit`)}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary p-5ö"
+                  onClick={handleInvoiceCreate}
+                >
+                  Create invoice
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* MOBILE*/}
+          <div className='md:hidden flex flex-col'>
+            <div className="flex items-center justify-between mb-4">
+              <button className="btn btn-ghost btn-md" onClick={() => router.back()}>
                 &larr; Back
               </button>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => router.push(`/orders/${id}/edit`)}
-              >
-                Edit
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary ml-4"
-                onClick={handleInvoiceCreate}
-                disabled={loading}
-              >
-                Create Invoice
-              </button>
-            </div>
-          </div>
-
-          {/* Order details */}
-          <div className="mt-8 w-7/12">
-            <span className="text-gray-500">Order details</span>
-            <hr className="mt-2 mb-4 border-gray-300" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-x-10 gap-y-2 w-7/12">
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <FaUser size={16} />
-                <span>Customer</span>
-              </div>
-              <div className="flex-1 text-sm">
-                <Link
-                  href={`/customers/${order.customer_id}`}
-                  className="underline break-words"
+              <div>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => router.push(`/orders/${id}/edit`)}
                 >
-                  {order.customer_name ?? '—'}
-                </Link>
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary p-5ö"
+                  onClick={handleInvoiceCreate}
+                >
+                  Create invoice
+                </button>
               </div>
             </div>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold">
+                  {displayTitle || 'Order details'}
+              </h1>
+              <span className="badge badge-neutral mt-1 w-fit">
+                  {order.status ?? 'draft'}
+              </span>
+            </div>
+          </div>
 
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <RiMoneyEuroBoxFill size={16} />
-                <span>Total (excl. VAT)</span>
-              </div>
-              <div className="flex-1">
-                <div className="h-10 flex items-center text-sm justify-self-end">
-                  {totalAmountVatExclDisplay} €
+          {/* DETAILS */}
+          <div className="rounded-xl border md:border-none border-base-300 px-4">
+            <div className="mt-4 md:w-7/12">
+              <span className="text-gray-500">Order details</span>
+              <hr className="mt-2 mb-4 border-gray-300" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-x-10 gap-y-2 w-7/12">
+              {/* Left: general info */}
+              <div className="flex flex-col gap-3">
+                {/* Customer */}
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                    <FaUser size={16} />
+                    <span>Customer</span>
+                  </div>
+                  <div className="flex-1">
+                    <Link href={`/customers/${order.customer_id}`} className="underline md:h-10 flex items-center text-sm">
+                      {order.customer_name ?? '—'}
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Order date */}
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                    <FaCalendarDay size={16} />
+                    <span>Order date</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="md:h-10 flex items-center text-sm">
+                      {orderDateDisplay}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <FaCalendarDay size={16} />
-                <span>Order date</span>
-              </div>
-              <div className="flex-1 text-sm">
-                {orderDateDisplay}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <RiMoneyEuroBoxFill size={16} />
-                <span>VAT amount</span>
-              </div>
-              <div className="flex-1">
-                <div className="h-10 flex items-center text-sm justify-self-end">
-                  {vatAmountDisplay} €
+              {/* Right: totals (always together) */}
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                    <RiMoneyEuroBoxFill size={16} />
+                    <span>Total (excl. VAT)</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="md:h-10 flex items-center text-sm md:justify-end">
+                      {totalAmountVatExclDisplay} €
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-4 h-full">
-              <div className="w-40 flex items-center gap-2 text-sm text-gray-500">
-                <RiMoneyEuroBoxFill size={16} />
-                <span>Total (incl. VAT)</span>
-              </div>
-              <div className="flex-1 text-sm font-semibold">
-                <div className="h-10 flex items-center text-sm">
-                  {totalAmountVatInclDisplay} €
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                    <RiMoneyEuroBoxFill size={16} />
+                    <span>VAT amount</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="md:h-10 flex items-center text-sm md:justify-end">
+                      {vatAmountDisplay} €
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 mb-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-500 md:w-40">
+                    <RiMoneyEuroBoxFill size={16} />
+                    <span>Total (incl. VAT)</span>
+                  </div>
+                  <div className="flex-1 text-sm font-semibold">
+                    <div className="md:h-10 flex items-center md:justify-end">
+                      {totalAmountVatInclDisplay} €
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-
-
 
           {/* Items section */}
-          <div className="mt-4">
-            <span className="text-gray-500">Order items</span>
-            <hr className="mt-2 mb-1 border-gray-300" />
-          </div>
-
-          {items.length === 0 ? (
-            <p className="text-gray-500">No items in this order.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="table table-zebra w-full">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th className="text-right">EAN</th>
-                    <th className="text-right">Qty</th>
-                    <th className="text-right">Unit (excl. VAT) €</th>
-                    <th className="text-right">VAT %</th>
-                    <th className="text-right">VAT €</th>
-                    <th className="text-right">Unit (incl. VAT) €</th>
-                    <th className="text-right">Total (excl. VAT) €</th>
-                    <th className="text-right">Total (incl. VAT) €</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item) => {
-                    const quantity = item.quantity ?? 0;
-                    const unit_price_vat_excl =
-                      item.unit_price_vat_excl === null || item.unit_price_vat_excl === undefined
-                        ? 0
-                        : Number(item.unit_price_vat_excl);
-                    const unit_price_vat_incl =
-                      item.unit_price_vat_incl === null || item.unit_price_vat_incl === undefined
-                        ? 0
-                        : Number(item.unit_price_vat_incl);
-                    const totalPriceVatExcl =
-                      item.total_price_vat_excl === null ||
-                      item.total_price_vat_excl === undefined
-                        ? quantity * unit_price_vat_excl
-                        : Number(item.total_price_vat_excl);
-                    const totalPriceVatIncl =
-                      item.total_price_vat_incl === null ||
-                      item.total_price_vat_incl === undefined
-                        ? quantity * unit_price_vat_incl
-                        : Number(item.total_price_vat_incl);
-                    return (
-                      <tr key={item.id}>
-                        <td>
+          <div className="rounded-xl border md:border-none border-base-300 px-4">
+            <div className="mt-4">
+              <span className="text-gray-500">Order items</span>
+              <hr className="mt-2 mb-1 border-gray-300" />
+            </div>
+            {items.length === 0 ? (
+              <p className="text-gray-500">No items in this order.</p>
+              ) : (
+                <>
+                  {/* MOBILE */}
+                  <div className="md:hidden flex flex-col gap-3 py-2">
+                    {items.map(item => (
+                      <div key={item.id}>
+                        <div className="font-semibold mb-2">
                           <Link href={`/inventory/${item.product_id}`} className="underline">
                             {item.product_name ?? item.product_id ?? '-'}
                           </Link>
-                        </td>
-                        <td className="text-right">{item.ean_code ?? '-'}</td>
-                        <td className="text-right">{quantity}</td>
-                        <td className="text-right">
-                          {unit_price_vat_excl.toFixed(2)}
-                        </td>
-                        <td className="text-right">{item.tax_rate ?? '-'}</td>
-                        <td className="text-right">
-                          {(unit_price_vat_incl - unit_price_vat_excl).toFixed(2)}
-                        </td>
-                        <td className="text-right">
-                          {unit_price_vat_incl.toFixed(2)}
-                        </td>
-                        <td className="text-right">
-                          {totalPriceVatExcl.toFixed(2)}
-                        </td>
-                        <td className="text-right">
-                          {totalPriceVatIncl.toFixed(2)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                        </div>
+                        <div className="text-sm text-gray-500 mb-2">
+                          EAN: {item.ean_code ?? '-'}
+                        </div>
+                        <div className="text-sm text-gray-500 mb-2">
+                          Qty: {item.quantity}
+                        </div>
+                        <div className="text-sm text-gray-500 mb-2">
+                          Unit price (excl. VAT): {Number(item.unit_price_vat_excl ?? 0).toFixed(2)} €
+                        </div>
+                        <div className="text-sm text-gray-500 mb-2">
+                          VAT rate: {item.tax_rate ?? '0'} %
+                        </div>
+                        <div className="text-sm text-gray-500 mb-2">
+                          VAT amount per unit: {Number((item.unit_price_vat_incl ?? 0) - (item.unit_price_vat_excl ?? 0)).toFixed(2)} €
+                        </div>
+                        <div className="text-sm text-gray-500 mb-2">
+                          Unit price (incl. VAT): {Number(item.unit_price_vat_incl ?? 0).toFixed(2)} €
+                        </div>
+                        <div className="text-sm text-gray-500 mb-2">
+                          Total (excl. VAT): {Number(item.total_price_vat_excl ?? 0).toFixed(2)} €
+                        </div>
+                        <div className="text-sm font-medium">
+                          Total (incl. VAT): {Number(item.total_price_vat_incl ?? 0).toFixed(2)} €
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="table table-zebra w-full">
+                      <thead>
+                        <tr>
+                          <th>Product</th>
+                          <th className="text-right">EAN</th>
+                          <th className="text-right">Qty</th>
+                          <th className="text-right">Unit (excl. VAT) €</th>
+                          <th className="text-right">VAT %</th>
+                          <th className="text-right">VAT €</th>
+                          <th className="text-right">Unit (incl. VAT) €</th>
+                          <th className="text-right">Total (excl. VAT) €</th>
+                          <th className="text-right">Total (incl. VAT) €</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {items.map((item) => {
+                          const quantity = item.quantity ?? 0;
+                          const unit_price_vat_excl =
+                            item.unit_price_vat_excl === null || item.unit_price_vat_excl === undefined
+                              ? 0
+                              : Number(item.unit_price_vat_excl);
+                          const unit_price_vat_incl =
+                            item.unit_price_vat_incl === null || item.unit_price_vat_incl === undefined
+                              ? 0
+                              : Number(item.unit_price_vat_incl);
+                          const totalPriceVatExcl =
+                            item.total_price_vat_excl === null ||
+                            item.total_price_vat_excl === undefined
+                              ? quantity * unit_price_vat_excl
+                              : Number(item.total_price_vat_excl);
+                          const totalPriceVatIncl =
+                            item.total_price_vat_incl === null ||
+                            item.total_price_vat_incl === undefined
+                              ? quantity * unit_price_vat_incl
+                              : Number(item.total_price_vat_incl);
+                          return (
+                            <tr key={item.id}>
+                              <td>
+                                <Link href={`/inventory/${item.product_id}`} className="underline">
+                                  {item.product_name ?? item.product_id ?? '-'}
+                                </Link>
+                              </td>
+                              <td className="text-right">{item.ean_code ?? '-'}</td>
+                              <td className="text-right">{quantity}</td>
+                              <td className="text-right">
+                                {unit_price_vat_excl.toFixed(2)}
+                              </td>
+                              <td className="text-right">{item.tax_rate ?? '-'}</td>
+                              <td className="text-right">
+                                {(unit_price_vat_incl - unit_price_vat_excl).toFixed(2)}
+                              </td>
+                              <td className="text-right">
+                                {unit_price_vat_incl.toFixed(2)}
+                              </td>
+                              <td className="text-right">
+                                {totalPriceVatExcl.toFixed(2)}
+                              </td>
+                              <td className="text-right">
+                                {totalPriceVatIncl.toFixed(2)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+          </div>
 
           {/* Notes */}
-          <div className="mt-10">
-            <span className="text-gray-500">Notes</span>
-            <hr className="mt-2 border-gray-300" />
-          </div>
-          <div>
-            <p>{order.extra_info}</p>    
+          <div className="rounded-xl border md:border-none border-base-300 px-4">
+            <div className='mt-4'>
+              <span className="text-gray-500">Notes</span>
+              <hr className="mt-2 mb-2 border-gray-300" />
+            </div>
+            <p className="text-sm mb-2">{order.extra_info || '—'}</p>
           </div>
 
           {/* Meta info */}
-          <div className="mt-10">
-            <span className="text-gray-500">Meta data</span>
-            <hr className="mt-2 border-gray-300" />
-          </div>
-          <div className="text-sm text-gray-500">
-            <p>
+          <div className="rounded-xl border md:border-none border-base-300 px-4">
+            <div className='mt-4'>
+              <span className="text-gray-500">Meta information</span>
+              <hr className="mt-2 mb-2 border-gray-300" />
+            </div>
+            <p className="text-sm">
               Created:{' '}
               {createdAtDisplay}
             </p>
-            <p>
+            <p className="text-sm mb-2">
               Updated:{' '}
               {updatedAtDisplay}
             </p>
