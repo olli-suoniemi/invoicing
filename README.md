@@ -10,11 +10,13 @@ Web-based invoice generation and customer relationship management
 | Backend                          | Implements business logic for authentication, client management, invoice creation, PDF generation and email sending. | DenoJS                           |
 | Database                         | A relational database for persistent storage of users, customers, invoices, and logs.                                | PostgreSQL                       |
 | Migrations                       | Database migrations                                                                                                  | Flyway                           |
+| In-memory cache                  | Speeds up queries, stores sessions and temporary data.                                                               | Redis                            |
 | Containerization & orchestration | Packages services, ensures portability and scaling.                                                                  | Docker & Docker Swarm            |
 | Authentication                   | Secure login and role-based access control.                                                                          | Firebase Authentication          |
 | Email delivery                   | Sends invoices and notifications to customers.                                                                       | Forward Email (SMTP/API service) |
 | Reverse proxy & routing          | Handles HTTPS termination, routing, and load balancing between services.                                             | Traefik                          |
 | Hosting                          | Runs the application stack in production.                                                                            | Virtual Private Server           |
+| Content delivery & protection    | Hides VPS IP, adds DDoS protection, and caches static assets globally.                                               | Cloudflare                       |
 | CI/CD                            | CI/CD pipeline for testing, building, and automated deployment.                                                      | GitHub Actions                   |
 
 ### Schema structure
