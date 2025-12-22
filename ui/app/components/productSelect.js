@@ -75,11 +75,10 @@ const selectStyles = {
   // styles for the portal container
   menuPortal: (base) => ({
     ...base,
-    zIndex: 50, // or higher if needed
+    zIndex: 50, 
   }),
 };
 
-// your ClearWithEdit from before (unchanged except imports)
 const ClearWithEdit = (props) => {
   const { selectProps } = props;
 
@@ -120,8 +119,8 @@ export default function ProductSelect({
   onChange,
   placeholder = 'Search a product...',
   onEdit,
-  isDisabled = false,        // 👈 new prop
-  instanceId = 'product-select',   // 👈 NEW
+  isDisabled = false,  
+  instanceId = 'product-select',   
 }) {
   const [portalTarget, setPortalTarget] = useState(null);
 
@@ -132,7 +131,7 @@ export default function ProductSelect({
 
   return (
     <Select
-      instanceId={instanceId}      // 👈 KEY FIX
+      instanceId={instanceId}    
       className="react-select-container"
       classNamePrefix="react-select"
       styles={selectStyles}
@@ -144,7 +143,7 @@ export default function ProductSelect({
       isSearchable
       placeholder={placeholder}
       menuPlacement="auto"
-      menuPortalTarget={portalTarget}  // 👈 render menu in body, not inside table div
+      menuPortalTarget={portalTarget}  
       menuPosition="fixed"             // keeps it aligned when scrolling
       onEdit={onEdit}
       isDisabled={isDisabled}

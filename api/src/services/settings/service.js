@@ -23,7 +23,7 @@ export async function createUserDuringLogin(authUser, body) {
     throw new Error("Missing Firebase UID in authUser");
   }
 
-  // Look up by Firebase UID (best key to avoid duplicates)
+  // Look up by Firebase UID
   const existing = await repo.getUserByAuthUid(authUser.uid);
   if (existing) {
     // Update last login time
@@ -60,9 +60,6 @@ export async function createUser(requestor, body) {
   }
 
   // 1) Create user in Firebase Auth
-  // You have a few options here:
-  //  - generate a random password and send it to them separately
-  //  - or create the user without password and send an email link reset, etc.
   // For demo, we generate a random temp password.
   const tempPassword =
     Math.random().toString(36).slice(-10) + 'A1!'; // ensure complexity if you want
@@ -97,7 +94,7 @@ export async function createUser(requestor, body) {
     const added = await repo.addUserToCompany(created.id);
     return added;
   } catch (e) {
-    // Optional: rollback Auth user if DB insert fails
+    // rollback Auth user if DB insert fails
     await firebaseAdmin.auth().deleteUser(fbUser.uid).catch(() => {});
     throw e;
   }

@@ -33,5 +33,4 @@ if (typeof window !== "undefined") {
   }
 }
 
-// Export may be null during SSR – only use in "use client" components
 export { auth };

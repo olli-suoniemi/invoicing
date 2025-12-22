@@ -109,8 +109,6 @@ export async function GET(req, { params }) {
     dueDate: order.due_date ?? '2024-06-30',
   });
 
-  console.log('Generated pankkiviivakoodi data string:', barcodeData); // --- IGNORE ---
-
   order.barcodeData = barcodeData;
 
   // ---- Generate barcode image with JsBarcode ----

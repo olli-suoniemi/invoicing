@@ -22,7 +22,7 @@ export async function generateInvoicePdfBuffer({ id, authz }) {
   const { invoice } = await r.json();
   if (!invoice) throw new Error('Invoice not found');
 
-  // map customer fields (same as your /print route)
+  // map customer fields 
   invoice.customer_name = invoice.customer.name;
   invoice.customer_business_id = invoice.customer.business_id;
   invoice.customer_email = invoice.customer.email;

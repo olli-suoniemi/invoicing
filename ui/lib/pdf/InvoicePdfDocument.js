@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
 
   logoImage: {
     width: 100,
-    height: 35,                 // not too tall, matches minHeight above
+    height: 35,                
     objectFit: 'contain',
   },
 

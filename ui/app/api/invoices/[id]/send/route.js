@@ -17,7 +17,7 @@ export async function POST(req, { params }) {
     return NextResponse.json({ error: 'Missing to/subject/text' }, { status: 400 });
   }
 
-  // 1) Get invoice (optional)
+  // 1) Get invoice
   const invRes = await fetch(`${apiURL}/v1/invoices/${id}`, {
     headers: { 'Content-Type': 'application/json', Authorization: authz },
     cache: 'no-store',
@@ -32,7 +32,7 @@ export async function POST(req, { params }) {
   // 2) Generate PDF buffer
   const pdfBuf = await generateInvoicePdfBuffer({ id, authz });
 
-  // 3) Get company + email settings from your backend
+  // 3) Get company + email settings 
   const compRes = await fetch(`${apiURL}/v1/company`, {
     headers: { 'Content-Type': 'application/json', Authorization: authz },
     cache: 'no-store',
@@ -54,7 +54,7 @@ export async function POST(req, { params }) {
   const emailSettings = (await emailRes.json()).email;
 
   const from = company?.email;
-  const token = emailSettings?.api_key; // ensure this is actually the ForwardEmail API token
+  const token = emailSettings?.api_key;
   if (!from || !token) {
     return NextResponse.json({ error: 'Missing from email or token' }, { status: 500 });
   }

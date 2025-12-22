@@ -7,7 +7,7 @@ const CustomerSelect = ({
   handleCustomerChangeInSelect,
   handleInputChangeSelect,
   isDisabled = false,
-  instanceId = 'customer-select',   // 👈 NEW (with default)
+  instanceId = 'customer-select', 
 }) => {
   const selectStyles = {
     // main input
@@ -17,7 +17,7 @@ const CustomerSelect = ({
       borderRadius: 8,
       borderColor: '#d4d4d8',
       boxShadow: 'none',
-      fontSize: 14,              // 👈 font size for main input area
+      fontSize: 14,       
       '&:hover': {
         borderColor: '#a3a3a3',
       },
@@ -25,23 +25,23 @@ const CustomerSelect = ({
 
     singleValue: (base) => ({
       ...base,
-      fontSize: 14,              // 👈 selected value text
+      fontSize: 14,            
     }),
 
     placeholder: (base) => ({
       ...base,
-      fontSize: 14,              // 👈 placeholder text
+      fontSize: 14,           
     }),
 
     input: (base) => ({
       ...base,
-      fontSize: 14,              // 👈 typed text
+      fontSize: 14,             
     }),
 
     // dropdown menu container
     menu: (base) => ({
       ...base,
-      fontSize: 14,              // 👈 dropdown options
+      fontSize: 14,          
       backgroundColor: '#ffffff',
       borderRadius: 8,
       boxShadow:
@@ -71,7 +71,6 @@ const CustomerSelect = ({
       color: '#111827',
       userSelect: 'none',
 
-      // 🔽 click/active flash color
       ':active': {
         ...base[':active'],
         backgroundColor: '#000000', // black flash on click

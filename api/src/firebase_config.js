@@ -17,8 +17,8 @@ export const config = {
       .toString(),
 
   firebase_service_json:
-    // in prod you read this from the Docker secret;
-    // in local you can leave it empty and use ADC instead if you want
+    // in prod this comes from the Docker secret;
+    // in local from env var
     ENV === "local"
       ? Deno.env.get("FIREBASE_SERVICE_JSON") ?? ""
       : decoder.decode(Deno.readFileSync("/run/secrets/CRM_FIREBASE_SERVICE_JSON")),

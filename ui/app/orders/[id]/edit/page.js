@@ -319,7 +319,7 @@ export default function OrderEditPage() {
       customer_id: initialOrder.customer_id ?? '',
       status: initialOrder.status ?? 'draft',
       extra_info: initialOrder.extra_info || '',
-      order_date: formatOrderDateForInput(initialOrder.order_date), // ⬅️ here
+      order_date: formatOrderDateForInput(initialOrder.order_date),
       items:
         (initialOrder.items ?? []).length > 0
           ? initialOrder.items.map((item) => ({

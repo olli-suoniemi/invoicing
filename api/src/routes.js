@@ -58,9 +58,6 @@ v1.post("/users/login", async (c) => {
 v1.use("*", requireLocalUser);
 
 // --------- Authenticated with local user (has internalId) ---------
-
-// If you want /me to return *local* user instead, you can redefine it here
-// or keep the earlier one and rename this.
 v1.get("/me", (c) => {
   const user = c.get("user");
   return c.json({ user });

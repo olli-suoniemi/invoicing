@@ -55,7 +55,7 @@ export default function OrdersNewPage() {
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch('/api/customers'); // change if your endpoint is different
+        const r = await fetch('/api/customers');
         
         if (!r.ok) {
           const err = await r.json().catch(() => ({}));
@@ -77,7 +77,7 @@ export default function OrdersNewPage() {
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch('/api/inventory'); // change if your endpoint is different
+        const r = await fetch('/api/inventory');
         
         if (!r.ok) {
           const err = await r.json().catch(() => ({}));

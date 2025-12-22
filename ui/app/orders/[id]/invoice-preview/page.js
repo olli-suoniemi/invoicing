@@ -20,7 +20,7 @@ export default function OrderInvoicePreviewPage() {
 
     (async () => {
       const res = await fetch(`/api/orders/${id}/invoice`);
-      if (!res.ok) return; // add error handling as you like
+      if (!res.ok) return; 
       const data = await res.json();
       setOrder(data.order ?? null);
     })();
