@@ -2,6 +2,11 @@
 
 Web-based invoice generation and customer relationship management
 
+Credentials for test user are:
+
+- Username: test@gmail.com
+- Password: test@gmail.com
+
 ## Architechture
 
 |       Part of architecture       |                                                        Purpose                                                       |            Technology            |
